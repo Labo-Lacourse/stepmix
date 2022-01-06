@@ -161,6 +161,18 @@ class LCA(BaseMixture):
         self.n_iter_ = best_n_iter
         self.lower_bound_ = max_lower_bound
 
+    def fit_1_step(self, X, Y):
+        self.fit(X, Y)  # Fit complete model
+
+    def fit_2_step(self, X, Y):
+        self.fit(X)  # Fit measurement model
+        self.fit(X, Y, freeze_measurement=True)  # Fit complete model, but keep measurement model parameters fixed
+
+    def fit_3_step(self, X, Y):
+        self.fit(X)  # Fit measurement
+        resp = self.predict_proba(X)  # Soft class assignment
+        self.m_step_structural(resp, Y)  # Fit structural model
+
     def avg_log_likelihood(self, X, Y=None):
         avg_ll, _ = self._e_step(X, Y)
         return avg_ll
