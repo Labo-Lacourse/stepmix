@@ -1,4 +1,8 @@
-"""EM for 1-step, 2-step and 3-step estimation"""
+"""EM for multi-step estimation of latent class models with structural variables.
+
+Please note the class weights rho are now referred to as 'weights' and the soft assignments tau are known as
+'responsibilities' or resp to match the sklearn stack terminology.
+"""
 import warnings
 import numpy as np
 
@@ -53,8 +57,8 @@ class LCA(BaseMixture):
         # Initialize latent class weights
         super()._initialize_parameters(X, random_state)
 
-        # Initialize class weights
-        self.rho = np.ones((self.n_components,)) / self.n_components
+        # Uniform class weights initialization
+        self.weights = np.ones((self.n_components,)) / self.n_components
 
         # Initialize measurement model
         self._mm = EMISSION_DICT[self.measurement](n_components=self.n_components,
@@ -73,22 +77,21 @@ class LCA(BaseMixture):
         self.resp = resp
 
     def fit(self, X, Y=None, freeze_measurement=False):
-        """Estimate model parameters using X and predict the labels for X.
-        The method fits the model n_init times and sets the parameters with
-        which the model has the largest likelihood or lower bound. Within each
-        trial, the method iterates between E-step and M-step for `max_iter`
-        times until the change of likelihood or lower bound is less than
-        `tol`, otherwise, a :class:`~sklearn.exceptions.ConvergenceWarning` is
-        raised. After fitting, it predicts the most probable label for the
-        input data points.
-        .. versionadded:: 0.20
+        """Adapted from the fit_predict method of the BaseMixture class to include (optional) structural model
+        computations.
+
+        Setting Y=None will run EM on the measurement model only. Providing both X and Y will run EM on the complete
+        model.
+
         Parameters
         ----------
         X : array-like of shape (n_samples, n_features)
             List of n_features-dimensional data points. Each row
             corresponds to a single data point.
-        Y : array-like of shape (n_samples, n_structural)
+        Y : array-like of shape (n_samples, n_structural), default = None
             List of n_structural-dimensional data points.
+        freeze_measurement : bool, default =False
+            Run EM on the complete model, but freeze measurement model parameters. Useful for two-step estimation.
         Returns
         -------
         labels : array, shape (n_samples,)
@@ -107,7 +110,8 @@ class LCA(BaseMixture):
         self._check_initial_parameters(X)
 
         # if we enable warm_start, we will have a unique initialisation
-        do_init = not (self.warm_start and hasattr(self, "converged_"))
+        # do_init = not (self.warm_start and hasattr(self, "converged_"))
+        do_init = True
         n_init = self.n_init if do_init else 1
 
         max_lower_bound = -np.inf
@@ -179,7 +183,7 @@ class LCA(BaseMixture):
 
     def _e_step(self, X, Y=None):
         # Measurement likelihood
-        log_resp = self._estimate_log_prob(X) + np.log(self.rho).reshape((1, -1))
+        log_resp = self._estimate_log_prob(X) + self._estimate_log_weights().reshape((1, -1))
 
         # Add structural model likelihood (if structural data is provided)
         if Y is not None:
@@ -197,7 +201,7 @@ class LCA(BaseMixture):
     def _m_step(self, X, log_resp, Y=None, freeze_measurement=False):
         if not freeze_measurement:
             # Update measurement model parameters
-            self.rho = np.exp(log_resp).mean(axis=0)
+            self.weights = np.exp(log_resp).mean(axis=0)
             self._mm.m_step(X, log_resp)
 
         if Y is not None:
@@ -205,12 +209,13 @@ class LCA(BaseMixture):
             self._sm.m_step(Y, log_resp)
 
     def m_step_structural(self, resp, Y):
+        # For the third step of the 3-step approach
         if not hasattr(self, '_sm'):
             self._initialize_parameters_structural(Y, self.random_state)
         self._sm.m_step(Y, np.log(resp))
 
     def _estimate_log_weights(self):
-        return np.log(self.rho)
+        return np.log(self.weights)
 
     def _estimate_log_prob(self, X):
         return self._mm.log_likelihood(X)
@@ -219,13 +224,16 @@ class LCA(BaseMixture):
         return log_prob_norm
 
     def _get_parameters(self):
-        params = dict(rho=self.rho, mm_params=self._mm.get_parameters())
+        params = dict(weights=self.weights, measurement=self._mm.get_parameters())
         if hasattr(self, '_sm'):
-            params['sm_params'] = self._sm.get_parameters()
+            params['structural'] = self._sm.get_parameters()
         return params
 
+    def get_parameters(self):
+        return self._get_parameters()
+
     def _set_parameters(self, params):
-        self.rho = params['rho']
-        self._mm.set_parameters(params['mm_params'])
+        self.weights = params['weights']
+        self._mm.set_parameters(params['measurement'])
         if 'sm_params' in params.keys():
-            self._sm.set_parameters(params['sm_params'])
+            self._sm.set_parameters(params['structural'])
