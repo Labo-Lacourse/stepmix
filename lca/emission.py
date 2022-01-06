@@ -53,6 +53,11 @@ class Gaussian(Emission):
         self.init_params = init_params
         self.reg_covar = reg_covar
 
+        # Actual parameters
+        self.means_ = None
+        self.covariances_ = None
+        self.precisions_cholesky_ = None
+
         # This is for compatibility with Gaussian mixture methods. Could be implemented in the future.
         self.means_init = None
         self.weights_init = None
@@ -65,7 +70,13 @@ class Gaussian(Emission):
 
     def initialize(self, X, resp):
         super().check_initial_parameters()
+
+        # Initialize Gaussian Mixture attributes
         GaussianMixture._initialize(self, X, resp)
+
+        # Use random points in the dataset as initial means
+        idx = self.random_state.choice(X.shape[0], size=self.n_components, replace=False)
+        self.means_ = X[idx]
 
     def m_step(self, X, log_resp):
         GaussianMixture._m_step(self, X, log_resp)
