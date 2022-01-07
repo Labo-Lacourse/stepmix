@@ -79,6 +79,7 @@ class Gaussian(Emission):
         # self.means_ = X[idx]
 
     def m_step(self, X, log_resp):
+        # This will update self.means_, self.covariances_ and self.precisions_cholesky_
         GaussianMixture._m_step(self, X, log_resp)
 
     def log_likelihood(self, X):
@@ -88,6 +89,7 @@ class Gaussian(Emission):
         return dict(means=self.means_, covariances=self.covariances_, precisions_cholesky=self.precisions_cholesky_)
 
     def set_parameters(self, params):
+        # This will update self.means_, self.covariances_ and self.precisions_cholesky_
         GaussianMixture._set_parameters(self,
                                         (None, params['means'], params['covariances'], params['precisions_cholesky']))
 
