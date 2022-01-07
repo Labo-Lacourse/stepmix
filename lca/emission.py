@@ -75,8 +75,8 @@ class Gaussian(Emission):
         GaussianMixture._initialize(self, X, resp)
 
         # Use random points in the dataset as initial means
-        idx = self.random_state.choice(X.shape[0], size=self.n_components, replace=False)
-        self.means_ = X[idx]
+        # idx = self.random_state.choice(X.shape[0], size=self.n_components, replace=False)
+        # self.means_ = X[idx]
 
     def m_step(self, X, log_resp):
         GaussianMixture._m_step(self, X, log_resp)
@@ -88,7 +88,36 @@ class Gaussian(Emission):
         return dict(means=self.means_, covariances=self.covariances_, precisions_cholesky=self.precisions_cholesky_)
 
     def set_parameters(self, params):
-        GaussianMixture._set_parameters(self, (None, params['means'], params['covariances'], params['precisions_cholesky']))
+        GaussianMixture._set_parameters(self,
+                                        (None, params['means'], params['covariances'], params['precisions_cholesky']))
+
+
+class GaussianFull(Gaussian):
+    def __init__(self, **kwargs):
+        # Make sure no other covariance_type is specified
+        kwargs.pop('covariance_type', None)
+        super().__init__(covariance_type='full', **kwargs)
+
+
+class GaussianSpherical(Gaussian):
+    def __init__(self, **kwargs):
+        # Make sure no other covariance_type is specified
+        kwargs.pop('covariance_type', None)
+        super().__init__(covariance_type='spherical', **kwargs)
+
+
+class GaussianDiag(Gaussian):
+    def __init__(self, **kwargs):
+        # Make sure no other covariance_type is specified
+        kwargs.pop('covariance_type', None)
+        super().__init__(covariance_type='diag', **kwargs)
+
+
+class GaussianTied(Gaussian):
+    def __init__(self, **kwargs):
+        # Make sure no other covariance_type is specified
+        kwargs.pop('covariance_type', None)
+        super().__init__(covariance_type='tied', **kwargs)
 
 
 class Bernoulli(Emission):
@@ -126,6 +155,10 @@ class Bernoulli(Emission):
 
 
 EMISSION_DICT = {
-        'gaussian': Gaussian,
-        'bernoulli': Bernoulli,
+    'gaussian': Gaussian,
+    'gaussian_full': GaussianFull,
+    'gaussian_spherical': GaussianSpherical,
+    'gaussian_diag': GaussianDiag,
+    'gaussian_tied': GaussianTied,
+    'bernoulli': Bernoulli,
 }
