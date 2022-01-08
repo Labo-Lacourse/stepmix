@@ -61,16 +61,18 @@ class LCA(BaseMixture):
         self.weights = np.ones((self.n_components,)) / self.n_components
 
         # Initialize measurement model
-        self._mm = EMISSION_DICT[self.measurement](n_components=self.n_components,
-                                                   random_state=self.random_state,
-                                                   **self.measurement_params)
+        if not hasattr(self, '_mm'):
+            self._mm = EMISSION_DICT[self.measurement](n_components=self.n_components,
+                                                       random_state=self.random_state,
+                                                       **self.measurement_params)
         self._mm.initialize(X, self.resp)
 
     def _initialize_parameters_structural(self, Y, random_state):
         # Initialize structural model
-        self._sm = EMISSION_DICT[self.structural](n_components=self.n_components,
-                                                  random_state=self.random_state,
-                                                  **self.structural_params)
+        if not hasattr(self, '_sm'):
+            self._sm = EMISSION_DICT[self.structural](n_components=self.n_components,
+                                                      random_state=self.random_state,
+                                                      **self.structural_params)
         self._sm.initialize(Y, self.resp)
 
     def _initialize(self, X, resp):
