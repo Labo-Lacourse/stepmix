@@ -237,5 +237,5 @@ class LCA(BaseMixture):
     def _set_parameters(self, params):
         self.weights = params['weights']
         self._mm.set_parameters(params['measurement'])
-        if 'sm_params' in params.keys():
+        if 'structural' in params.keys():
             self._sm.set_parameters(params['structural'])
