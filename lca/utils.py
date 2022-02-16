@@ -23,6 +23,7 @@ def check_nonneg(**params):
         if not isinstance(params[p], numbers.Number) or params[p] < 0:
             raise ValueError("Expected {} >= 0, got {}".format(p, params[p]))
 
+
 def check_int(**params):
     """Check that parameters are integers as expected
     Raises
@@ -69,6 +70,26 @@ def check_in(choices, **params):
             raise ValueError(
                 "{} value {} not recognized. Choose from {}".format(
                     p, params[p], choices
+                )
+            )
+
+
+def check_type(type, **params):
+    """Checks parameters are of a given type.
+    Parameters
+    ----------
+    choices : array-like, accepted values
+    params : object
+        Named arguments, parameters to be checked
+    Raises
+    ------
+    ValueError : unacceptable choice of parameters
+    """
+    for p in params:
+        if not isinstance(params[p], type):
+            raise ValueError(
+                "{} value {} not recognized. Choose from {}".format(
+                    p, params[p], p
                 )
             )
 
