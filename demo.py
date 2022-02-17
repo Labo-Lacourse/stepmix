@@ -22,7 +22,7 @@ means_list = []
 
 # Run experiment for 1-step, 2-step and 3-step
 for n_steps in [1, 2, 3]:
-    m = LCA(n_steps=n_steps, n_components=3, measurement='bernoulli', structural='gaussian', tol=1e-5, n_init=10,
+    m = LCA(n_steps=n_steps, n_components=3, measurement='bernoulli', structural='gaussian_unit', tol=1e-5, n_init=10,
             random_state=42, max_iter=200)
     m.fit(X, Y)
 
@@ -40,13 +40,13 @@ print_results(ll_list, means_list)
 print('\n\nBakk experiment (explicit step decomposition)...')
 
 # ONE-STEP
-m_1 = LCA(n_components=3, measurement='bernoulli', structural='gaussian', tol=1e-5, n_init=10,
+m_1 = LCA(n_components=3, measurement='bernoulli', structural='gaussian_unit', tol=1e-5, n_init=10,
           random_state=42, max_iter=200)
 # 1) Maximum likelihood with both measurement and structural models
 m_1.em(X, Y)
 
 # TWO-STEP
-m_2 = LCA(n_components=3, measurement='bernoulli', structural='gaussian', tol=1e-5, n_init=10,
+m_2 = LCA(n_components=3, measurement='bernoulli', structural='gaussian_unit', tol=1e-5, n_init=10,
           random_state=42, max_iter=200)
 # 1) Fit the measurement model
 # 2) Fit the structural model by keeping the parameters of the measurement model fixed
@@ -54,7 +54,7 @@ m_2.em(X)
 m_2.em(X, Y, freeze_measurement=True)
 
 # THREE-STEP
-m_3 = LCA(n_components=3, measurement='bernoulli', structural='gaussian', tol=1e-5, n_init=10,
+m_3 = LCA(n_components=3, measurement='bernoulli', structural='gaussian_unit', tol=1e-5, n_init=10,
           random_state=42, max_iter=200)
 # 1) Fit the measurement model
 # 2) Assign class probabilities
@@ -81,7 +81,7 @@ means_list = []
 
 # Run experiment for 1-step, 2-step and 3-step
 for n_steps in [1, 2, 3]:
-    m = LCA(n_steps=n_steps, n_components=3, measurement='gaussian', structural='bernoulli', tol=1e-5, n_init=10,
+    m = LCA(n_steps=n_steps, n_components=3, measurement='gaussian_unit', structural='bernoulli', tol=1e-5, n_init=10,
             random_state=42, max_iter=200)
     m.fit(Y, X)
 
@@ -95,7 +95,7 @@ print_results(ll_list, means_list)
 # Gaussian emission models with various covariance estimators are available. The code is based on the
 # sklearn GaussianMixture class
 print('\n\nHmwk4 experiment...')
-for cov_string in ["spherical", "tied", "diag", "full"]:
+for cov_string in ["unit", "spherical", "tied", "diag", "full"]:
     m = LCA(n_steps=1, n_components=4, measurement='bernoulli', structural='gaussian_' + cov_string,
             tol=1e-5, n_init=10, random_state=42, max_iter=200)
     X, Y = data_generation_Hwk4(sample_size=3000, random_state=42,

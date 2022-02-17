@@ -4,6 +4,7 @@ Encapsulate the M-step and log-likelihood computations of different conditional 
 from abc import ABC, abstractmethod
 from sklearn.utils.validation import check_random_state
 from sklearn.mixture import GaussianMixture
+from scipy.stats import multivariate_normal
 import numpy as np
 
 from .utils import check_in, check_int, check_positive, check_nonneg
@@ -130,6 +131,31 @@ class GaussianTied(Gaussian):
         super().__init__(covariance_type='tied', **kwargs)
 
 
+class GaussianUnit(Emission):
+    """sklearn.mixture.GaussianMixture does not have an implementation for fixed unit variance, so we provide one."""
+
+    def __init__(self, n_components=2, random_state=None):
+        super().__init__(n_components=n_components, random_state=random_state)
+        self.means = None
+
+    def m_step(self, X, log_resp):
+        resp = np.exp(log_resp)
+        self.means = (resp[..., np.newaxis] * X[:, np.newaxis, :]).sum(axis=0) / resp.sum(axis=0, keepdims=True).T
+
+    def log_likelihood(self, X):
+        n, D = X.shape
+        log_eps = np.zeros((n, self.n_components))
+        for c in range(self.n_components):
+            log_eps[:, c] = multivariate_normal.logpdf(x=X, mean=self.means[c], cov=1)
+        return log_eps
+
+    def get_parameters(self):
+        return dict(means=self.means)
+
+    def set_parameters(self, params):
+        self.means = params['means']
+
+
 class Bernoulli(Emission):
     def __init__(self, clip_eps=1e-15, n_components=2, random_state=None):
         super().__init__(n_components=n_components, random_state=random_state)
@@ -163,6 +189,7 @@ class Bernoulli(Emission):
 
 EMISSION_DICT = {
     'gaussian': Gaussian,
+    'gaussian_unit': GaussianUnit,
     'gaussian_full': GaussianFull,
     'gaussian_spherical': GaussianSpherical,
     'gaussian_diag': GaussianDiag,
