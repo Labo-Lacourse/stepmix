@@ -14,19 +14,22 @@ class Emission(ABC):
         self.n_components = n_components
         self.random_state = random_state
 
-    def check_initial_parameters(self):
+    def check_parameters(self):
         check_int(n_components=self.n_components)
         check_positive(n_components=self.n_components)
-        self.random_state = check_random_state(self.random_state)
-        self.check_parameters()
 
     @abstractmethod
-    def check_parameters(self):
+    def initialize(self, X, resp, random_state=None):
         raise NotImplementedError
 
-    @abstractmethod
-    def initialize(self, X, resp):
-        raise NotImplementedError
+    def check_random_state(self, random_state=None):
+        if random_state is None:
+            # If no random state is provided, use mine
+            random_state = check_random_state(self.random_state)
+        else:
+            # Use the provided random_state
+            random_state = check_random_state(random_state)
+        return random_state
 
     @abstractmethod
     def m_step(self, X, log_resp):
@@ -64,12 +67,14 @@ class Gaussian(Emission):
         self.precisions_init = None
 
     def check_parameters(self):
+        super().check_parameters()
         check_in(["spherical", "tied", "diag", "full"], covariance_type=self.covariance_type)
         check_in(["random"], init_params=self.init_params)
         check_nonneg(reg_covar=self.reg_covar)
 
-    def initialize(self, X, resp):
-        super().check_initial_parameters()
+    def initialize(self, X, resp, random_state=None):
+        self.check_parameters()
+        random_state = self.check_random_state(random_state)
 
         # Initialize Gaussian Mixture attributes
         GaussianMixture._initialize(self, X, resp)
@@ -129,11 +134,15 @@ class Bernoulli(Emission):
         self.pis = None
 
     def check_parameters(self):
+        super().check_parameters()
         check_nonneg(clip_eps=self.clip_eps)
 
-    def initialize(self, X, _):
-        self.check_initial_parameters()
-        self.pis = 0.25 + 0.5 * self.random_state.rand(X.shape[1], self.n_components)
+    def initialize(self, X, resp, random_state=None):
+        self.check_parameters()
+        random_state = self.check_random_state(random_state)
+
+        # Init
+        self.pis = 0.25 + 0.5 * random_state.rand(X.shape[1], self.n_components)
 
     def m_step(self, X, log_resp):
         resp = np.exp(log_resp)

@@ -114,9 +114,9 @@ class LCA(BaseEstimator):
         self.weights = np.ones((self.n_components,)) / self.n_components
 
         # Initialize measurement model
-        self._initialize_parameters_measurement(X)
+        self._initialize_parameters_measurement(X, random_state)
 
-    def _initialize_parameters_measurement(self, X):
+    def _initialize_parameters_measurement(self, X, random_state=None):
         """Initialize parameters of measurement model.
 
         Parameters
@@ -128,9 +128,10 @@ class LCA(BaseEstimator):
             self._mm = EMISSION_DICT[self.measurement](n_components=self.n_components,
                                                        random_state=self.random_state,
                                                        **self.structural_params)
-        self._mm.initialize(X, self.resp)
+        # Use the provided random_state instead of self.random_state to ensure we have a different init every run
+        self._mm.initialize(X, self.resp, random_state)
 
-    def _initialize_parameters_structural(self, X):
+    def _initialize_parameters_structural(self, X, random_state=None):
         """Initialize parameters of structural model.
 
         Parameters
@@ -142,7 +143,8 @@ class LCA(BaseEstimator):
             self._sm = EMISSION_DICT[self.structural](n_components=self.n_components,
                                                       random_state=self.random_state,
                                                       **self.structural_params)
-        self._sm.initialize(X, self.resp)
+        # Use the provided random_state instead of self.random_state to ensure we have a different init every run
+        self._sm.initialize(X, self.resp, random_state)
 
     def fit(self, X, Y=None):
         """Fit LCA measurement model and optionally the structural model.
@@ -229,7 +231,7 @@ class LCA(BaseEstimator):
                 self._initialize_parameters(X, random_state)  # Measurement model
 
             if Y is not None:
-                self._initialize_parameters_structural(Y)  # Structural Model
+                self._initialize_parameters_structural(Y, random_state)  # Structural Model
 
             lower_bound = -np.inf
 
