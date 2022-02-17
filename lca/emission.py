@@ -20,10 +20,11 @@ class Emission(ABC):
 
     def initialize(self, X, log_resp, random_state=None):
         self.check_parameters()
-        # Currently unused, for future random initialisations
+        # Currently unused, for future random initializations
         random_state = self.check_random_state(random_state)
 
-        # Initialize by maximum likelihood on the initial responsibilities
+        # Measurement and structural models are initialized by running their M-step on the initial log responsibilities
+        # obtained via kmeans or sampled uniformly (See LCA._initialize_parameters)
         self.m_step(X, log_resp)
 
     def check_random_state(self, random_state=None):
