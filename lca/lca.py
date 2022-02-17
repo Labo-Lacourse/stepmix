@@ -114,7 +114,7 @@ class LCA(BaseEstimator):
         self.log_resp_ = np.log(resp)
 
         # Uniform class weights initialization
-        self.weights = np.ones((self.n_components,)) / self.n_components
+        self.weights_ = np.ones((self.n_components,)) / self.n_components
 
         # Initialize measurement model
         self._initialize_parameters_measurement(X, random_state)
@@ -275,7 +275,7 @@ class LCA(BaseEstimator):
 
     def _e_step(self, X, Y=None):
         # Measurement log-likelihood
-        log_resp = self._mm.log_likelihood(X) + np.log(self.weights).reshape((1, -1))
+        log_resp = self._mm.log_likelihood(X) + np.log(self.weights_).reshape((1, -1))
 
         # Add structural model likelihood (if structural data is provided)
         if Y is not None:
@@ -293,7 +293,7 @@ class LCA(BaseEstimator):
     def _m_step(self, X, log_resp, Y=None, freeze_measurement=False):
         if not freeze_measurement:
             # Update measurement model parameters
-            self.weights = np.exp(log_resp).mean(axis=0)
+            self.weights_ = np.exp(log_resp).mean(axis=0)
             self._mm.m_step(X, log_resp)
 
         if Y is not None:
@@ -354,7 +354,7 @@ class LCA(BaseEstimator):
         return np.exp(log_resp)
 
     def _get_parameters(self):
-        params = dict(weights=self.weights, measurement=self._mm.get_parameters())
+        params = dict(weights=self.weights_, measurement=self._mm.get_parameters())
         if hasattr(self, '_sm'):
             params['structural'] = self._sm.get_parameters()
         return params
@@ -363,7 +363,7 @@ class LCA(BaseEstimator):
         return self._get_parameters()
 
     def _set_parameters(self, params):
-        self.weights = params['weights']
+        self.weights_ = params['weights']
         self._mm.set_parameters(params['measurement'])
         if 'structural' in params.keys():
             self._sm.set_parameters(params['structural'])
