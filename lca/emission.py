@@ -78,9 +78,13 @@ class Gaussian(Emission):
         check_nonneg(reg_covar=self.reg_covar)
 
     def initialize(self, X, log_resp, random_state=None):
+        self.check_parameters()
+        # Currently unused, for future random initializations
+        random_state = self.check_random_state(random_state)
+
         # Required to get the initial means, covariances and precisions right
+        # Already performs the M-step
         GaussianMixture._initialize(self, X, np.exp(log_resp))
-        super().initialize(X, log_resp, random_state)
 
     def m_step(self, X, log_resp):
         # This will update self.means_, self.covariances_ and self.precisions_cholesky_
