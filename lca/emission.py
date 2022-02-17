@@ -18,9 +18,13 @@ class Emission(ABC):
         check_int(n_components=self.n_components)
         check_positive(n_components=self.n_components)
 
-    @abstractmethod
     def initialize(self, X, log_resp, random_state=None):
-        raise NotImplementedError
+        self.check_parameters()
+        # Currently unused, for future random initialisations
+        random_state = self.check_random_state(random_state)
+
+        # Initialize by maximum likelihood on the initial responsibilities
+        self.m_step(X, log_resp)
 
     def check_random_state(self, random_state=None):
         if random_state is None:
@@ -73,15 +77,9 @@ class Gaussian(Emission):
         check_nonneg(reg_covar=self.reg_covar)
 
     def initialize(self, X, log_resp, random_state=None):
-        self.check_parameters()
-        random_state = self.check_random_state(random_state)
-
-        # Initialize Gaussian Mixture attributes
+        # Required to get the initial means, covariances and precisions right
         GaussianMixture._initialize(self, X, np.exp(log_resp))
-
-        # Use random points in the dataset as initial means
-        # idx = self.random_state.choice(X.shape[0], size=self.n_components, replace=False)
-        # self.means_ = X[idx]
+        super().initialize(X, log_resp, random_state)
 
     def m_step(self, X, log_resp):
         # This will update self.means_, self.covariances_ and self.precisions_cholesky_
@@ -136,13 +134,6 @@ class Bernoulli(Emission):
     def check_parameters(self):
         super().check_parameters()
         check_nonneg(clip_eps=self.clip_eps)
-
-    def initialize(self, X, log_resp, random_state=None):
-        self.check_parameters()
-        random_state = self.check_random_state(random_state)
-
-        # Init
-        self.pis = 0.25 + 0.5 * random_state.rand(X.shape[1], self.n_components)
 
     def m_step(self, X, log_resp):
         resp = np.exp(log_resp)

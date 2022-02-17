@@ -111,7 +111,7 @@ class LCA(BaseEstimator):
             )
 
         # Save log responsibilities
-        self.log_resp_ = np.log(resp)
+        self.log_resp_ = np.log(np.clip(resp, 1e-15, 1 - 1e-15))
 
         # Uniform class weights initialization
         self.weights_ = np.ones((self.n_components,)) / self.n_components
