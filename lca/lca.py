@@ -93,7 +93,7 @@ class LCA(BaseEstimator):
 
         # Initialize responsibilities
         if self.init_params == "kmeans":
-            self.resp = np.zeros((n_samples, self.n_components))
+            resp = np.zeros((n_samples, self.n_components))
             label = (
                 KMeans(
                     n_clusters=self.n_components, n_init=1, random_state=random_state
@@ -101,14 +101,17 @@ class LCA(BaseEstimator):
                     .fit(X)
                     .labels_
             )
-            self.resp[np.arange(n_samples), label] = 1
+            resp[np.arange(n_samples), label] = 1
         elif self.init_params == "random":
-            self.resp = random_state.uniform(size=(n_samples, self.n_components))
-            self.resp /= self.resp.sum(axis=1)[:, np.newaxis]
+            resp = random_state.uniform(size=(n_samples, self.n_components))
+            resp /= resp.sum(axis=1)[:, np.newaxis]
         else:
             raise ValueError(
                 f"Unimplemented initialization method {self.init_params}."
             )
+
+        # Save log responsibilities
+        self.log_resp_ = np.log(resp)
 
         # Uniform class weights initialization
         self.weights = np.ones((self.n_components,)) / self.n_components
@@ -129,7 +132,7 @@ class LCA(BaseEstimator):
                                                        random_state=self.random_state,
                                                        **self.structural_params)
         # Use the provided random_state instead of self.random_state to ensure we have a different init every run
-        self._mm.initialize(X, self.resp, random_state)
+        self._mm.initialize(X, self.log_resp_, random_state)
 
     def _initialize_parameters_structural(self, X, random_state=None):
         """Initialize parameters of structural model.
@@ -144,7 +147,7 @@ class LCA(BaseEstimator):
                                                       random_state=self.random_state,
                                                       **self.structural_params)
         # Use the provided random_state instead of self.random_state to ensure we have a different init every run
-        self._sm.initialize(X, self.resp, random_state)
+        self._sm.initialize(X, self.log_resp_, random_state)
 
     def fit(self, X, Y=None):
         """Fit LCA measurement model and optionally the structural model.

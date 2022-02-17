@@ -19,7 +19,7 @@ class Emission(ABC):
         check_positive(n_components=self.n_components)
 
     @abstractmethod
-    def initialize(self, X, resp, random_state=None):
+    def initialize(self, X, log_resp, random_state=None):
         raise NotImplementedError
 
     def check_random_state(self, random_state=None):
@@ -72,12 +72,12 @@ class Gaussian(Emission):
         check_in(["random"], init_params=self.init_params)
         check_nonneg(reg_covar=self.reg_covar)
 
-    def initialize(self, X, resp, random_state=None):
+    def initialize(self, X, log_resp, random_state=None):
         self.check_parameters()
         random_state = self.check_random_state(random_state)
 
         # Initialize Gaussian Mixture attributes
-        GaussianMixture._initialize(self, X, resp)
+        GaussianMixture._initialize(self, X, np.exp(log_resp))
 
         # Use random points in the dataset as initial means
         # idx = self.random_state.choice(X.shape[0], size=self.n_components, replace=False)
@@ -137,7 +137,7 @@ class Bernoulli(Emission):
         super().check_parameters()
         check_nonneg(clip_eps=self.clip_eps)
 
-    def initialize(self, X, resp, random_state=None):
+    def initialize(self, X, log_resp, random_state=None):
         self.check_parameters()
         random_state = self.check_random_state(random_state)
 
