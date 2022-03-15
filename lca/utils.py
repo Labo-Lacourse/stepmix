@@ -1,4 +1,5 @@
 import numbers
+import numpy as np
 
 
 # Check parameters utils copied from the PHATE library
@@ -112,3 +113,32 @@ def check_between(v_min, v_max, **params):
                 "Expected {} between {} and {}, "
                 "got {}".format(p, v_min, v_max, params[p])
             )
+
+
+def modal(resp, clip=False):
+    """Takes in class probabilities and performs modal assignment.
+
+    Will return a one-hot encoding. The clip argument can also be used to clip the results to the (1e-15, 1-1e-15)
+    range.
+    
+    Parameters
+    ----------
+    resp : array-like of shape (n_samples, n_components)
+        Class probabilities.
+    clip : bool, default=False
+        Clip the probabilities to the range (1e-15, 1-1e-15).
+
+    Returns
+    -------
+    modal_resp : array, shape (n_samples, n_components)
+        Modal class assignment.
+
+    """
+    preds = resp.argmax(axis=1)
+    modal_resp = np.zeros(resp.shape)
+    modal_resp[np.arange(resp.shape[0]), preds] = 1
+
+    if clip:
+        modal_resp = np.clip(modal_resp, 1e-15, 1 - 1e-15)
+
+    return modal_resp

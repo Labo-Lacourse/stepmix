@@ -34,6 +34,7 @@ class LCA(BaseEstimator):
             verbose=0,
             verbose_interval=10,
             assignment="soft",
+            correction=None,
     ):
         # Attributes of the base LCA class
         self.n_components = n_components
@@ -48,6 +49,7 @@ class LCA(BaseEstimator):
 
         # Additional attributes for 3-step estimation
         self.assignment = assignment
+        self.correction = correction
 
         # Additional attributes to specify the measurement and structural models
         self.measurement = measurement
@@ -75,6 +77,7 @@ class LCA(BaseEstimator):
         utils.check_in([1, 2, 3], n_steps=self.n_steps)
         utils.check_in(["kmeans", "random"], init_params=self.init_params)
         utils.check_in(["modal", "soft"], init_params=self.assignment)
+        utils.check_in([None, "BCH"], init_params=self.correction)
         utils.check_in(EMISSION_DICT.keys(), measurement=self.measurement)
         utils.check_in(EMISSION_DICT.keys(), structural=self.structural)
         utils.check_type(dict, measurement_params=self.measurement_params, structural_params=self.structural_params)
@@ -137,7 +140,7 @@ class LCA(BaseEstimator):
                                                        random_state=self.random_state,
                                                        **self.structural_params)
         # Use the provided random_state instead of self.random_state to ensure we have a different init every run
-        self._mm.initialize(X, self.log_resp_, random_state)
+        self._mm.initialize(X, np.exp(self.log_resp_), random_state)
 
     def _initialize_parameters_structural(self, X, random_state=None):
         """Initialize parameters of structural model.
@@ -152,7 +155,7 @@ class LCA(BaseEstimator):
                                                       random_state=self.random_state,
                                                       **self.structural_params)
         # Use the provided random_state instead of self.random_state to ensure we have a different init every run
-        self._sm.initialize(X, self.log_resp_, random_state)
+        self._sm.initialize(X, np.exp(self.log_resp_), random_state)
 
     def fit(self, X, Y=None):
         """Fit LCA measurement model and optionally the structural model.
@@ -187,16 +190,21 @@ class LCA(BaseEstimator):
             # Three-step estimation
             # 1) Fit the measurement model
             self.em(X)
+
             # 2) Assign class probabilities
-            resp = self.predict_proba(X)
+            soft_resp = self.predict_proba(X)
 
             # Modal assignment (clipped for numerical reasons)
             # Else we simply keep the assignment as is (soft)
             if self.assignment == 'modal':
-                preds = resp.argmax(axis=1)
-                resp = np.zeros(resp.shape)
-                resp[np.arange(resp.shape[0]), preds] = 1
-                resp = np.clip(resp, 1e-15, 1 - 1e-15)
+                resp = utils.modal(soft_resp, clip=True)
+            else:
+                resp = soft_resp
+
+            # Apply BCH correction
+            if self.correction == 'BCH':
+                _, D_inv = compute_bch_matrix(soft_resp)
+                resp = resp @ D_inv
 
             # 3) M-step on the structural model
             self.m_step_structural(resp, Y)
@@ -257,7 +265,7 @@ class LCA(BaseEstimator):
                 prev_lower_bound = lower_bound
 
                 log_prob_norm, log_resp = self._e_step(X, Y)
-                self._m_step(X, log_resp, Y, freeze_measurement=freeze_measurement)
+                self._m_step(X, np.exp(log_resp), Y, freeze_measurement=freeze_measurement)
                 lower_bound = log_prob_norm
 
                 change = lower_bound - prev_lower_bound
@@ -304,21 +312,21 @@ class LCA(BaseEstimator):
 
         return np.mean(log_prob_norm), log_resp
 
-    def _m_step(self, X, log_resp, Y=None, freeze_measurement=False):
+    def _m_step(self, X, resp, Y=None, freeze_measurement=False):
         if not freeze_measurement:
             # Update measurement model parameters
-            self.weights_ = np.exp(log_resp).mean(axis=0)
-            self._mm.m_step(X, log_resp)
+            self.weights_ = resp.mean(axis=0)
+            self._mm.m_step(X, resp)
 
         if Y is not None:
             # Update structural model parameters
-            self._sm.m_step(Y, log_resp)
+            self._sm.m_step(Y, resp)
 
     def m_step_structural(self, resp, Y):
         # For the third step of the 3-step approach
         if not hasattr(self, '_sm'):
             self._initialize_parameters_structural(Y)
-        self._sm.m_step(Y, np.log(resp))
+        self._sm.m_step(Y, resp)
 
     def score(self, X, Y=None):
         avg_ll, _ = self._e_step(X, Y)
@@ -358,7 +366,7 @@ class LCA(BaseEstimator):
         Returns
         -------
         resp : array, shape (n_samples, n_components)
-            Density of each Gaussian component for each sample in X.
+            Density of each component for each sample in X.
         """
         check_is_fitted(self)
         X = self._validate_data(X, reset=False)
@@ -381,3 +389,31 @@ class LCA(BaseEstimator):
         self._mm.set_parameters(params['measurement'])
         if 'structural' in params.keys():
             self._sm.set_parameters(params['structural'])
+
+
+def compute_bch_matrix(resp):
+    """Compute the probability D[c,s] = P(X_pred=s | X=c) of predicting class latent class s given
+    that a point belongs to latent class c.
+
+    Parameters
+    ----------
+    resp : array-like of shape (n_samples, n_components)
+        Class responsibilities.
+
+    Returns
+    ----------
+     D: array-like of shape (n_components, n_components)
+        Matrix of conditional probabilities D[c,s] = P(X_pred=s | X=c)
+     D_inv: array-like of shape (n_components, n_components)
+        Pseudo-inverse of D.
+    """
+    # Dimensions
+    n = resp.shape[0]
+    X_pred = utils.modal(resp)
+    weights = resp.mean(axis=0)
+
+    # BCH correction (based on the empirical distribution: eq (6))
+    D = (resp.T @ X_pred / weights.reshape((-1, 1))) / n
+    D_inv = np.linalg.pinv(D)
+
+    return D, D_inv

@@ -6,6 +6,7 @@ import copy
 
 from sklearn.utils.validation import check_random_state
 from sklearn.mixture import GaussianMixture
+from sklearn.mixture._gaussian_mixture import _compute_precision_cholesky, _estimate_gaussian_parameters
 from scipy.stats import multivariate_normal
 import numpy as np
 
@@ -24,14 +25,14 @@ class Emission(ABC):
         check_int(n_components=self.n_components)
         check_positive(n_components=self.n_components)
 
-    def initialize(self, X, log_resp, random_state=None):
+    def initialize(self, X, resp, random_state=None):
         self.check_parameters()
         # Currently unused, for future random initializations
         random_state = self.check_random_state(random_state)
 
         # Measurement and structural models are initialized by running their M-step on the initial log responsibilities
         # obtained via kmeans or sampled uniformly (See LCA._initialize_parameters)
-        self.m_step(X, log_resp)
+        self.m_step(X, resp)
 
     def check_random_state(self, random_state=None):
         if random_state is None:
@@ -66,8 +67,7 @@ class Bernoulli(Emission):
         super().check_parameters()
         check_nonneg(clip_eps=self.clip_eps)
 
-    def m_step(self, X, log_resp):
-        resp = np.exp(log_resp)
+    def m_step(self, X, resp):
         pis = X.T @ resp
         pis /= resp.sum(axis=0, keepdims=True)
         pis = np.clip(pis, self.clip_eps, 1 - self.clip_eps)  # avoid probabilities 0 or 1
@@ -87,8 +87,7 @@ class GaussianUnit(Emission):
     def __init__(self, n_components=2, random_state=None):
         super().__init__(n_components=n_components, random_state=random_state)
 
-    def m_step(self, X, log_resp):
-        resp = np.exp(log_resp)
+    def m_step(self, X, resp):
         self.parameters['means'] = (resp[..., np.newaxis] * X[:, np.newaxis, :]).sum(axis=0) / resp.sum(axis=0, keepdims=True).T
 
     def log_likelihood(self, X):
@@ -128,18 +127,36 @@ class Gaussian(Emission):
         check_in(["random"], init_params=self.init_params)
         check_nonneg(reg_covar=self.reg_covar)
 
-    def initialize(self, X, log_resp, random_state=None):
+    def initialize(self, X, resp, random_state=None):
         self.check_parameters()
         # Currently unused, for future random initializations
         random_state = self.check_random_state(random_state)
 
         # Required to get the initial means, covariances and precisions right
         # Already performs the M-step
-        GaussianMixture._initialize(self, X, np.exp(log_resp))
+        GaussianMixture._initialize(self, X, resp)
 
-    def m_step(self, X, log_resp):
-        # This will update self.means_, self.covariances_ and self.precisions_cholesky_
-        GaussianMixture._m_step(self, X, log_resp)
+    def m_step(self, X, resp):
+        """M step.
+
+        Adapted from the gaussian mixture class to accept responsibilities instead of log responsibilities.
+
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
+
+        resp : array-like of shape (n_samples, n_components)
+            Posterior probabilities (or responsibilities) of
+            the point of each sample in X.
+        """
+        n_samples, _ = X.shape
+        self.weights_, self.means_, self.covariances_ = _estimate_gaussian_parameters(
+            X, resp, self.reg_covar, self.covariance_type
+        )
+        self.weights_ /= n_samples
+        self.precisions_cholesky_ = _compute_precision_cholesky(
+            self.covariances_, self.covariance_type
+        )
 
     def log_likelihood(self, X):
         return GaussianMixture._estimate_log_prob(self, X)
