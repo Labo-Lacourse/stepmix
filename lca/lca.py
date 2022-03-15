@@ -6,7 +6,7 @@ Please note the class weights rho are now referred to as 'weights' and the assig
 import warnings
 import numpy as np
 
-from scipy.special import logsumexp
+from scipy.special import logsumexp, softmax
 from sklearn.mixture._base import BaseEstimator
 from sklearn.exceptions import ConvergenceWarning
 from sklearn.utils.validation import check_random_state, check_is_fitted
@@ -77,7 +77,7 @@ class LCA(BaseEstimator):
         utils.check_in([1, 2, 3], n_steps=self.n_steps)
         utils.check_in(["kmeans", "random"], init_params=self.init_params)
         utils.check_in(["modal", "soft"], init_params=self.assignment)
-        utils.check_in([None, "BCH"], init_params=self.correction)
+        utils.check_in([None, "BCH", "ML"], init_params=self.correction)
         utils.check_in(EMISSION_DICT.keys(), measurement=self.measurement)
         utils.check_in(EMISSION_DICT.keys(), structural=self.structural)
         utils.check_type(dict, measurement_params=self.measurement_params, structural_params=self.structural_params)
@@ -176,18 +176,38 @@ class LCA(BaseEstimator):
         if Y is None:
             # No structural data. Simply fit the measurement data
             self.em(X)
+
         elif self.n_steps == 1:
             # One-step estimation
             # 1) Maximum likelihood with both measurement and structural models
             self.em(X, Y)
+
         elif self.n_steps == 2:
             # Two-step estimation
             # 1) Fit the measurement model
             self.em(X)
             # 2) Fit the the structural model by keeping the parameters of the measurement model fixed
             self.em(X, Y, freeze_measurement=True)
-        elif self.n_steps == 3:
+
+        elif self.n_steps == 3 and self.correction is None:
             # Three-step estimation
+            # 1) Fit the measurement model
+            self.em(X)
+            # 2) Assign class probabilities
+            soft_resp = self.predict_proba(X)
+
+            # Modal assignment (clipped for numerical reasons)
+            # Else we simply keep the assignment as is (soft)
+            if self.assignment == 'modal':
+                resp = utils.modal(soft_resp, clip=True)
+            else:
+                resp = soft_resp
+
+            # 3) M-step on the structural model
+            self.m_step_structural(resp, Y)
+
+        elif self.n_steps == 3 and self.correction == 'BCH':
+            # Three-step estimation with BCH correction
             # 1) Fit the measurement model
             self.em(X)
 
@@ -202,14 +222,30 @@ class LCA(BaseEstimator):
                 resp = soft_resp
 
             # Apply BCH correction
-            if self.correction == 'BCH':
-                _, D_inv = compute_bch_matrix(soft_resp)
-                resp = resp @ D_inv
+            _, D_inv = compute_bch_matrix(soft_resp)
+            resp = resp @ D_inv
 
             # 3) M-step on the structural model
             self.m_step_structural(resp, Y)
 
-    def em(self, X, Y=None, freeze_measurement=False):
+        elif self.n_steps == 3 and self.correction == 'ML':
+            # Three-step estimation with ML correction
+            # 1) Fit the measurement model
+            self.em(X)
+
+            # 2) Assign class probabilities
+            soft_resp = self.predict_proba(X)
+
+            # Compute D
+            D, _ = compute_bch_matrix(soft_resp)
+
+            # Compute log_emission_pm
+            log_emission_pm = compute_log_emission_pm(soft_resp.argmax(axis=1), D)
+
+            # 3) M-step on the structural model
+            self.em(X, Y, freeze_measurement=True, log_emission_pm=log_emission_pm)
+
+    def em(self, X, Y=None, freeze_measurement=False, log_emission_pm=None):
         """EM algorithm to fit the weights, measurement parameters and structural parameters.
 
         Adapted from the fit_predict method of the sklearn BaseMixture class to include (optional) structural model
@@ -228,6 +264,8 @@ class LCA(BaseEstimator):
             corresponds to a single data point of the structural model.
         freeze_measurement : bool, default =False
             Run EM on the complete model, but do not update measurement model parameters. Useful for two-step estimation.
+        log_emission_pm : array-like of shape (n, n_components), default=None
+            Log probabilities of the predicted class given the true latent class for ML correction.
         """
         # First validate the input and the class attributes
         n_samples, _ = X.shape
@@ -264,18 +302,19 @@ class LCA(BaseEstimator):
             for n_iter in range(1, self.max_iter + 1):
                 prev_lower_bound = lower_bound
 
-                log_prob_norm, log_resp = self._e_step(X, Y)
-                self._m_step(X, np.exp(log_resp), Y, freeze_measurement=freeze_measurement)
-                lower_bound = log_prob_norm
+                # E-step
+                log_prob_norm, log_resp = self._e_step(X, Y=Y, log_emission_pm=log_emission_pm)
 
+                # M-step
+                self._m_step(X, np.exp(log_resp), Y, freeze_measurement=freeze_measurement)
+
+                # Likelihood & stopping criterion
+                lower_bound = log_prob_norm
                 change = lower_bound - prev_lower_bound
-                # self._print_verbose_msg_iter_end(n_iter, change)
 
                 if abs(change) < self.tol:
                     self.converged_ = True
                     break
-
-            # self._print_verbose_msg_init_end(lower_bound)
 
             if lower_bound > max_lower_bound or max_lower_bound == -np.inf:
                 max_lower_bound = lower_bound
@@ -295,9 +334,17 @@ class LCA(BaseEstimator):
         self.n_iter_ = best_n_iter
         self.lower_bound_ = max_lower_bound
 
-    def _e_step(self, X, Y=None):
+    def _e_step(self, X, Y=None, log_emission_pm=None):
         # Measurement log-likelihood
-        log_resp = self._mm.log_likelihood(X) + np.log(self.weights_).reshape((1, -1))
+        if log_emission_pm is not None:
+            # Use log probabilities of the predicted class given the true latent class for ML correction
+            log_resp = log_emission_pm
+        else:
+            # Standard Measurement Log likelihood
+            log_resp = self._mm.log_likelihood(X)
+
+        # Add class prior probabilities
+        log_resp += np.log(self.weights_).reshape((1, -1))
 
         # Add structural model likelihood (if structural data is provided)
         if Y is not None:
@@ -417,3 +464,34 @@ def compute_bch_matrix(resp):
     D_inv = np.linalg.pinv(D)
 
     return D, D_inv
+
+
+def compute_log_emission_pm(X_pred_idx, D):
+    """(Log) probabilities of the predicted class given the true latent classes.
+
+    Used for ML correction.
+
+    Inputs:
+        X_pred_idx: array-like of size (n,) 
+            Predicted classes. X_pred[i]=argmax{c} p(X[i]=c|Y[i];rho,pis).
+        D: array_like of size (n_components, n_components). 
+            Matrix of (previously) estimated probabilities D[c,s] = p(X_pred=s|X=c) for pairs of classes c,s
+
+    Returns:
+        log_eps: ndarray of size (n, n_components)
+            Matrix of log emission probabilities: log p(X_pred_idx[i]|X[i]=c)
+    """
+    # number of units
+    n = X_pred_idx.size
+
+    # number of latent classes
+    C = D.shape[0]
+
+    # compute log emission probabilities
+    log_eps = np.zeros((n, C))
+    log_D = np.log(np.clip(D, 1e-15, 1 - 1e-15))  # avoid probabilities 0 or 1
+
+    for s in range(C):
+        indexes_pred_s = np.where(X_pred_idx == s)
+        log_eps[indexes_pred_s, :] = log_D[:, s]
+    return log_eps
