@@ -103,3 +103,18 @@ for cov_string in ["unit", "spherical", "tied", "diag", "full"]:
     m.fit(X, Y)
     pr = f'Log-likelihood of Gaussian Structural Model with {cov_string} covariance'
     print(f'{pr:<70} : {m.score(X, Y):.3f}')
+
+
+########################################################################################################################
+# 3-step estimation supports modal and soft assignments.
+print('\n\nBakk experiment with different 3-step flavors...')
+for assignment in ['modal', 'soft']:
+    X, Y = data_generation_Bakk(sample_size=3000, sep_level=.7, random_state=42)
+
+    # Run experiment for 1-step, 2-step and 3-step
+    m = LCA(n_steps=3, n_components=3, measurement='bernoulli', structural='gaussian_unit', tol=1e-5,
+            n_init=10, random_state=42, max_iter=200, assignment=assignment)
+    m.fit(X, Y)
+
+    pr = f'Log-likelihood of 3-step estimation with {assignment} assignments'
+    print(f'{pr:<70} : {m.score(X, Y):.3f}')

@@ -1,6 +1,6 @@
 """EM for multi-step estimation of latent class models with structural variables.
 
-Please note the class weights rho are now referred to as 'weights' and the soft assignments tau are known as
+Please note the class weights rho are now referred to as 'weights' and the assignments tau are known as
 'responsibilities' or resp to match the sklearn stack terminology.
 """
 import warnings
@@ -22,8 +22,8 @@ class LCA(BaseEstimator):
             n_components=2,
             *,
             n_steps=1,
-            measurement='gaussian',
-            structural='bernoulli',
+            measurement="gaussian",
+            structural="bernoulli",
             measurement_params=dict(),
             structural_params=dict(),
             tol=1e-3,
@@ -33,6 +33,7 @@ class LCA(BaseEstimator):
             random_state=None,
             verbose=0,
             verbose_interval=10,
+            assignment="soft",
     ):
         # Attributes of the base LCA class
         self.n_components = n_components
@@ -44,6 +45,9 @@ class LCA(BaseEstimator):
         self.verbose = verbose
         self.verbose_interval = verbose_interval
         self.n_steps = n_steps
+
+        # Additional attributes for 3-step estimation
+        self.assignment = assignment
 
         # Additional attributes to specify the measurement and structural models
         self.measurement = measurement
@@ -70,6 +74,7 @@ class LCA(BaseEstimator):
         utils.check_nonneg(tol=self.tol, verbose=self.verbose)
         utils.check_in([1, 2, 3], n_steps=self.n_steps)
         utils.check_in(["kmeans", "random"], init_params=self.init_params)
+        utils.check_in(["modal", "soft"], init_params=self.assignment)
         utils.check_in(EMISSION_DICT.keys(), measurement=self.measurement)
         utils.check_in(EMISSION_DICT.keys(), structural=self.structural)
         utils.check_type(dict, measurement_params=self.measurement_params, structural_params=self.structural_params)
@@ -87,7 +92,7 @@ class LCA(BaseEstimator):
             used for the method chosen to initialize the parameters.
         Raises
         ------
-        ValueError : unacceptable self.init_params parameter
+        ValueError : illegal self.init_params parameter
         """
         n_samples, _ = X.shape
 
@@ -184,6 +189,15 @@ class LCA(BaseEstimator):
             self.em(X)
             # 2) Assign class probabilities
             resp = self.predict_proba(X)
+
+            # Modal assignment (clipped for numerical reasons)
+            # Else we simply keep the assignment as is (soft)
+            if self.assignment == 'modal':
+                preds = resp.argmax(axis=1)
+                resp = np.zeros(resp.shape)
+                resp[np.arange(resp.shape[0]), preds] = 1
+                resp = np.clip(resp, 1e-15, 1 - 1e-15)
+
             # 3) M-step on the structural model
             self.m_step_structural(resp, Y)
 
@@ -194,7 +208,7 @@ class LCA(BaseEstimator):
         computations.
 
         Setting Y=None will run EM on the measurement model only. Providing both X and Y will run EM on the complete
-        model.
+        model, unless otherwise specified by freeze_measurement.
 
         Parameters
         ----------
@@ -205,7 +219,7 @@ class LCA(BaseEstimator):
             List of n_structural-dimensional data points. Each row
             corresponds to a single data point of the structural model.
         freeze_measurement : bool, default =False
-            Run EM on the complete model, but freeze measurement model parameters. Useful for two-step estimation.
+            Run EM on the complete model, but do not update measurement model parameters. Useful for two-step estimation.
         """
         # First validate the input and the class attributes
         n_samples, _ = X.shape
