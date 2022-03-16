@@ -86,6 +86,7 @@ df = pd.melt(df.reset_index(), id_vars=df.index.names)
 df = df.pivot(index=['Class Separation', 'Sample Size'], columns=['variable', 'Model'], values='value')
 df = df.reindex(['1-step', '2-step', '3-step (Naive)', '3-step (BCH)', '3-step (ML)'], axis=1, level=1).round(2)
 
+# Print!
 print(df.to_string())
 
 if args.latex:
