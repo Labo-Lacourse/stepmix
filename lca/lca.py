@@ -217,7 +217,7 @@ class LCA(BaseEstimator):
             # Modal assignment (clipped for numerical reasons)
             # Else we simply keep the assignment as is (soft)
             if self.assignment == 'modal':
-                resp = utils.modal(soft_resp, clip=True)
+                resp = utils.modal(soft_resp)
             else:
                 resp = soft_resp
 
@@ -338,7 +338,7 @@ class LCA(BaseEstimator):
         # Measurement log-likelihood
         if log_emission_pm is not None:
             # Use log probabilities of the predicted class given the true latent class for ML correction
-            log_resp = log_emission_pm
+            log_resp = log_emission_pm.copy()
         else:
             # Standard Measurement Log likelihood
             log_resp = self._mm.log_likelihood(X)
@@ -402,6 +402,7 @@ class LCA(BaseEstimator):
 
     def predict_proba(self, X, Y=None):
         """Predict the class probabilities for the data samples in X using the measurement model.
+
         Parameters
         ----------
         X : array-like of shape (n_samples, n_features)

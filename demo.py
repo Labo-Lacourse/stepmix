@@ -107,15 +107,33 @@ for cov_string in ["unit", "spherical", "tied", "diag", "full"]:
 
 ########################################################################################################################
 # 3-step estimation supports modal and soft assignments.
-print('\n\nBakk experiment with different 3-step flavors...')
-for assignment in ['modal', 'soft']:
+X, Y = data_generation_Bakk(sample_size=10000, sep_level=.9, random_state=42)
+print('\n\nBakk experiment with different 1-step and 2-step...')
+for step in [1, 2, 3]:
+    # Run experiment for 1-step, 2-step and 3-step
+    m = LCA(n_steps=step, n_components=3, measurement='bernoulli', structural='gaussian_unit', tol=1e-5,
+            n_init=10, random_state=42, max_iter=200)
+    m.fit(X, Y)
+
+    # Get mu_2 estimation (which we assume is the max parameter)
+    # The target value if 1
+    mu_2 = m.get_parameters()['structural']['means'].max()
+
+    pr = f'Mean bias of {step}-step estimation'
+    print(f'{pr:<75} : {mu_2 - 1:.3f}')
+
+print('\nBakk experiment with different 3-step flavors...')
+for assignment in ['modal']:
     for correction in [None, 'BCH', 'ML']:
-        X, Y = data_generation_Bakk(sample_size=3000, sep_level=.7, random_state=42)
 
         # Run experiment for 1-step, 2-step and 3-step
         m = LCA(n_steps=3, n_components=3, measurement='bernoulli', structural='gaussian_unit', tol=1e-5,
-                n_init=10, random_state=42, max_iter=200, assignment=assignment, correction=correction)
+                n_init=10, random_state=42, max_iter=1000, assignment=assignment, correction=correction)
         m.fit(X, Y)
 
-        pr = f'Log-likelihood of 3-step estimation with {assignment} assignments and {correction} correction'
-        print(f'{pr:<85} : {m.score(X, Y):.30f}')
+        # Get mu_2 estimation (which we assume is the max parameter)
+        # The target value if 1
+        mu_2 = m.get_parameters()['structural']['means'].max()
+
+        pr = f'Mean bias of 3-step estimation with {assignment} assignments and {correction} correction'
+        print(f'{pr:<75} : {mu_2 - 1:.3f}')
