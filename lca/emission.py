@@ -14,6 +14,34 @@ from .utils import check_in, check_int, check_positive, check_nonneg
 
 
 class Emission(ABC):
+    """Abstract class for Emission models.
+
+    Emission models can be used by the LCA class for both the structural and the measurement model. Emission instances
+    encapsulate maximum likelihood computations for a given model.
+
+    All model parameters should be values of the self.parameters dict attribute. See the Bernoulli and GaussianUnit
+    implementations for reference.
+
+    To add an emission model, you must :
+        - Inherit from Emission.
+        - Implement the m_step and log_likelihood methods.
+        - Add a corresponding string in the EMISSION_DICT at the end of emission.py.
+        - Update the LCA doctring for the measurement and structural arguments!
+
+    Parameters
+    ----------
+    n_components : int, default=2
+        The number of latent classes.
+    random_state : int, RandomState instance or None, default=None
+        Controls the random seed given to the method chosen to initialize the parameters.
+        Pass an int for reproducible output across multiple function calls.
+
+    Attributes
+    ----------
+    self.parameters : dict
+        Dictionary with all model parameters.
+
+    """
     def __init__(self, n_components, random_state):
         self.n_components = n_components
         self.random_state = random_state
@@ -22,19 +50,19 @@ class Emission(ABC):
         self.parameters = dict()
 
     def check_parameters(self):
+        """Validate class attributes."""
         check_int(n_components=self.n_components)
         check_positive(n_components=self.n_components)
 
-    def initialize(self, X, resp, random_state=None):
-        self.check_parameters()
-        # Currently unused, for future random initializations
-        random_state = self.check_random_state(random_state)
-
-        # Measurement and structural models are initialized by running their M-step on the initial log responsibilities
-        # obtained via kmeans or sampled uniformly (See LCA._initialize_parameters)
-        self.m_step(X, resp)
-
     def check_random_state(self, random_state=None):
+        """Use a provided random state, otherwise use self.random_state.
+
+        Parameters
+        ----------
+        random_state : int, RandomState instance or None, default=None
+            Controls the random seed given to the method chosen to initialize the parameters.
+            Pass an int for reproducible output across multiple function calls.
+        """
         if random_state is None:
             # If no random state is provided, use mine
             random_state = check_random_state(self.random_state)
@@ -43,50 +71,103 @@ class Emission(ABC):
             random_state = check_random_state(random_state)
         return random_state
 
+    def initialize(self, X, resp, random_state=None):
+        """Initialize parameters.
+
+        Simply performs the m-step on the current responsibilities to initialize parameters.
+
+        Parameters
+        ----------
+        X : ndarray of shape (n_samples, n_features)
+            Input data for this emission model.
+        resp : ndarray of shape (n_samples, n_components)
+            Responsibilities, i.e., posterior probabilities over the latent classes.
+        random_state : int, RandomState instance or None, default=None
+            Controls the random seed given to the method chosen to initialize the parameters.
+            Pass an int for reproducible output across multiple function calls.
+
+        """
+        self.check_parameters()
+        # Currently unused, for future random initializations
+        random_state = self.check_random_state(random_state)
+
+        # Measurement and structural models are initialized by running their M-step on the initial log responsibilities
+        # obtained via kmeans or sampled uniformly (See LCA._initialize_parameters)
+        self.m_step(X, resp)
+
     def get_parameters(self):
+        """Get a copy of model parameters.
+
+        Returns
+        -------
+        parameters: dict
+            Copy of model parameters.
+
+        """
         return copy.deepcopy(self.parameters)
 
-    def set_parameters(self, params):
-        self.parameters = params
+    def set_parameters(self, parameters):
+        """Set current parameters.
+
+        Parameters
+        -------
+        parameters: dict
+            Model parameters. Should be the same format as the dict returned by self.get_parameters.
+        """
+        self.parameters = parameters
 
     @abstractmethod
-    def m_step(self, X, log_resp):
+    def m_step(self, X, resp):
+        """Update model parameters via maximum likelihood using the current responsilities.
+
+        Parameters
+        ----------
+        X : ndarray of shape (n_samples, n_features)
+            Input data for this emission model.
+        resp : ndarray of shape (n_samples, n_components)
+            Responsibilities, i.e., posterior probabilities over the latent classes of each point in X.
+        """
         raise NotImplementedError
 
     @abstractmethod
     def log_likelihood(self, X):
+        """Return the log-likelihood of the input data.
+
+        Parameters
+        ----------
+        X : ndarray of shape (n_samples, n_features)
+            Input data for this emission model.
+
+        Returns
+        -------
+        ll : ndarray of shape (n_samples, n_components)
+            Log-likelihood of the input data conditioned on each component.
+
+        """
         raise NotImplementedError
 
 
 class Bernoulli(Emission):
-    def __init__(self, clip_eps=1e-15, n_components=2, random_state=None):
-        super().__init__(n_components=n_components, random_state=random_state)
-        self.clip_eps = clip_eps
-
-    def check_parameters(self):
-        super().check_parameters()
-        check_nonneg(clip_eps=self.clip_eps)
-
+    """Bernoulli (binary) emission model."""
     def m_step(self, X, resp):
         pis = X.T @ resp
         pis /= resp.sum(axis=0, keepdims=True)
-        pis = np.clip(pis, self.clip_eps, 1 - self.clip_eps)  # avoid probabilities 0 or 1
+        pis = np.clip(pis, 1e-15, 1 - 1e-15)  # avoid probabilities 0 or 1
         self.parameters['pis'] = pis
 
     def log_likelihood(self, X):
         # compute log emission probabilities
-        pis = np.clip(self.parameters['pis'], self.clip_eps, 1 - self.clip_eps)  # avoid probabilities 0 or 1
+        pis = np.clip(self.parameters['pis'], 1e-15, 1 - 1e-15)  # avoid probabilities 0 or 1
         log_eps = X @ np.log(pis) + (1 - X) @ np.log(1 - pis)
 
         return log_eps
 
 
 class GaussianUnit(Emission):
-    """sklearn.mixture.GaussianMixture does not have an implementation for fixed unit variance, so we provide one."""
+    """Gaussian emission model with fixed unit variance.
 
-    def __init__(self, n_components=2, random_state=None):
-        super().__init__(n_components=n_components, random_state=random_state)
-
+    sklearn.mixture.GaussianMixture does not have an implementation for fixed unit variance, so we provide one.
+    """
     def m_step(self, X, resp):
         self.parameters['means'] = (resp[..., np.newaxis] * X[:, np.newaxis, :]).sum(axis=0) / resp.sum(axis=0, keepdims=True).T
 
@@ -99,6 +180,9 @@ class GaussianUnit(Emission):
 
 
 class Gaussian(Emission):
+    """Gaussian emission model with various covariance options.
+
+    This class spoofs the scikit-learn Gaussian Mixture class by reusing the same attributes and calls its methods."""
     def __init__(self, n_components=2, covariance_type="spherical", init_params="random", reg_covar=1e-6,
                  random_state=None):
         super().__init__(n_components=n_components, random_state=random_state)
@@ -208,4 +292,5 @@ EMISSION_DICT = {
     'gaussian_diag': GaussianDiag,
     'gaussian_tied': GaussianTied,
     'bernoulli': Bernoulli,
+    'binary': Bernoulli,
 }

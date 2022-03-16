@@ -47,16 +47,17 @@ class LCA(BaseEstimator):
         fixed for the second step. See *Bakk, 2018*.
         - 3: first run EM on the measurement model, assign class probabilities, then fit the structural model via
         maximum likelihood. See the correction parameter for bias correction.
-    measurement : {'bernoulli', 'gaussian_unit', 'gaussian_spherical', 'gaussian_tied', 'gaussian_full', 'gaussian_diag'}, default='bernoulli'
+    measurement : {'bernoulli', 'binary', 'gaussian_unit', 'gaussian_spherical', 'gaussian_tied', 'gaussian_full', 'gaussian_diag'}, default='bernoulli'
         String describing the measurement model.
         Must be one of:
         - 'bernoulli': the observed data consists of n_features bernoulli (binary) random variables.
+        - 'binary': alias for bernoulli.
         - 'gaussian_unit': each gaussian component has unit variance. Only fit the mean.
         - 'gaussian_spherical': each gaussian component has its own single variance.
         - 'gaussian_tied': all gaussian components share the same general covariance matrix.
         - 'gaussian_full': each gaussian component has its own general covariance matrix.
         - 'gaussian_diag': each gaussian component has its own diagonal covariance matrix.
-    structural : {'bernoulli', 'gaussian_unit', 'gaussian_spherical', 'gaussian_tied', 'gaussian_full', 'gaussian_diag'}, default='gaussian_unit'
+    structural : {'bernoulli', 'binary', 'gaussian_unit', 'gaussian_spherical', 'gaussian_tied', 'gaussian_full', 'gaussian_diag'}, default='gaussian_unit'
         String describing the structural model. Same options as those for the measurement model.
     assignment : {'soft', 'modal'}, default='modal'
         Class assignments for 3-step estimation.
@@ -84,11 +85,7 @@ class LCA(BaseEstimator):
             'random' : responsibilities are initialized randomly.
     random_state : int, RandomState instance or None, default=None
         Controls the random seed given to the method chosen to initialize the
-        parameters (see `init_params`).
-        In addition, it controls the generation of random samples from the
-        fitted distribution (see the method `sample`).
-        Pass an int for reproducible output across multiple function calls.
-        See :term:`Glossary <random_state>`.
+        parameters. Pass an int for reproducible output across multiple function calls.
     verbose : int, default=0
         Enable verbose output. If 1 then it prints the current
         initialization and each iteration step. If greater than 1 then
@@ -638,7 +635,7 @@ class LCA(BaseEstimator):
         Parameters
         ----------
         resp : ndarray of shape (n_samples, n_components)
-            Responsibilities, i.e., posterior probabilities over the latent classes.
+            Responsibilities, i.e., posterior probabilities over the latent classes of each point in Y.
         Y : ndarray of shape (n_samples, n_structural)
             List of n_structural-dimensional data points. Each row
             corresponds to a single data point of the structural model.
