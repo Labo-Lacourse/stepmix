@@ -5,6 +5,7 @@ Please note the class weights rho are now referred to as 'weights' and the assig
 """
 
 # Author: Sacha Morin <morin.sacha@gmail.com>
+# Author: Robin Legault <robin.legault@umontreal.ca>
 # License:
 
 import warnings
