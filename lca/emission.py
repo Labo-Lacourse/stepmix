@@ -26,7 +26,7 @@ class Emission(ABC):
         - Inherit from Emission.
         - Implement the m_step and log_likelihood methods.
         - Add a corresponding string in the EMISSION_DICT at the end of emission.py.
-        - Update the LCA doctring for the measurement and structural arguments!
+        - Update the LCA docstring for the measurement and structural arguments!
 
     Parameters
     ----------

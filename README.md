@@ -12,22 +12,24 @@ You can install this repo directly with pip, preferably in a virtual environment
 pip install --upgrade git+https://github.com/sachaMorin/lca.git
 ``` 
 # Usage
-A simple example for 3-step estimation on simulated data : 
+A simple example for 3-step estimation on simulated data :
+
 ```python
-from lca.datasets import data_generation_Bakk
+from lca.datasets import data_bakk_response
 from lca.lca import LCA
 
 # Soft 3-step 
-X, Y = data_generation_Bakk(sample_size=1000, sep_level=.7, random_state=42)
-model = LCA(n_components=3, n_steps=3, measurement='bernoulli', structural='gaussian_unit', assignment='soft', random_state=42)
+X, Y = data_bakk_response(sample_size=1000, sep_level=.7, random_state=42)
+model = LCA(n_components=3, n_steps=3, measurement='bernoulli', structural='gaussian_unit', assignment='soft',
+            random_state=42)
 model.fit(X, Y)
 print(model.score(X, Y))  # Average log-likelihood
 
 # Equivalently, each step can be performed individually. See the code of the fit method for details.
 model = LCA(n_components=3, measurement='bernoulli', structural='gaussian_unit', random_state=42)
-model.em(X) # Step 1
-probs = model.predict_proba(X) # Step 2
-model.m_step_structural(probs, Y) # Step 3
+model.em(X)  # Step 1
+probs = model.predict_proba(X)  # Step 2
+model.m_step_structural(probs, Y)  # Step 3
 print(model.score(X, Y))
 ```
 1-step and 2-step estimation are simply a matter of changing of the `n_steps` argument. Additionally, some bias correction

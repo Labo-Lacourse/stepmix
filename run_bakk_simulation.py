@@ -6,7 +6,7 @@ import pandas as pd
 import numpy as np
 
 from lca.lca import LCA
-from lca.datasets import data_generation_Bakk
+from lca.datasets import data_bakk_response
 
 
 # Parser
@@ -52,7 +52,7 @@ for r in range(args.n_simulations):
         # Loop over separations
         for sep in [.7, .8, .9]:
             # Generate dataset
-            X, Y = data_generation_Bakk(sample_size=size, sep_level=sep, random_state=random_state)
+            X, Y = data_bakk_response(sample_size=size, sep_level=sep, random_state=random_state)
 
             # Loop over models
             for name, model_args in models.items():
