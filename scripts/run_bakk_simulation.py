@@ -1,29 +1,33 @@
-"""Partial reproduction of results from Bakk & Kuha (2018)"""
+"""Reproduction of results from Bakk & Kuha (2018)"""
 import argparse
 
 import pandas as pd
 import numpy as np
 
 from lca.lca import LCA
-from lca.datasets import data_bakk_response
+from lca.datasets import data_bakk_response, data_bakk_covariate
+from lca.utils import identify_coef
 
 
-def main(n_simulations=10, latex=False):
+def main(n_simulations=10, latex=False, covariate=False):
     # Common arguments for all models
     lca_args = dict(n_components=3,
                     measurement='bernoulli',
-                    structural='gaussian_unit',
+                    structural='covariate' if covariate else 'gaussian_unit',
                     tol=1e-5,
                     n_init=1,
                     max_iter=1000)
 
     # Model-specific arguments
+    # Specify optimization parameters if we have a covariate model
+    structural_params_12 = dict(lr=1e-3, iter=1) if covariate else dict()
+    structural_params_3 = dict(lr=1e-3, iter=lca_args['max_iter']) if covariate else dict()
     models = {
-        '1-step': dict(n_steps=1),
-        '2-step': dict(n_steps=2),
-        '3-step (Naive)': dict(n_steps=3, assignment='modal', correction=None),
-        '3-step (BCH)': dict(n_steps=3, assignment='modal', correction='BCH'),
-        '3-step (ML)': dict(n_steps=3, assignment='modal', correction='ML'),
+        '1-step': dict(n_steps=1, structural_params=structural_params_12),
+        '2-step': dict(n_steps=2, structural_params=structural_params_12),
+        '3-step (Naive)': dict(n_steps=3, assignment='modal', correction=None, structural_params=structural_params_3),
+        '3-step (BCH)': dict(n_steps=3, assignment='modal', correction='BCH', structural_params=structural_params_3),
+        '3-step (ML)': dict(n_steps=3, assignment='modal', correction='ML', structural_params=structural_params_3),
     }
 
     # Result collector
@@ -38,7 +42,8 @@ def main(n_simulations=10, latex=False):
             # Loop over separations
             for sep in [.7, .8, .9]:
                 # Generate dataset
-                X, Y, c = data_bakk_response(sample_size=size, sep_level=sep, random_state=random_state)
+                dataset = data_bakk_covariate if covariate else data_bakk_response
+                X, Y, c = dataset(sample_size=size, sep_level=sep, random_state=random_state)
 
                 # Loop over models
                 for name, model_args in models.items():
@@ -46,7 +51,15 @@ def main(n_simulations=10, latex=False):
                     model.fit(X, Y)
 
                     # Get max mean
-                    mu = model.get_parameters()['structural']['means'].max()
+                    if covariate:
+                        # First correct coefficients
+                        coef = identify_coef(model.get_parameters()['structural']['coef'])
+
+                        # Get max
+                        mu = coef.max()
+                    else:
+                        # Get max mean
+                        mu = model.get_parameters()['structural']['means'].max()
 
                     # Save results
                     result_i = {
@@ -91,6 +104,10 @@ if __name__ == '__main__':
                         '-l',
                         help='Also print a latex version of the results.',
                         action='store_true')
+    parser.add_argument('--covariate',
+                        '-c',
+                        help='Run the covariate simulation. Otherwise runs the response simulation',
+                        action='store_true')
 
     args = parser.parse_args()
-    main(n_simulations=args.n_simulations, latex=args.latex)
+    main(n_simulations=args.n_simulations, latex=args.latex, covariate=args.covariate)
