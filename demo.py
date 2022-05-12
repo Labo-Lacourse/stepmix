@@ -15,7 +15,7 @@ def print_results(log_likelihoods, means):
 ########################################################################################################################
 # Various multi-step methods are available
 print('Bakk experiment...')
-X, Y = data_bakk_response(sample_size=3000, sep_level=.7, random_state=42)
+X, Y, _ = data_bakk_response(sample_size=3000, sep_level=.7, random_state=42)
 
 ll_list = []
 means_list = []
@@ -107,7 +107,7 @@ for cov_string in ["unit", "spherical", "tied", "diag", "full"]:
 
 ########################################################################################################################
 # 3-step estimation supports modal and soft assignments.
-X, Y = data_bakk_response(sample_size=10000, sep_level=.9, random_state=42)
+X, Y, _ = data_bakk_response(sample_size=10000, sep_level=.9, random_state=42)
 print('\n\nBakk experiment with different 1-step and 2-step...')
 for step in [1, 2, 3]:
     # Run experiment for 1-step, 2-step and 3-step

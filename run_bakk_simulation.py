@@ -52,7 +52,7 @@ for r in range(args.n_simulations):
         # Loop over separations
         for sep in [.7, .8, .9]:
             # Generate dataset
-            X, Y = data_bakk_response(sample_size=size, sep_level=sep, random_state=random_state)
+            X, Y, c = data_bakk_response(sample_size=size, sep_level=sep, random_state=random_state)
 
             # Loop over models
             for name, model_args in models.items():

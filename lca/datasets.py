@@ -44,7 +44,9 @@ def data_bakk_response(sample_size, sep_level, random_state=None):
     Z = np.array([rng.normal(mus[Xidx[i]], sigmas[Xidx[i]]) for i in range(sample_size)]).reshape(sample_size, D)
     Y = data_bakk_measurement(sample_size, sep_level, Xidx, K, C, rng)
 
-    return Y, Z
+    # Also return ground truth class labels
+
+    return Y, Z, Xidx
 
 
 def data_bakk_covariate(sample_size, sep_level, random_state=None):
@@ -70,13 +72,17 @@ def data_bakk_covariate(sample_size, sep_level, random_state=None):
     pis = softmax(logits, axis=1)
 
     # Predicted latent class
-    # TODO : Double check this. Paper does not discuss the specifics of class assignment
+    # TODO : Double check this. Paper does not discuss the specifics of class assignment. Modal assignment leads to class imbalance
+    # TODO : We could also sample following the distribution of each row of pi
     Xidx = pis.argmax(axis=1)
 
     # Gen measurements
     Y = data_bakk_measurement(sample_size, sep_level, Xidx, K, C, rng)
 
-    return Y, Z
+    # Also return ground truth class labels
+    c = pis.argmax(axis=1)
+
+    return Y, Z, c
 
 
 def data_generation_gaussian(sample_size, random_state=None):
