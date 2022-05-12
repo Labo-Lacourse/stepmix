@@ -4,13 +4,15 @@ Encapsulate the M-step and log-likelihood computations of different conditional 
 from abc import ABC, abstractmethod
 import copy
 
+import numpy as np
 from sklearn.utils.validation import check_random_state
 from sklearn.mixture import GaussianMixture
 from sklearn.mixture._gaussian_mixture import _compute_precision_cholesky, _estimate_gaussian_parameters
+from sklearn.linear_model import LogisticRegression
 from scipy.stats import multivariate_normal
-import numpy as np
+from scipy.special import softmax
 
-from .utils import check_in, check_int, check_positive, check_nonneg
+from .utils import check_in, check_int, check_positive, check_nonneg, modal
 
 
 class Emission(ABC):
@@ -42,6 +44,7 @@ class Emission(ABC):
         Dictionary with all model parameters.
 
     """
+
     def __init__(self, n_components, random_state):
         self.n_components = n_components
         self.random_state = random_state
@@ -89,7 +92,7 @@ class Emission(ABC):
         """
         self.check_parameters()
         # Currently unused, for future random initializations
-        random_state = self.check_random_state(random_state)
+        self.random_state = self.check_random_state(random_state)
 
         # Measurement and structural models are initialized by running their M-step on the initial log responsibilities
         # obtained via kmeans or sampled uniformly (See LCA._initialize_parameters)
@@ -149,6 +152,7 @@ class Emission(ABC):
 
 class Bernoulli(Emission):
     """Bernoulli (binary) emission model."""
+
     def m_step(self, X, resp):
         pis = X.T @ resp
         pis /= resp.sum(axis=0, keepdims=True)
@@ -168,8 +172,10 @@ class GaussianUnit(Emission):
 
     sklearn.mixture.GaussianMixture does not have an implementation for fixed unit variance, so we provide one.
     """
+
     def m_step(self, X, resp):
-        self.parameters['means'] = (resp[..., np.newaxis] * X[:, np.newaxis, :]).sum(axis=0) / resp.sum(axis=0, keepdims=True).T
+        self.parameters['means'] = (resp[..., np.newaxis] * X[:, np.newaxis, :]).sum(axis=0) / resp.sum(axis=0,
+                                                                                                        keepdims=True).T
 
     def log_likelihood(self, X):
         n, D = X.shape
@@ -183,6 +189,7 @@ class Gaussian(Emission):
     """Gaussian emission model with various covariance options.
 
     This class spoofs the scikit-learn Gaussian Mixture class by reusing the same attributes and calls its methods."""
+
     def __init__(self, n_components=2, covariance_type="spherical", init_params="random", reg_covar=1e-6,
                  random_state=None):
         super().__init__(n_components=n_components, random_state=random_state)
@@ -246,7 +253,8 @@ class Gaussian(Emission):
         return GaussianMixture._estimate_log_prob(self, X)
 
     def get_parameters(self):
-        return dict(means=self.means_.copy(), covariances=self.covariances_.copy(), precisions_cholesky=self.precisions_cholesky_.copy())
+        return dict(means=self.means_.copy(), covariances=self.covariances_.copy(),
+                    precisions_cholesky=self.precisions_cholesky_.copy())
 
     def set_parameters(self, params):
         # We spoof the sklearn GaussianMixture class
@@ -285,6 +293,93 @@ class GaussianTied(Gaussian):
         super().__init__(covariance_type='tied', **kwargs)
 
 
+class Covariate(Emission):
+    """Covariate model with simple gradient update.
+
+    TODO: Does not currently use a reference category. All classes have a coefficient.
+    TODO: Consider fancier optimizer. This implementation only seems to work in the high separation case.
+
+    """
+    def __init__(self, iter=1, lr=1e-3, **kwargs):
+        super().__init__(**kwargs)
+        self.iter = iter
+        self.lr = lr
+
+    def _add_intercept(self, X):
+        intercept = np.ones((X.shape[0], 1))
+        return np.hstack((X, intercept))
+
+    def _forward(self, X):
+        return softmax(X @ self.parameters['coef'], axis=1)
+
+    def initialize(self, X, resp, random_state=None):
+        n, D = X.shape
+        _, K = resp.shape
+
+        self.check_parameters()
+        random_state = self.check_random_state(random_state)
+
+        # Parameter initialization
+        # D + 1 for intercept
+        self.parameters['coef'] = random_state.normal(0, 2, size=(D + 1, K))
+
+    def m_step(self, X, resp):
+        n, D = X.shape
+        _, K = resp.shape
+
+        # Add intercept
+        X = self._add_intercept(X)
+
+        for _ in range(self.iter):
+            output = self._forward(X)
+
+            # CE/Softmax gradient
+            grad = output - resp
+            grad = X.T @ grad/n
+
+            # Update parameters
+            self.parameters['coef'] -= self.lr * grad
+
+    def log_likelihood(self, X):
+        X = self._add_intercept(X)
+        prob = np.clip(self._forward(X), 1e-15, 1-1e-15)
+        return np.log(prob)
+
+    def predict(self, X):
+        X = self._add_intercept(X)
+        prob = self._forward(X)
+        return prob.argmax(axis=1)
+
+
+class Covariate_sk(Emission):
+    # Sklearn-based covariate model.
+    # I don't think we will keep this. We need more flexibility
+    def m_step(self, X, resp):
+        # Max assignment
+        y = resp.argmax(axis=1)
+
+        # Check which class is represented
+        is_pred = np.unique(y)
+
+        # Fit a Logistic regression
+        if not hasattr(self, 'model_'):
+            self.model_ = LogisticRegression(solver='lbfgs', multi_class='multinomial',
+                                             warm_start=True, max_iter=1000)
+
+        self.model_.fit(X, y)
+        self.parameters['coef'] = self.model_.coef_
+        self.parameters['intercept'] = self.model_.intercept_
+        self.parameters['is_pred'] = is_pred
+        self.parameters['n_classes'] = resp.shape[1]
+
+    def log_likelihood(self, X):
+        prob_pred = self.model_.predict_log_proba(X)
+        return prob_pred
+
+    def predict(self, X):
+        return self.model_.predict(X)
+
+
 EMISSION_DICT = {
     'gaussian_unit': GaussianUnit,
     'gaussian_full': GaussianFull,
@@ -293,4 +388,5 @@ EMISSION_DICT = {
     'gaussian_tied': GaussianTied,
     'bernoulli': Bernoulli,
     'binary': Bernoulli,
+    'covariate': Covariate,
 }
