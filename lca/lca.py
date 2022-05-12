@@ -530,7 +530,7 @@ class LCA(BaseEstimator):
                     self.converged_ = True
                     break
 
-            if lower_bound > max_lower_bound or max_lower_bound == -np.inf:
+            if lower_bound > max_lower_bound or max_lower_bound == -np.inf or np.isnan(max_lower_bound):
                 max_lower_bound = lower_bound
                 best_params = self.get_parameters()
                 best_n_iter = n_iter
