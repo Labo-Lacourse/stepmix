@@ -115,6 +115,27 @@ def check_between(v_min, v_max, **params):
             )
 
 
+def identify_coef(coef):
+    """Find a reference configuration of the coefficients.
+
+    Pick whichever coefficient is closest to 0 in the first row of coef. Subtract the associated
+    column from all coefficients. This will give us a reference class with 0 coefficients everywhere.
+
+
+    Parameters
+    ----------
+    coef: np.ndarray, Current coefficient estimates.
+
+    Returns
+    -------
+    coef: np.ndarray, Corrected coefficient estimates with a null reference class.
+
+    """
+    closest_id = np.abs(coef[0]).argmin()
+    coef -= coef[:, closest_id].reshape((-1, 1))
+    return coef
+
+
 def modal(resp, clip=False):
     """Takes in class probabilities and performs modal assignment.
 
