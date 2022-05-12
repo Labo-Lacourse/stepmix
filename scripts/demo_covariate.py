@@ -15,9 +15,9 @@ X, Y, c = data_bakk_covariate(sample_size=n, sep_level=sep_level, random_state=4
 target = np.zeros((n, 3))
 target[np.arange(n), c] = 1
 m = Covariate(n_components=3, iter=1000, lr=1, random_state=42)
-m.initialize(X, target)
-m.m_step(X, target)
-pred = m.predict(X)
+m.initialize(Y, target)
+m.m_step(Y, target)
+pred = m.predict(Y)
 print(f'Trained on GT Accuracy : {accuracy_score(c, pred):.3f}\n')
 
 
