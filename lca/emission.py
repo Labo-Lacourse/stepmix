@@ -296,7 +296,6 @@ class GaussianTied(Gaussian):
 class Covariate(Emission):
     """Covariate model with simple gradient update.
 
-    TODO: Does not currently use a reference category. All classes have a coefficient.
     TODO: Consider fancier optimizer. This implementation only seems to work in the high separation case.
 
     """

@@ -131,7 +131,7 @@ def identify_coef(coef):
     coef: np.ndarray, Corrected coefficient estimates with a null reference class.
 
     """
-    closest_id = np.abs(coef[0]).argmin()
+    closest_id = np.argsort(coef[0])[1]
     coef -= coef[:, closest_id].reshape((-1, 1))
     return coef
 
