@@ -14,7 +14,7 @@ X, Y, c = data_bakk_covariate(n_samples=n, sep_level=sep_level, random_state=42)
 # on modal ground truth latent classes
 target = np.zeros((n, 3))
 target[np.arange(n), c] = 1
-m = Covariate(n_components=3, iter=1000, lr=1, random_state=42)
+m = Covariate(n_components=3, iter=200, lr=1, random_state=42)
 m.initialize(Y, target)
 m.m_step(Y, target)
 pred = m.predict(Y)
@@ -57,8 +57,12 @@ for n_steps in [1, 2, 3]:
                                                                              iter=1 if n_steps < 3 else 1000))
     m.fit(X, Y)
 
-    # Model estimates all K coefficients. Apply translation to have a a null reference category
-    coef = identify_coef(m.get_parameters()['structural']['coef'].copy())
+    params = m.get_parameters()['structural']
+    coeff = np.vstack((params['coef'], params['inter']))  # Stack intercepts and coeff
+
+    # Model estimates all K coefficients
+    # Recenter the middle coefficient to 0 (Reference class)
+    coef = identify_coef(coeff)
 
     # Likelihood and paramters
     ll_list.append(m.score(X, Y))

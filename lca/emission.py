@@ -337,12 +337,8 @@ class Covariate(Emission):
         self.iter = iter
         self.lr = lr
 
-    def _add_intercept(self, X):
-        intercept = np.ones((X.shape[0], 1))
-        return np.hstack((X, intercept))
-
     def _forward(self, X):
-        return softmax(X @ self.parameters['coef'], axis=1)
+        return softmax(X @ self.parameters['coef'] + self.parameters['inter'], axis=1)
 
     def initialize(self, X, resp, random_state=None):
         n, D = X.shape
@@ -352,33 +348,30 @@ class Covariate(Emission):
         random_state = self.check_random_state(random_state)
 
         # Parameter initialization
-        # D + 1 for intercept
-        self.parameters['coef'] = random_state.normal(0, 2, size=(D + 1, K))
+        self.parameters['coef'] = random_state.normal(0, 2, size=(D, K))
+        self.parameters['inter'] = random_state.normal(0, 2, size=(1, K))
 
     def m_step(self, X, resp):
         n, D = X.shape
         _, K = resp.shape
-
-        # Add intercept
-        X = self._add_intercept(X)
 
         for _ in range(self.iter):
             output = self._forward(X)
 
             # CE/Softmax gradient
             grad = output - resp
-            grad = X.T @ grad/n
+            grad_coeff = X.T @ grad/n
+            grad_inter = grad.mean(axis=0)
 
             # Update parameters
-            self.parameters['coef'] -= self.lr * grad
+            self.parameters['coef'] -= self.lr * grad_coeff
+            self.parameters['inter'] -= self.lr * grad_inter
 
     def log_likelihood(self, X):
-        X = self._add_intercept(X)
         prob = np.clip(self._forward(X), 1e-15, 1-1e-15)
         return np.log(prob)
 
     def predict(self, X):
-        X = self._add_intercept(X)
         prob = self._forward(X)
         return prob.argmax(axis=1)
 

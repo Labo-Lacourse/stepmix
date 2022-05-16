@@ -20,8 +20,8 @@ def main(n_simulations=10, latex=False, covariate=False):
 
     # Model-specific arguments
     # Specify optimization parameters if we have a covariate model
-    structural_params_12 = dict(lr=1e-3, iter=1) if covariate else dict()
-    structural_params_3 = dict(lr=1e-3, iter=lca_args['max_iter']) if covariate else dict()
+    structural_params_12 = dict(lr=5e-3, iter=1) if covariate else dict()
+    structural_params_3 = dict(lr=5e-3, iter=lca_args['max_iter']) if covariate else dict()
     models = {
         '1-step': dict(n_steps=1, structural_params=structural_params_12),
         '2-step': dict(n_steps=2, structural_params=structural_params_12),
@@ -52,11 +52,15 @@ def main(n_simulations=10, latex=False, covariate=False):
 
                     # Get max mean
                     if covariate:
-                        # First correct coefficients
-                        coef = identify_coef(model.get_parameters()['structural']['coef'])
+                        params = model.get_parameters()['structural']
+                        coeff = np.vstack((params['coef'], params['inter']))  # Stack intercepts and coeff
 
-                        # Get max
-                        mu = coef.max()
+                        # Model estimates all K coefficients
+                        # Recenter the middle coefficient to 0 to "recreate" the reference class
+                        coef = identify_coef(coeff)
+
+                        # Pick highest coefficient
+                        mu = coef[0].max()
                     else:
                         # Get max mean
                         mu = model.get_parameters()['structural']['means'].max()
