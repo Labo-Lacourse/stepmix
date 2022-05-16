@@ -139,7 +139,7 @@ class LCA(BaseEstimator):
     >>> from lca.datasets import data_bakk_response
     >>> from lca.lca import LCA
     >>> # Soft 3-step
-    >>> X, Y = data_bakk_response(sample_size=1000, sep_level=.7, random_state=42)
+    >>> X, Y = data_bakk_response(n_samples=1000, sep_level=.7, random_state=42)
     >>> model = LCA(n_components=3, n_steps=3, measurement='bernoulli', structural='gaussian_unit', random_state=42, assignment='soft')
     >>> model.fit(X, Y)
     >>> model.score(X, Y)  # Average log-likelihood
@@ -266,7 +266,7 @@ class LCA(BaseEstimator):
         # Initialize measurement model
         self._initialize_parameters_measurement(X, random_state)
 
-    def _initialize_parameters_measurement(self, X, random_state=None):
+    def _initialize_parameters_measurement(self, X, random_state=None, init_emission=True):
         """Initialize parameters of measurement model.
 
         Parameters
@@ -279,10 +279,11 @@ class LCA(BaseEstimator):
             self._mm = EMISSION_DICT[self.measurement](n_components=self.n_components,
                                                        random_state=self.random_state,
                                                        **self.measurement_params)
-        # Use the provided random_state instead of self.random_state to ensure we have a different init every run
-        self._mm.initialize(X, np.exp(self.log_resp_), random_state)
+        if init_emission:
+            # Use the provided random_state instead of self.random_state to ensure we have a different init every run
+            self._mm.initialize(X, np.exp(self.log_resp_), random_state)
 
-    def _initialize_parameters_structural(self, Y, random_state=None):
+    def _initialize_parameters_structural(self, Y, random_state=None, init_emission=True):
         """Initialize parameters of structural model.
 
         Parameters
@@ -295,8 +296,9 @@ class LCA(BaseEstimator):
             self._sm = EMISSION_DICT[self.structural](n_components=self.n_components,
                                                       random_state=self.random_state,
                                                       **self.structural_params)
-        # Use the provided random_state instead of self.random_state to ensure we have a different init every run
-        self._sm.initialize(Y, np.exp(self.log_resp_), random_state)
+        if init_emission:
+            # Use the provided random_state instead of self.random_state to ensure we have a different init every run
+            self._sm.initialize(Y, np.exp(self.log_resp_), random_state)
 
     def _check_x_y(self, X=None, Y=None, reset=False):
         """Input validation function.
@@ -354,12 +356,16 @@ class LCA(BaseEstimator):
             Nested dict {'weights': self.weights_,
                          'measurement': dict of measurement params,
                          'structural': dict of structural params,
+                         'measurement_in': number of measurements,
+                         'structural_in': number of structural features,
                          }.
         """
         check_is_fitted(self)
-        params = dict(weights=self.weights_, measurement=self._mm.get_parameters())
+        params = dict(weights=self.weights_, measurement=self._mm.get_parameters(),
+                      measurement_in=self.measurement_in_)
         if hasattr(self, '_sm'):
             params['structural'] = self._sm.get_parameters()
+            params['structural_in'] = self.structural_in_
         return params
 
     def set_parameters(self, params):
@@ -372,9 +378,19 @@ class LCA(BaseEstimator):
 
         """
         self.weights_ = params['weights']
+
+        if not hasattr(self, '_mm'):
+            # Init model without random initializations (we will provide one)
+            self._initialize_parameters_measurement(None, random_state=self.random_state, init_emission=False)
         self._mm.set_parameters(params['measurement'])
+        self.measurement_in_ = params['measurement_in']
+
         if 'structural' in params.keys():
+            if not hasattr(self, '_sm'):
+                # Init model without random initializations (we will provide one)
+                self._initialize_parameters_structural(None, random_state=self.random_state, init_emission=False)
             self._sm.set_parameters(params['structural'])
+            self.structural_in_ = params['structural_in']
 
 #######################################################################################################################
     # ESTIMATION AND EM METHODS
@@ -719,3 +735,90 @@ class LCA(BaseEstimator):
 
         _, log_resp = self._e_step(X, Y)
         return np.exp(log_resp)
+
+    def sample(self, n_samples, labels=None):
+        """Sample method for fitted LCA model.
+
+        Adapted from the sklearn BaseMixture sample method.
+
+        Parameters
+        ----------
+        n_samples : int
+            Number of samples.
+        labels : ndarray of shape (n_samples,)
+            Predetermined class labels. Will ignore self.weights_ if provided.
+
+        Returns
+        -------
+        X : ndarray of shape (n_samples, n_features)
+            Measurement samples.
+        Y : ndarray of shape (n_samples, n_features)
+            Structural samples.
+        labels : ndarray of shape (n_samples,)
+            Ground truth class membership.
+        """
+        check_is_fitted(self)
+
+        # Validate n_samples argument
+        utils.check_type(int, n_samples=n_samples)
+        if n_samples < 1:
+            raise ValueError(
+                "Invalid value for 'n_samples': %d . The sampling requires at "
+                "least one sample." % (self.n_components)
+            )
+
+        # Covariate sampling is not supported
+        # You need to first sample input data, then apply the covariate model to infer weights
+        if self.structural == 'covariate':
+            raise NotImplementedError("Sampling for the covariate model is not implemented.")
+
+        # Sample
+        rng = check_random_state(self.random_state)
+        if labels is None:
+            n_samples_comp = rng.multinomial(n_samples, self.weights_)
+        else:
+            classes, n_samples_comp = np.unique(labels, return_counts=True)
+
+        X = np.vstack(
+            [self._mm.sample(c, int(sample)) for c, sample in enumerate(n_samples_comp)]
+        )
+
+        if hasattr(self, '_sm'):
+            Y = np.vstack(
+                [self._sm.sample(c, int(sample)) for c, sample in enumerate(n_samples_comp)]
+            )
+        else:
+            Y = None
+
+        # Also return labels
+        labels_ret = []
+        for i, n in enumerate(n_samples_comp):
+            labels_ret += [i] * n
+        labels_ret = np.array(labels_ret)
+
+        if labels is not None:
+            # Reorder samples according to provided labels
+            X_new = np.zeros_like(X)
+
+            if Y is not None:
+                # Optional structural data
+                Y_new = np.zeros_like(Y)
+
+            for i, c in enumerate(classes):
+                mask = labels_ret == i
+                mask_labels = labels == c
+                X_new[mask_labels] = X[mask]
+
+                if Y is not None:
+                    # Optional structural data
+                    Y_new[mask_labels] = Y[mask]
+
+            labels_ret = labels
+            X = X_new
+            if Y is not None:
+                # Optional structural data
+                Y = Y_new
+
+        return X, Y, labels_ret
+
+

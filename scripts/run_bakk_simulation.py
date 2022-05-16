@@ -43,7 +43,7 @@ def main(n_simulations=10, latex=False, covariate=False):
             for sep in [.7, .8, .9]:
                 # Generate dataset
                 dataset = data_bakk_covariate if covariate else data_bakk_response
-                X, Y, c = dataset(sample_size=size, sep_level=sep, random_state=random_state)
+                X, Y, _ = dataset(n_samples=size, sep_level=sep, random_state=random_state)
 
                 # Loop over models
                 for name, model_args in models.items():
@@ -94,7 +94,7 @@ def main(n_simulations=10, latex=False, covariate=False):
 
 if __name__ == '__main__':
     # Parser
-    parser = argparse.ArgumentParser(description="Reproduce the response variable results from Bakk & Kuha 2018.")
+    parser = argparse.ArgumentParser(description="Reproduce results from Bakk & Kuha 2018.")
     parser.add_argument('--n_simulations',
                         '-s',
                         help='Number of simulations to run. Results are averaged.',
@@ -106,7 +106,7 @@ if __name__ == '__main__':
                         action='store_true')
     parser.add_argument('--covariate',
                         '-c',
-                        help='Run the covariate simulation. Otherwise runs the response simulation',
+                        help='Run the covariate simulation. Otherwise runs the response simulation by default.',
                         action='store_true')
 
     args = parser.parse_args()

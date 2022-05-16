@@ -26,7 +26,7 @@ class Emission(ABC):
 
     To add an emission model, you must :
         - Inherit from Emission.
-        - Implement the m_step and log_likelihood methods.
+        - Implement the m_step, log_likelihood and sample methods.
         - Add a corresponding string in the EMISSION_DICT at the end of emission.py.
         - Update the LCA docstring for the measurement and structural arguments!
 
@@ -47,7 +47,7 @@ class Emission(ABC):
 
     def __init__(self, n_components, random_state):
         self.n_components = n_components
-        self.random_state = random_state
+        self.random_state = self.check_random_state(random_state)
 
         # Dict including all parameters for estimation
         self.parameters = dict()
@@ -91,7 +91,6 @@ class Emission(ABC):
 
         """
         self.check_parameters()
-        # Currently unused, for future random initializations
         self.random_state = self.check_random_state(random_state)
 
         # Measurement and structural models are initialized by running their M-step on the initial log responsibilities
@@ -150,6 +149,26 @@ class Emission(ABC):
         raise NotImplementedError
 
 
+    @abstractmethod
+    def sample(self, class_no, n_samples):
+        """Sample n_samples conditioned on the given class_no.
+
+        Parameters
+        ----------
+        class_no : int
+            Class int.
+        n_samples : int
+            Number of samples.
+
+        Returns
+        -------
+        samples : ndarray of shape (n_samples, n_features)
+            Samples
+
+        """
+        raise NotImplementedError
+
+
 class Bernoulli(Emission):
     """Bernoulli (binary) emission model."""
 
@@ -165,6 +184,12 @@ class Bernoulli(Emission):
         log_eps = X @ np.log(pis) + (1 - X) @ np.log(1 - pis)
 
         return log_eps
+
+    def sample(self, class_no, n_samples):
+        feature_weights = self.parameters['pis'][:, class_no].reshape((1, -1))
+        c = feature_weights.shape[1]
+        X = (self.random_state.uniform(size=(n_samples, c)) < feature_weights).astype(int)
+        return X
 
 
 class GaussianUnit(Emission):
@@ -183,6 +208,11 @@ class GaussianUnit(Emission):
         for c in range(self.n_components):
             log_eps[:, c] = multivariate_normal.logpdf(x=X, mean=self.parameters['means'][c], cov=1)
         return log_eps
+
+    def sample(self, class_no, n_samples):
+        D = self.parameters['means'].shape[1]
+        X = self.random_state.normal(loc=self.parameters['means'][class_no], scale=np.ones(D), size=(n_samples, D))
+        return X
 
 
 class Gaussian(Emission):
@@ -251,6 +281,9 @@ class Gaussian(Emission):
 
     def log_likelihood(self, X):
         return GaussianMixture._estimate_log_prob(self, X)
+
+    def sample(self, class_no, n_samples):
+        raise NotImplementedError
 
     def get_parameters(self):
         return dict(means=self.means_.copy(), covariances=self.covariances_.copy(),
@@ -348,6 +381,9 @@ class Covariate(Emission):
         X = self._add_intercept(X)
         prob = self._forward(X)
         return prob.argmax(axis=1)
+
+    def sample(self, class_no, n_samples):
+        raise NotImplementedError
 
 
 class Covariate_sk(Emission):

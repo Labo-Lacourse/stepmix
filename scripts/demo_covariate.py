@@ -6,9 +6,9 @@ from sklearn.metrics import adjusted_rand_score, accuracy_score
 from lca.utils import identify_coef
 
 n = 1000
-sep_level = .9
+sep_level = .90
 
-X, Y, c = data_bakk_covariate(sample_size=n, sep_level=sep_level, random_state=42)
+X, Y, c = data_bakk_covariate(n_samples=n, sep_level=sep_level, random_state=42)
 
 # First a sanity check to see if the covariate model learns
 # on modal ground truth latent classes

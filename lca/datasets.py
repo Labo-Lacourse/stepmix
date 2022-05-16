@@ -1,88 +1,165 @@
+"""Various synthetic datasets."""
 import numpy as np
 from sklearn.utils.validation import check_random_state
-from scipy.special import softmax
+
+from .lca import LCA
 
 
-def data_bakk_measurement(sample_size, sep_level, Xidx, K, C, rng):
-    # Credit : Robin Legault
-    # pis[k,c] = p(Yk=1|X=c)
-    # sep_level = 0.9 #0.9->high, 0.8->medium, 0.7->low
-    pis = np.zeros((K, C))
+def bakk_measurements(n_classes, n_mm, sep_level):
+    """Binary measurement parameters in Bakk 2018.
+
+    Parameters
+    ----------
+    n_classes: int
+        Number of latent classes. Use 3 for the paper simulation.
+    n_mm: int
+        Number of features in the measurement model. Use 6 for the paper simulation.
+    sep_level : float
+        Separation level in the measurement data. Use .7, .8 or .9 for the paper simulation.
+
+    Returns
+    -------
+    pis : ndarray of shape (n_mm, n_classes)
+        Conditional bernoulli probabilities.
+
+    """
+    pis = np.zeros((n_mm, n_classes))
     pis[:, 0] = sep_level
-    pis[:int(K / 2), 1] = sep_level
-    pis[int(K / 2):, 1] = 1 - sep_level
+    pis[:int(n_mm / 2), 1] = sep_level
+    pis[int(n_mm / 2):, 1] = 1 - sep_level
     pis[:, 2] = 1 - sep_level
 
-    Y = np.array([0 + (rng.rand() < pis[k, Xidx[i]]) for i in range(Xidx.shape[0]) for k in range(K)]).reshape(
-        sample_size, K)
-
-    return Y
+    return pis
 
 
-def data_bakk_response(sample_size, sep_level, random_state=None):
-    # Credit : Robin Legault
+def data_bakk_response(n_samples, sep_level, n_classes=3, n_mm=6, random_state=None):
+    """Simulated data for the response simulations in Bakk 2018.
+
+    Parameters
+    ----------
+    n_samples : int
+        Number of samples.
+    sep_level : float
+        Separation level in the measurement data. Use .7, .8 or .9 for the paper simulation.
+    n_classes: int
+        Number of latent classes. Use 3 for the paper simulation.
+    n_mm: int
+        Number of features in the measurement model. Use 6 for the paper simulation.
+    random_state: int
+        Random state.
+
+    Returns
+    -------
+    X : ndarray of shape (n_samples, n_features)
+        Measurement samples.
+    Y : ndarray of shape (n_samples, n_features)
+        Structural samples.
+    labels : ndarray of shape (n_samples,)
+        Ground truth class membership.
+
+    References
+    ----------
+    Bakk, Z. and Kuha, J. Two-step estimation of models between latent classes and external variables. Psychometrika,
+    83(4):871–892, 2018
+
+    """
+    n_sm = 1  # Always 1 structural feature
+
+    # Measurement probabilities
+    pis = bakk_measurements(n_classes, n_mm, sep_level)
+
+    # Structural means
+    means = [
+        [-1],
+        [0],
+        [1]
+    ]
+
+    # Model parameters
+    params = dict(
+        weights=np.ones(n_classes) / n_classes,
+        measurement=dict(pis=pis),
+        structural=dict(means=np.array(means)),
+        measurement_in=n_mm,
+        structural_in=n_sm,
+    )
+
+    # Sample data
+    generator = LCA(n_components=n_classes, measurement='bernoulli', structural='gaussian_unit',
+                    random_state=random_state)
+    generator.set_parameters(params)
+    X, Y, labels = generator.sample(n_samples)
+
+    return X, Y, labels
+
+
+def data_bakk_covariate(n_samples, sep_level, n_mm=6, random_state=None):
+    """Simulated data for the covariate simulations in Bakk 2018.
+
+    Parameters
+    ----------
+    n_samples : int
+        Number of samples.
+    sep_level : float
+        Separation level in the measurement data. Use .7, .8 or .9 for the paper simulation.
+    n_mm: int
+        Number of features in the measurement model. Use 6 for the paper simulation.
+    random_state: int
+        Random state.
+
+    Returns
+    -------
+    X : ndarray of shape (n_samples, n_features)
+        Measurement samples.
+    Y : ndarray of shape (n_samples, n_features)
+        Structural samples.
+    labels : ndarray of shape (n_samples,)
+        Ground truth class membership.
+
+    References
+    ----------
+    Bakk, Z. and Kuha, J. Two-step estimation of models between latent classes and external variables. Psychometrika,
+    83(4):871–892, 2018
+
+    """
     rng = check_random_state(random_state)
+    n_sm = 1  # Always one structural feature
+    n_classes = 3  # Always 3 latent classes
 
-    C = 3  # Number of latent classes
-    K = 6  # Number of observed indicators
-    D = 1  # Dimensions of the response variable Zo
-
-    # True parameters
-    # rho[c] = p(X=c)
-    rho = np.ones(C) / C
-
-    # mus[k] = E[Z0|X=c]
-    mus = np.array([-1, 1, 0])
-
-    # unit variance for all gaussians
-    sigmas = np.array([1, 1, 1])
-
-    # Data generation
-    X = rng.multinomial(1, rho, size=sample_size)  # one-hot: X[i,c]=1 iff X[i]=c
-    Xidx = np.dot(np.array([c for c in range(C)]), X.T)  # index: Xidx[i]=c
-
-    Z = np.array([rng.normal(mus[Xidx[i]], sigmas[Xidx[i]]) for i in range(sample_size)]).reshape(sample_size, D)
-    Y = data_bakk_measurement(sample_size, sep_level, Xidx, K, C, rng)
-
-    # Also return ground truth class labels
-
-    return Y, Z, Xidx
-
-
-def data_bakk_covariate(sample_size, sep_level, random_state=None):
-    rng = check_random_state(random_state)
-
-    C = 3  # Number of latent classes
-    K = 6  # Number of observed indicators
-    D = 1  # Dimensions of the response variable Zp
-
+    # Regression parameters
     beta = np.array([0, -1, 1])
 
     # Intercepts are adjusted so that class sizes are roughly equal
+    # TODO : Adjust intercepts for more balanced classes
     intercepts = np.array([0, 2.3, -3.65])
 
     # Sample covariate
     # Uniform integer 1-5 (see p.15 Bakk 2017)
-    Z = rng.randint(low=1, high=6, size=(sample_size, D))
+    Y = rng.randint(low=1, high=6, size=(n_samples, n_sm))
 
     # Scores
-    logits = Z * beta.reshape((1, -1)) + intercepts
-
-    # Probabilities
-    pis = softmax(logits, axis=1)
+    logits = Y * beta.reshape((1, -1)) + intercepts
 
     # Predicted latent class
     # TODO : Double check this. Paper does not discuss the specifics of class assignment. Modal assignment leads to class imbalance
-    # TODO : We could also sample following the distribution of each row of pi
-    Xidx = pis.argmax(axis=1)
+    labels = logits.argmax(axis=1)
 
-    # Gen measurements
-    Y = data_bakk_measurement(sample_size, sep_level, Xidx, K, C, rng)
+    # Measurement probabilities
+    pis = bakk_measurements(n_classes, n_mm, sep_level)
 
-    # Also return ground truth class labels
-    c = pis.argmax(axis=1)
+    # Measurement model parameters
+    params = dict(
+        weights=np.ones(n_classes) / n_classes,  # Spoof. Will be ignored
+        measurement=dict(pis=pis),
+        measurement_in=n_mm,
+    )
 
-    return Y, Z, c
+    # Sample data
+    generator = LCA(n_components=n_classes, measurement='bernoulli', random_state=random_state)
+    generator.set_parameters(params)
+    X, _, labels_new = generator.sample(n_samples, labels=labels)
+
+    return X, Y, labels
 
 
 def data_generation_gaussian(sample_size, random_state=None):
