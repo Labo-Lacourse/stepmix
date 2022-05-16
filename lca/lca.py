@@ -637,7 +637,7 @@ class LCA(BaseEstimator):
         """
         if not freeze_measurement:
             # Update measurement model parameters
-            self.weights_ = resp.mean(axis=0)
+            self.weights_ = np.clip(resp.mean(axis=0), 1e-15, 1-1e-15)
             self._mm.m_step(X, resp)
 
         if Y is not None:
