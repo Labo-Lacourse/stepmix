@@ -283,7 +283,14 @@ class Gaussian(Emission):
         return GaussianMixture._estimate_log_prob(self, X)
 
     def sample(self, class_no, n_samples):
-        raise NotImplementedError
+        if self.covariance_type == "full":
+            X = self.random_state.multivariate_normal(self.means_[class_no], self.covariances_[class_no], n_samples)
+        elif self.covariance_type == "tied":
+            X = self.random_state.multivariate_normal(self.means_[class_no], self.covariances_, n_samples)
+        else:
+            n_features = self.means_.shape[1]
+            X = self.means_[class_no] + self.random_state.standard_normal(size=(n_samples, n_features)) * np.sqrt(self.covariances_[class_no])
+        return X
 
     def get_parameters(self):
         return dict(means=self.means_.copy(), covariances=self.covariances_.copy(),
@@ -294,6 +301,8 @@ class Gaussian(Emission):
         # This is not needed for typical children of the Emission class. We do this only to be compatible
         # with the sklearn GaussianMixture machinery.
         # This will update self.means_, self.covariances_ and self.precisions_cholesky_
+        if 'precisions_cholesky' not in params:
+            params['precisions_cholesky'] = _compute_precision_cholesky(params['covariances'], self.covariance_type)
         GaussianMixture._set_parameters(self,
                                         (None, params['means'], params['covariances'], params['precisions_cholesky']))
 

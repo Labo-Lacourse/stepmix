@@ -1,7 +1,7 @@
 """Demo script."""
 import numpy as np
 from lca.lca import LCA
-from lca.datasets import data_bakk_response, data_generation_Hwk4
+from lca.datasets import data_bakk_response, data_generation_gaussian
 
 
 def print_results(log_likelihoods, means):
@@ -94,12 +94,13 @@ print_results(ll_list, means_list)
 ########################################################################################################################
 # Gaussian emission models with various covariance estimators are available. The code is based on the
 # sklearn GaussianMixture class
-print('\n\nHmwk4 experiment...')
+print('\n\nGaussian experiment...')
 for cov_string in ["unit", "spherical", "tied", "diag", "full"]:
     m = LCA(n_steps=1, n_components=4, measurement='bernoulli', structural='gaussian_' + cov_string,
             tol=1e-5, n_init=10, random_state=42, max_iter=200)
-    X, Y = data_generation_Hwk4(sample_size=3000, random_state=42,
-                                sep_level=.9)  # Bernoulli measurements, Gaussian responses
+    X, Y, c = data_generation_gaussian(n_samples=3000, random_state=42,
+                                       sep_level=.9)  # Bernoulli measurements, Gaussian responses
+
     m.fit(X, Y)
     pr = f'Log-likelihood of Gaussian Structural Model with {cov_string} covariance'
     print(f'{pr:<70} : {m.score(X, Y):.3f}')
