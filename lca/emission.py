@@ -8,11 +8,10 @@ import numpy as np
 from sklearn.utils.validation import check_random_state
 from sklearn.mixture import GaussianMixture
 from sklearn.mixture._gaussian_mixture import _compute_precision_cholesky, _estimate_gaussian_parameters
-from sklearn.linear_model import LogisticRegression
 from scipy.stats import multivariate_normal
 from scipy.special import softmax
 
-from .utils import check_in, check_int, check_positive, check_nonneg, modal
+from .utils import check_in, check_int, check_positive, check_nonneg
 
 
 class Emission(ABC):
@@ -386,35 +385,6 @@ class Covariate(Emission):
 
     def sample(self, class_no, n_samples):
         raise NotImplementedError
-
-
-class Covariate_sk(Emission):
-    # Sklearn-based covariate model.
-    # I don't think we will keep this. We need more flexibility
-    def m_step(self, X, resp):
-        # Max assignment
-        y = resp.argmax(axis=1)
-
-        # Check which class is represented
-        is_pred = np.unique(y)
-
-        # Fit a Logistic regression
-        if not hasattr(self, 'model_'):
-            self.model_ = LogisticRegression(solver='lbfgs', multi_class='multinomial',
-                                             warm_start=True, max_iter=1000)
-
-        self.model_.fit(X, y)
-        self.parameters['coef'] = self.model_.coef_
-        self.parameters['intercept'] = self.model_.intercept_
-        self.parameters['is_pred'] = is_pred
-        self.parameters['n_classes'] = resp.shape[1]
-
-    def log_likelihood(self, X):
-        prob_pred = self.model_.predict_log_proba(X)
-        return prob_pred
-
-    def predict(self, X):
-        return self.model_.predict(X)
 
 
 EMISSION_DICT = {
