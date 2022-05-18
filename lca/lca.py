@@ -139,7 +139,7 @@ class LCA(BaseEstimator):
     >>> from lca.datasets import data_bakk_response
     >>> from lca.lca import LCA
     >>> # Soft 3-step
-    >>> X, Y = data_bakk_response(n_samples=1000, sep_level=.7, random_state=42)
+    >>> X, Y, _ = data_bakk_response(n_samples=1000, sep_level=.7, random_state=42)
     >>> model = LCA(n_components=3, n_steps=3, measurement='bernoulli', structural='gaussian_unit', random_state=42, assignment='soft')
     >>> model.fit(X, Y)
     >>> model.score(X, Y)  # Average log-likelihood
