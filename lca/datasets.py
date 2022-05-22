@@ -1,6 +1,7 @@
 """Various synthetic datasets."""
 import numpy as np
 from sklearn.utils.validation import check_random_state
+from scipy.special import softmax
 
 from .lca import LCA
 
@@ -129,9 +130,8 @@ def data_bakk_covariate(n_samples, sep_level, n_mm=6, random_state=None):
     # Regression parameters
     beta = np.array([0, -1, 1])
 
-    # Intercepts are adjusted so that class sizes are roughly equal
-    # TODO : Adjust intercepts for more balanced classes
-    intercepts = np.array([0, 2.3, -3.65])
+    # Intercepts are adjusted so that class sizes are equal in average
+    intercepts = np.array([0.0, 2.34459467, -3.65540533])
 
     # Sample covariate
     # Uniform integer 1-5 (see p.15 Bakk 2017)
@@ -140,9 +140,12 @@ def data_bakk_covariate(n_samples, sep_level, n_mm=6, random_state=None):
     # Scores
     logits = Y * beta.reshape((1, -1)) + intercepts
 
-    # Predicted latent class
-    # TODO : Double check this. Paper does not discuss the specifics of class assignment. Modal assignment leads to class imbalance
-    labels = logits.argmax(axis=1)
+    # Latent class (Ground truth class membership)
+    # probabilistic assignment ( realizations from the distribution of the r.v label_i|Y_i )
+    probas = softmax(logits, axis=1) #probas[n,c] = probability for unit n to be assigned to class c
+    cumul_probas = np.cumsum(probas, axis=1)
+    bool_tab = (cumul_probas - np.tile(rng.rand(n_samples), (n_classes, 1)).T) >= 0
+    labels = -np.sum(bool_tab, axis=1) + n_classes
 
     # Measurement probabilities
     pis = bakk_measurements(n_classes, n_mm, sep_level)

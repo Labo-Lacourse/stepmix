@@ -14,11 +14,12 @@ X, Y, c = data_bakk_covariate(n_samples=n, sep_level=sep_level, random_state=42)
 # on modal ground truth latent classes
 target = np.zeros((n, 3))
 target[np.arange(n), c] = 1
-m = Covariate(n_components=3, iter=200, lr=1, random_state=42)
+m = Covariate(n_components=3, iter=100, lr=0.02, intercept=True, method='gradient', random_state=42)
 m.initialize(Y, target)
 m.m_step(Y, target)
 pred = m.predict(Y)
 print(f'Trained on GT Accuracy : {accuracy_score(c, pred):.3f}\n')
+print(m.get_parameters())
 
 
 # Then we train the full LCA models
@@ -58,13 +59,15 @@ for n_steps in [1, 2, 3]:
     m.fit(X, Y)
 
     params = m.get_parameters()['structural']
-    coeff = np.vstack((params['coef'], params['inter']))  # Stack intercepts and coeff
+    coef  = params['beta'][0,:]
+    inter = params['beta'][1:,:]
+    coeff = np.vstack((coef, inter))  # Stack intercepts and coeff
 
     # Model estimates all K coefficients
     # Recenter the middle coefficient to 0 (Reference class)
     coef = identify_coef(coeff)
 
-    # Likelihood and paramters
+    # Likelihood and parameters
     ll_list.append(m.score(X, Y))
     means_list.append(coef[0])
     intercepts_list.append(coef[1])
