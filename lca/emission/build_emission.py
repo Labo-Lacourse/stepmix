@@ -35,5 +35,5 @@ def build_emission(descriptor, **kwargs):
         # Single homogenous model (e.g., only binary, only gaussian)
         return EMISSION_DICT[descriptor](**kwargs)
     else:
-        # Arbitrary
+        # Nested model
         return Nested(descriptor, EMISSION_DICT, **kwargs)

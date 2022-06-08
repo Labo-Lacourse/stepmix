@@ -48,17 +48,23 @@ class LCA(BaseEstimator):
         fixed for the second step. See *Bakk, 2018*.
         - 3: first run EM on the measurement model, assign class probabilities, then fit the structural model via
         maximum likelihood. See the correction parameter for bias correction.
-    measurement : {'bernoulli', 'binary', 'covariate, 'gaussian', 'gaussian_unit', 'gaussian_spherical', 'gaussian_tied', 'gaussian_full', 'gaussian_diag'} or dict, default='bernoulli'
+    measurement : {'bernoulli', 'binary', 'covariate, 'gaussian', 'gaussian_unit', 'gaussian_spherical', 'gaussian_tied', 'gaussian_full', 'gaussian_diag', dict}, default='bernoulli'
         String describing the measurement model.
         Must be one of:
         - 'bernoulli': the observed data consists of n_features bernoulli (binary) random variables.
         - 'binary': alias for bernoulli.
         - 'gaussian_unit': each gaussian component has unit variance. Only fit the mean.
+        - 'gaussian': alias for gaussian_unit.
         - 'gaussian_spherical': each gaussian component has its own single variance.
         - 'gaussian_tied': all gaussian components share the same general covariance matrix.
         - 'gaussian_full': each gaussian component has its own general covariance matrix.
         - 'gaussian_diag': each gaussian component has its own diagonal covariance matrix.
-    structural : {'bernoulli', 'binary', 'covariate, 'gaussian', 'gaussian_unit', 'gaussian_spherical', 'gaussian_tied', 'gaussian_full', 'gaussian_diag'} or dict, default='gaussian_unit'
+
+        Alternatively accepts a dict to define a nested model. E.g., dict(gaussian=3, bernoulli=2) will
+        expect an n x 5 matrix and fit a gaussian model on the first 3 features and a bernoulli model on the last 2.
+        See lca.emission.nested for details and advanced usage.
+
+    structural : {'bernoulli', 'binary', 'covariate, 'gaussian', 'gaussian_unit', 'gaussian_spherical', 'gaussian_tied', 'gaussian_full', 'gaussian_diag', dict} or dict, default='gaussian_unit'
         String describing the structural model. Same options as those for the measurement model.
     assignment : {'soft', 'modal'}, default='modal'
         Class assignments for 3-step estimation.

@@ -4,7 +4,21 @@ from .emission import Emission
 
 
 class Nested(Emission):
-    """Bernoulli (binary) emission model."""
+    """Nested emission model.
+
+    The descriptor must be a dict of string-int pairs. For example, a model where
+    the first 3 columns are gaussian with unit variance, the next 2 are binary and
+    the last 4 are covariates would be described likeso :
+    >>> param = {
+    >>>'gaussian': 3,
+    >>>'binary': 2,
+    >>>'covariate':4
+    >>> }
+
+    Alternatively, the integer can be replaced with a nested dict to specify some emission arguments. In this
+    case, the dict is expected to have an n_columns key to specify the number of associated features.
+
+    """
 
     def __init__(self, descriptor, emission_dict, n_components, random_state, **kwargs):
         super(Nested, self).__init__(n_components, random_state)
