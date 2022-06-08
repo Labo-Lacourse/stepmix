@@ -19,7 +19,7 @@ from sklearn.cluster import KMeans
 
 from . import utils
 from .corrections import compute_bch_matrix, compute_log_emission_pm
-from .emission import EMISSION_DICT
+from .emission.build_emission import EMISSION_DICT
 
 
 class LCA(BaseEstimator):
