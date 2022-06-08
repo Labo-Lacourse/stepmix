@@ -19,7 +19,7 @@ from sklearn.cluster import KMeans
 
 from . import utils
 from .corrections import compute_bch_matrix, compute_log_emission_pm
-from .emission.build_emission import EMISSION_DICT
+from .emission.build_emission import EMISSION_DICT, build_emission
 
 
 class LCA(BaseEstimator):
@@ -48,7 +48,7 @@ class LCA(BaseEstimator):
         fixed for the second step. See *Bakk, 2018*.
         - 3: first run EM on the measurement model, assign class probabilities, then fit the structural model via
         maximum likelihood. See the correction parameter for bias correction.
-    measurement : {'bernoulli', 'binary', 'gaussian_unit', 'gaussian_spherical', 'gaussian_tied', 'gaussian_full', 'gaussian_diag'}, default='bernoulli'
+    measurement : {'bernoulli', 'binary', 'covariate, 'gaussian', 'gaussian_unit', 'gaussian_spherical', 'gaussian_tied', 'gaussian_full', 'gaussian_diag'} or dict, default='bernoulli'
         String describing the measurement model.
         Must be one of:
         - 'bernoulli': the observed data consists of n_features bernoulli (binary) random variables.
@@ -58,7 +58,7 @@ class LCA(BaseEstimator):
         - 'gaussian_tied': all gaussian components share the same general covariance matrix.
         - 'gaussian_full': each gaussian component has its own general covariance matrix.
         - 'gaussian_diag': each gaussian component has its own diagonal covariance matrix.
-    structural : {'bernoulli', 'binary', 'gaussian_unit', 'gaussian_spherical', 'gaussian_tied', 'gaussian_full', 'gaussian_diag'}, default='gaussian_unit'
+    structural : {'bernoulli', 'binary', 'covariate, 'gaussian', 'gaussian_unit', 'gaussian_spherical', 'gaussian_tied', 'gaussian_full', 'gaussian_diag'} or dict, default='gaussian_unit'
         String describing the structural model. Same options as those for the measurement model.
     assignment : {'soft', 'modal'}, default='modal'
         Class assignments for 3-step estimation.
@@ -152,6 +152,7 @@ class LCA(BaseEstimator):
     >>> model.score(X, Y)  # Average log-likelihood
     -5.936162775486148
     """
+
     def __init__(
             self,
             n_components=2,
@@ -192,7 +193,7 @@ class LCA(BaseEstimator):
         self.structural = structural
         self.structural_params = structural_params
 
-########################################################################################################################
+    ########################################################################################################################
     # INPUT VALIDATION, INITIALIZATIONS AND PARAMETER MANAGEMENT
     def _check_initial_parameters(self, X):
         """Validate class attributes.
@@ -216,8 +217,8 @@ class LCA(BaseEstimator):
         utils.check_in(["kmeans", "random"], init_params=self.init_params)
         utils.check_in(["modal", "soft"], init_params=self.assignment)
         utils.check_in([None, "BCH", "ML"], init_params=self.correction)
-        utils.check_in(EMISSION_DICT.keys(), measurement=self.measurement)
-        utils.check_in(EMISSION_DICT.keys(), structural=self.structural)
+        utils.check_emission_param(self.measurement, keys=EMISSION_DICT.keys())
+        utils.check_emission_param(self.structural, keys=EMISSION_DICT.keys())
         utils.check_type(dict, measurement_params=self.measurement_params, structural_params=self.structural_params)
 
     def _initialize_parameters(self, X, random_state):
@@ -245,8 +246,8 @@ class LCA(BaseEstimator):
                 KMeans(
                     n_clusters=self.n_components, n_init=1, random_state=random_state
                 )
-                    .fit(X)
-                    .labels_
+                .fit(X)
+                .labels_
             )
             resp[np.arange(n_samples), label] = 1
         elif self.init_params == "random":
@@ -276,9 +277,10 @@ class LCA(BaseEstimator):
         """
         # Initialize measurement model
         if not hasattr(self, '_mm'):
-            self._mm = EMISSION_DICT[self.measurement](n_components=self.n_components,
-                                                       random_state=self.random_state,
-                                                       **self.measurement_params)
+            self._mm = build_emission(self.measurement,
+                                      n_components=self.n_components,
+                                      random_state=self.random_state,
+                                      **self.measurement_params)
         if init_emission:
             # Use the provided random_state instead of self.random_state to ensure we have a different init every run
             self._mm.initialize(X, np.exp(self.log_resp_), random_state)
@@ -293,9 +295,10 @@ class LCA(BaseEstimator):
         """
         # Initialize structural model
         if not hasattr(self, '_sm'):
-            self._sm = EMISSION_DICT[self.structural](n_components=self.n_components,
-                                                      random_state=self.random_state,
-                                                      **self.structural_params)
+            self._sm = build_emission(self.structural,
+                                      n_components=self.n_components,
+                                      random_state=self.random_state,
+                                      **self.structural_params)
         if init_emission:
             # Use the provided random_state instead of self.random_state to ensure we have a different init every run
             self._sm.initialize(Y, np.exp(self.log_resp_), random_state)
@@ -392,7 +395,7 @@ class LCA(BaseEstimator):
             self._sm.set_parameters(params['structural'])
             self.structural_in_ = params['structural_in']
 
-#######################################################################################################################
+    #######################################################################################################################
     # ESTIMATION AND EM METHODS
     def fit(self, X, Y=None):
         """Fit LCA measurement model and optionally the structural model.
@@ -637,7 +640,7 @@ class LCA(BaseEstimator):
         """
         if not freeze_measurement:
             # Update measurement model parameters
-            self.weights_ = np.clip(resp.mean(axis=0), 1e-15, 1-1e-15)
+            self.weights_ = np.clip(resp.mean(axis=0), 1e-15, 1 - 1e-15)
             self._mm.m_step(X, resp)
 
         if Y is not None:
@@ -666,7 +669,7 @@ class LCA(BaseEstimator):
             self._initialize_parameters_structural(Y)
         self._sm.m_step(Y, resp)
 
-########################################################################################################################
+    ########################################################################################################################
     # INFERENCE
     def score(self, X, Y=None):
         """Compute the average log-likelihood over samples.
@@ -820,5 +823,3 @@ class LCA(BaseEstimator):
                 Y = Y_new
 
         return X, Y, labels_ret
-
-

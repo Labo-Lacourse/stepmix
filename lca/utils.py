@@ -115,6 +115,49 @@ def check_between(v_min, v_max, **params):
             )
 
 
+def check_emission_param(param, keys):
+    """Check if the emission descriptor is valid.
+
+    A string describes a homogeneous model (e.g., all binary, all gaussian).
+
+    Otherwise param must be a dict of string-int pairs. For example, a model where
+    the first 3 columns are gaussian with unit variance, the next 2 are binary and
+    the last 4 are covariates would be described likeso :
+    >>> param = {
+    >>>'gaussian': 3,
+    >>>'binary': 2,
+    >>>'covariate':4
+    >>> }
+
+    Alternatively, the integer can be replaced with a nested dict to specify some emission arguments. In this
+    case, the dict is expected to have an n_columns key to specify the number of associated features.
+
+    Parameters
+    ----------
+    param: str or list, parameter description.
+    param: list, list of valid emission strings.
+
+    Returns
+    -------
+    is_valid: bool, indicating a valid parameter description.
+
+    """
+    if isinstance(param, str):
+        check_in(keys, emission=param)
+    elif isinstance(param, dict):
+        for key, item in param.items():
+            check_in(keys, emission=key)
+            if isinstance(item, dict):
+                if 'n_columns' not in item:
+                    raise ValueError(f'You have specified arguments for a nested {key} model. The dict'
+                                     f'should include an integer describing the number of columns.')
+            elif not isinstance(item, int):
+                raise ValueError(f'Items in a nested model description should be integers or dicts.')
+
+    else:
+        raise ValueError(f'Emission descriptor should be either a string or a dict.')
+
+
 def identify_coef(coef):
     """Find a reference configuration of the coefficients.
 
