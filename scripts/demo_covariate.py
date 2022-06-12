@@ -1,7 +1,7 @@
 import numpy as np
 from lca.datasets import data_bakk_covariate
 from lca.lca import LCA
-from lca.emission import Covariate
+from lca.emission.covariate import Covariate
 from sklearn.metrics import adjusted_rand_score, accuracy_score
 from lca.utils import identify_coef
 

@@ -14,13 +14,12 @@ import numpy as np
 from scipy.special import logsumexp
 from sklearn.mixture._base import BaseEstimator
 from sklearn.exceptions import ConvergenceWarning
-from sklearn.utils.validation import check_random_state, check_is_fitted
+from sklearn.utils.validation import check_random_state, check_is_fitted, _check_sample_weight
 from sklearn.cluster import KMeans
 
 from . import utils
 from .corrections import compute_bch_matrix, compute_log_emission_pm
 from .emission.build_emission import EMISSION_DICT, build_emission
-
 
 class LCA(BaseEstimator):
     """Latent Class Analysis.
@@ -485,7 +484,7 @@ class LCA(BaseEstimator):
             # 3) Degenerate EM with fixed log_emission_pm
             self.em(X, Y, freeze_measurement=True, log_emission_pm=log_emission_pm)
 
-    def em(self, X, Y=None, freeze_measurement=False, log_emission_pm=None):
+    def em(self, X, Y=None, sample_weight=None, freeze_measurement=False, log_emission_pm=None):
         """EM algorithm to fit the weights, measurement parameters and structural parameters.
 
         Adapted from the fit_predict method of the sklearn BaseMixture class to include (optional) structural model
@@ -502,6 +501,9 @@ class LCA(BaseEstimator):
         Y : array-like of shape (n_samples, n_structural), default = None
             List of n_structural-dimensional data points. Each row
             corresponds to a single data point of the structural model.
+        sample_weight : array-like of shape(n_samples,), default=None
+            Array of weights that are assigned to individual samples.
+            If not provided, then each sample is given unit weight.
         freeze_measurement : bool, default =False
             Run EM on the complete model, but do not update measurement model parameters.
             Useful for 2-step estimation and 3-step with ML correction.
@@ -511,6 +513,11 @@ class LCA(BaseEstimator):
         # First validate the input and the class attributes
         n_samples, _ = X.shape
         X, Y = self._check_x_y(X, Y, reset=True)
+
+        # If sample weights exist, convert them to array (support for lists)
+        # and check length
+        # Otherwise set them to 1 for all examples
+        sample_weight = _check_sample_weight(sample_weight, X, dtype=X.dtype, copy=True)
 
         if n_samples < self.n_components:
             raise ValueError(
@@ -542,7 +549,7 @@ class LCA(BaseEstimator):
                 prev_lower_bound = lower_bound
 
                 # E-step
-                log_prob_norm, log_resp = self._e_step(X, Y=Y, log_emission_pm=log_emission_pm)
+                log_prob_norm, log_resp = self._e_step(X, Y=Y, sample_weight=sample_weight, log_emission_pm=log_emission_pm)
 
                 # M-step
                 self._m_step(X, np.exp(log_resp), Y, freeze_measurement=freeze_measurement)
@@ -573,7 +580,7 @@ class LCA(BaseEstimator):
         self.n_iter_ = best_n_iter
         self.lower_bound_ = max_lower_bound
 
-    def _e_step(self, X, Y=None, log_emission_pm=None):
+    def _e_step(self, X, Y=None, sample_weight=None, log_emission_pm=None):
         """E-step of the EM algorithm to compute posterior probabilities.
 
         Setting Y=None will ignore the structural likelihood.
@@ -583,6 +590,9 @@ class LCA(BaseEstimator):
         X : ndarray of shape (n_samples, n_features)
             List of n_features-dimensional data points. Each row
             corresponds to a single data point of the measurement model.
+        sample_weight : array-like of shape(n_samples,), default=None
+            Array of weights that are assigned to individual samples.
+            If not provided, then each sample is given unit weight.
         Y : ndarray of shape (n_samples, n_structural), default = None
             List of n_structural-dimensional data points. Each row
             corresponds to a single data point of the structural model.
@@ -593,7 +603,7 @@ class LCA(BaseEstimator):
         Returns
         ----------
         avg_ll: float,
-            Average log likelihood over samples.
+            Weighted average log likelihood over samples .
         log_resp: ndarray of shape (n_samples, n_components)
             Log responsibilities, i.e., log posterior probabilities over the latent classes.
         """
@@ -620,9 +630,9 @@ class LCA(BaseEstimator):
             # ignore underflow
             log_resp -= ll.reshape((-1, 1))
 
-        return np.mean(ll), log_resp
+        return np.average(ll, weights=sample_weight), log_resp
 
-    def _m_step(self, X, resp, Y=None, freeze_measurement=False):
+    def _m_step(self, X, resp, Y=None, sample_weight=None, freeze_measurement=False):
         """M-step of the EM algorithm to compute maximum likelihood estimators
 
         Update parameters of self._mm (measurement) and optionally self._sm (structural).
@@ -640,18 +650,23 @@ class LCA(BaseEstimator):
         Y : ndarray of shape (n_samples, n_structural), default = None
             List of n_structural-dimensional data points. Each row
             corresponds to a single data point of the structural model.
+        sample_weight : array-like of shape(n_samples,), default=None
+            Array of weights that are assigned to individual samples.
+            If not provided, then each sample is given unit weight.
         freeze_measurement : bool, default =False
             Do not update the parameters of the measurement model.
 
         """
+        sample_weight = _check_sample_weight(sample_weight, X, dtype=X.dtype, copy=True)
+
         if not freeze_measurement:
             # Update measurement model parameters
-            self.weights_ = np.clip(resp.mean(axis=0), 1e-15, 1 - 1e-15)
-            self._mm.m_step(X, resp)
+            self.weights_ = np.clip(np.average(resp, weights=sample_weight, axis=0), 1e-15, 1 - 1e-15)
+            self._mm.m_step(X, resp * sample_weight[:, np.newaxis])
 
         if Y is not None:
             # Update structural model parameters
-            self._sm.m_step(Y, resp)
+            self._sm.m_step(Y, resp * sample_weight[:, np.newaxis])
 
     def m_step_structural(self, resp, Y):
         """M-step for the structural model only.
@@ -677,7 +692,7 @@ class LCA(BaseEstimator):
 
     ########################################################################################################################
     # INFERENCE
-    def score(self, X, Y=None):
+    def score(self, X, Y=None, sample_weight=None):
         """Compute the average log-likelihood over samples.
 
         Setting Y=None will ignore the structural likelihood.
@@ -690,6 +705,9 @@ class LCA(BaseEstimator):
         Y : array-like of shape (n_samples, n_structural), default = None
             List of n_structural-dimensional data points. Each row
             corresponds to a single data point of the structural model.
+        sample_weight : array-like of shape(n_samples,), default=None
+            Array of weights that are assigned to individual samples.
+            If not provided, then each sample is given unit weight.
 
         Returns
         ----------
@@ -698,8 +716,9 @@ class LCA(BaseEstimator):
         """
         check_is_fitted(self)
         X, Y = self._check_x_y(X, Y)
+        sample_weight = _check_sample_weight(sample_weight, X, dtype=X.dtype, copy=True)
 
-        avg_ll, _ = self._e_step(X, Y)
+        avg_ll, _ = self._e_step(X, Y=Y, sample_weight=sample_weight)
         return avg_ll
 
     def predict(self, X, Y=None):
@@ -723,7 +742,7 @@ class LCA(BaseEstimator):
         """
         return self.predict_proba(X, Y).argmax(axis=1)
 
-    def predict_proba(self, X, Y=None):
+    def predict_proba(self, X, sample_weight=None, Y=None):
         """Predict the class probabilities for the data samples in X using the measurement model.
 
         Parameters
@@ -734,6 +753,9 @@ class LCA(BaseEstimator):
         Y : array-like of shape (n_samples, n_features), default=None
             List of n_features-dimensional data points. Each row
             corresponds to a single data point of the structural model.
+        sample_weight : array-like of shape(n_samples,), default=None
+            Array of weights that are assigned to individual samples.
+            If not provided, then each sample is given unit weight.
         Returns
         -------
         resp : array, shape (n_samples, n_components)
@@ -742,7 +764,7 @@ class LCA(BaseEstimator):
         check_is_fitted(self)
         X, Y = self._check_x_y(X, Y)
 
-        _, log_resp = self._e_step(X, Y)
+        _, log_resp = self._e_step(X, Y=Y, sample_weight=sample_weight)
         return np.exp(log_resp)
 
     def sample(self, n_samples, labels=None):
