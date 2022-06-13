@@ -47,11 +47,13 @@ class LCA(BaseEstimator):
         fixed for the second step. See *Bakk, 2018*.
         - 3: first run EM on the measurement model, assign class probabilities, then fit the structural model via
         maximum likelihood. See the correction parameter for bias correction.
-    measurement : {'bernoulli', 'binary', 'covariate, 'gaussian', 'gaussian_unit', 'gaussian_spherical', 'gaussian_tied', 'gaussian_full', 'gaussian_diag', dict}, default='bernoulli'
+    measurement : {'bernoulli', 'binary', 'multinoulli', 'categorical', 'covariate, 'gaussian', 'gaussian_unit', 'gaussian_spherical', 'gaussian_tied', 'gaussian_full', 'gaussian_diag', dict}, default='bernoulli'
         String describing the measurement model.
         Must be one of:
         - 'bernoulli': the observed data consists of n_features bernoulli (binary) random variables.
         - 'binary': alias for bernoulli.
+        - 'multinoulli': the observed data consists of n_features multinoulli (categorical) random variables.
+        - 'categorical': alias for multinoulli.
         - 'gaussian_unit': each gaussian component has unit variance. Only fit the mean.
         - 'gaussian': alias for gaussian_unit.
         - 'gaussian_spherical': each gaussian component has its own single variance.
@@ -63,7 +65,7 @@ class LCA(BaseEstimator):
         expect an n x 5 matrix and fit a gaussian model on the first 3 features and a bernoulli model on the last 2.
         See lca.emission.nested for details and advanced usage.
 
-    structural : {'bernoulli', 'binary', 'covariate, 'gaussian', 'gaussian_unit', 'gaussian_spherical', 'gaussian_tied', 'gaussian_full', 'gaussian_diag', dict} or dict, default='gaussian_unit'
+    structural : {'bernoulli', 'binary', 'multinoulli', 'categorical', 'covariate, 'gaussian', 'gaussian_unit', 'gaussian_spherical', 'gaussian_tied', 'gaussian_full', 'gaussian_diag', dict} or dict, default='gaussian_unit'
         String describing the structural model. Same options as those for the measurement model.
     assignment : {'soft', 'modal'}, default='modal'
         Class assignments for 3-step estimation.
@@ -402,7 +404,7 @@ class LCA(BaseEstimator):
 
     #######################################################################################################################
     # ESTIMATION AND EM METHODS
-    def fit(self, X, Y=None):
+    def fit(self, X, Y=None, sample_weight=None):
         """Fit LCA measurement model and optionally the structural model.
 
         Setting Y=None will fit the measurement model only. Providing both X and Y will fit the full model following
@@ -416,28 +418,31 @@ class LCA(BaseEstimator):
         Y : array-like of shape (n_samples, n_structural), default = None
             List of n_structural-dimensional data points. Each row
             corresponds to a single data point of the structural model.
+        sample_weight : array-like of shape(n_samples,), default=None
+            Array of weights that are assigned to individual samples.
+            If not provided, then each sample is given unit weight.
 
         """
         if Y is None:
             # No structural data. Simply fit the measurement data
-            self.em(X)
+            self.em(X, sample_weight=sample_weight)
 
         elif self.n_steps == 1:
             # One-step estimation
             # 1) Maximum likelihood with both measurement and structural models
-            self.em(X, Y)
+            self.em(X, Y, sample_weight=sample_weight)
 
         elif self.n_steps == 2:
             # Two-step estimation
             # 1) Fit the measurement model
-            self.em(X)
+            self.em(X, sample_weight=sample_weight)
             # 2) Fit the the structural model by keeping the parameters of the measurement model fixed
-            self.em(X, Y, freeze_measurement=True)
+            self.em(X, Y, sample_weight=sample_weight, freeze_measurement=True)
 
         elif self.n_steps == 3 and self.correction is None:
             # Three-step estimation
             # 1) Fit the measurement model
-            self.em(X)
+            self.em(X, sample_weight=sample_weight)
             # 2) Assign class probabilities
             soft_resp = self.predict_proba(X)
 
@@ -552,7 +557,7 @@ class LCA(BaseEstimator):
                 log_prob_norm, log_resp = self._e_step(X, Y=Y, sample_weight=sample_weight, log_emission_pm=log_emission_pm)
 
                 # M-step
-                self._m_step(X, np.exp(log_resp), Y, freeze_measurement=freeze_measurement)
+                self._m_step(X, np.exp(log_resp), Y, sample_weight=sample_weight, freeze_measurement=freeze_measurement)
 
                 # Likelihood & stopping criterion
                 lower_bound = log_prob_norm
@@ -668,7 +673,7 @@ class LCA(BaseEstimator):
             # Update structural model parameters
             self._sm.m_step(Y, resp * sample_weight[:, np.newaxis])
 
-    def m_step_structural(self, resp, Y):
+    def m_step_structural(self, resp, Y, sample_weight=None):
         """M-step for the structural model only.
 
         Handy for 3-step estimation.
@@ -680,15 +685,20 @@ class LCA(BaseEstimator):
         Y : ndarray of shape (n_samples, n_structural)
             List of n_structural-dimensional data points. Each row
             corresponds to a single data point of the structural model.
+        sample_weight : array-like of shape(n_samples,), default=None
+            Array of weights that are assigned to individual samples.
+            If not provided, then each sample is given unit weight.
 
         """
+        sample_weight = _check_sample_weight(sample_weight, Y, dtype=Y.dtype, copy=True)
+
         check_is_fitted(self)
         _, Y = self._check_x_y(None, Y, reset=True)
 
         # For the third step of the 3-step approach
         if not hasattr(self, '_sm'):
             self._initialize_parameters_structural(Y)
-        self._sm.m_step(Y, resp)
+        self._sm.m_step(Y, resp * sample_weight[:, np.newaxis])
 
     ########################################################################################################################
     # INFERENCE
@@ -742,7 +752,7 @@ class LCA(BaseEstimator):
         """
         return self.predict_proba(X, Y).argmax(axis=1)
 
-    def predict_proba(self, X, sample_weight=None, Y=None):
+    def predict_proba(self, X, Y=None):
         """Predict the class probabilities for the data samples in X using the measurement model.
 
         Parameters
@@ -753,9 +763,6 @@ class LCA(BaseEstimator):
         Y : array-like of shape (n_samples, n_features), default=None
             List of n_features-dimensional data points. Each row
             corresponds to a single data point of the structural model.
-        sample_weight : array-like of shape(n_samples,), default=None
-            Array of weights that are assigned to individual samples.
-            If not provided, then each sample is given unit weight.
         Returns
         -------
         resp : array, shape (n_samples, n_components)
@@ -764,7 +771,7 @@ class LCA(BaseEstimator):
         check_is_fitted(self)
         X, Y = self._check_x_y(X, Y)
 
-        _, log_resp = self._e_step(X, Y=Y, sample_weight=sample_weight)
+        _, log_resp = self._e_step(X, Y=Y)
         return np.exp(log_resp)
 
     def sample(self, n_samples, labels=None):

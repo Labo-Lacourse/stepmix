@@ -24,3 +24,15 @@ class Bernoulli(Emission):
         c = feature_weights.shape[1]
         X = (self.random_state.uniform(size=(n_samples, c)) < feature_weights).astype(int)
         return X
+
+class Multinoulli(Emission):
+    """Multinoulli (categorical) emission model."""
+
+    def m_step(self, X, resp):
+        raise NotImplementedError("Multinoulli model is not implemented.")
+
+    def log_likelihood(self, X):
+        raise NotImplementedError("Multinoulli model is not implemented.")
+
+    def sample(self, class_no, n_samples):
+        raise NotImplementedError("Multinoulli model is not implemented.")
