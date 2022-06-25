@@ -200,6 +200,9 @@ class LCA(BaseEstimator):
         self.structural = structural
         self.structural_params = structural_params
 
+        # TODO : check if the provided measurement and structural models do support nans
+        self.allow_nan = 'allow-nan'
+
     ########################################################################################################################
     # INPUT VALIDATION, INITIALIZATIONS AND PARAMETER MANAGEMENT
     def _check_initial_parameters(self, X):
@@ -337,9 +340,9 @@ class LCA(BaseEstimator):
         """
         # We use reset True since we take care of dimensions in this class (and not in the parent)
         if X is not None:
-            X = self._validate_data(X, dtype=[np.float64, np.float32], reset=True)
+            X = self._validate_data(X, dtype=[np.float64, np.float32], reset=True, force_all_finite=self.allow_nan)
         if Y is not None:
-            Y = self._validate_data(Y, dtype=[np.float64, np.float32], reset=True)
+            Y = self._validate_data(Y, dtype=[np.float64, np.float32], reset=True, force_all_finite=self.allow_nan)
 
         if reset:
             if X is not None:
