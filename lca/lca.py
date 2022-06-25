@@ -859,5 +859,9 @@ class LCA(BaseEstimator):
             if Y is not None:
                 # Optional structural data
                 Y = Y_new
+        else:
+            # Shuffle everything
+            shuffle_mask = rng.permutation(X.shape[0])
+            X, Y, labels_ret = X[shuffle_mask], Y[shuffle_mask], labels_ret[shuffle_mask]
 
         return X, Y, labels_ret
