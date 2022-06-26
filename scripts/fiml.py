@@ -60,6 +60,8 @@ m = LCA(n_steps=1, n_components=3, measurement='bernoulli_nan', structural='gaus
 m.fit(X_partial, Y_partial)
 print(m.get_parameters()['measurement']['pis'])
 means_list.append(m.get_parameters()['structural']['means'])
+
+# Score the complete dataset
 ll_list.append(m.score(X, Y))
 
 # Report ll and means
