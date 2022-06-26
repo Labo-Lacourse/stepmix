@@ -30,6 +30,42 @@ class GaussianUnit(Emission):
         return X
 
 
+class GaussianUnitNan(GaussianUnit):
+    """Gaussian emission model with fixed unit variance supporting missing values (Full Information Maximum Likelihood)
+    """
+
+    def m_step(self, X, resp):
+        is_observed = ~np.isnan(X)
+
+        # Replace all nans with 0
+        X = np.nan_to_num(X)
+        means = (resp[..., np.newaxis] * X[:, np.newaxis, :]).sum(axis=0)
+
+        # Compute normalization factor over observed values for each feature
+        for i in range(means.shape[1]):
+            resp_i = resp[is_observed[:, i]]
+            means[:, i] /= resp_i.sum(axis=0)
+
+        self.parameters['means'] = means
+
+    def log_likelihood(self, X):
+        n, D = X.shape
+        log_eps = np.zeros((n, self.n_components))
+        for c in range(self.n_components):
+            mean_c = self.parameters['means'][c]
+
+            # Impute nans with the mean to effectively ignore them in the log likelihood
+            # TODO: Review this. Particularly in the case of the determinant, should it be
+            # TODO: reduced if there are missing values in the sample? E.g., if we have a 3D multivariate gaussian
+            # TODO: should we use a 2D log pdf for observations where we are missing one dimension?
+            X_c = X.copy()
+            for k in range(X_c.shape[1]):
+                X_c[:, k] = np.nan_to_num(X[:, k], nan=mean_c[k])
+
+            log_eps[:, c] = multivariate_normal.logpdf(x=X_c, mean=mean_c, cov=1)
+        return log_eps
+
+
 class Gaussian(Emission):
     """Gaussian emission model with various covariance options.
 
@@ -104,7 +140,8 @@ class Gaussian(Emission):
             X = self.random_state.multivariate_normal(self.means_[class_no], self.covariances_, n_samples)
         else:
             n_features = self.means_.shape[1]
-            X = self.means_[class_no] + self.random_state.standard_normal(size=(n_samples, n_features)) * np.sqrt(self.covariances_[class_no])
+            X = self.means_[class_no] + self.random_state.standard_normal(size=(n_samples, n_features)) * np.sqrt(
+                self.covariances_[class_no])
         return X
 
     def get_parameters(self):
