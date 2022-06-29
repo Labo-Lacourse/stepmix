@@ -14,7 +14,7 @@ X, Y, c = data_bakk_covariate(n_samples=n, sep_level=sep_level, random_state=42)
 # on modal ground truth latent classes
 target = np.zeros((n, 3))
 target[np.arange(n), c] = 1
-m = Covariate(n_components=3, iter=100, lr=0.02, intercept=True, method='gradient', random_state=42)
+m = Covariate(n_components=3, max_iter=10000, lr=0.2, intercept=True, method='newton-raphson', random_state=42)
 m.initialize(Y, target)
 m.m_step(Y, target)
 pred = m.predict(Y)
@@ -54,8 +54,8 @@ intercepts_list = []
 # Run experiment for 1-step, 2-step and 3-step
 for n_steps in [1, 2, 3]:
     m = LCA(n_steps=n_steps, n_components=3, measurement='bernoulli', structural='covariate', n_init=10,
-            random_state=42, max_iter=1000, tol=1e-5, structural_params=dict(lr=5e-3,
-                                                                             iter=1 if n_steps < 3 else 1000))
+            random_state=42, max_iter=10000, abs_tol=1e-5,
+            structural_params=dict(method='gradient', lr=1e-2, max_iter=1 if n_steps < 3 else 100000))
     m.fit(X, Y)
 
     params = m.get_parameters()['structural']
