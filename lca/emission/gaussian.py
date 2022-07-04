@@ -30,42 +30,6 @@ class GaussianUnit(Emission):
         return X
 
 
-class GaussianUnitNan(GaussianUnit):
-    """Gaussian emission model with fixed unit variance supporting missing values (Full Information Maximum Likelihood)
-    """
-
-    def m_step(self, X, resp):
-        is_observed = ~np.isnan(X)
-
-        # Replace all nans with 0
-        X = np.nan_to_num(X)
-        means = (resp[..., np.newaxis] * X[:, np.newaxis, :]).sum(axis=0)
-
-        # Compute normalization factor over observed values for each feature
-        for i in range(means.shape[1]):
-            resp_i = resp[is_observed[:, i]]
-            means[:, i] /= resp_i.sum(axis=0)
-
-        self.parameters['means'] = means
-
-    def log_likelihood(self, X):
-        n, D = X.shape
-        log_eps = np.zeros((n, self.n_components))
-        for c in range(self.n_components):
-            mean_c = self.parameters['means'][c]
-
-            # Impute nans with the mean to effectively ignore them in the log likelihood
-            # TODO: Review this. Particularly in the case of the determinant, should it be
-            # TODO: reduced if there are missing values in the sample? E.g., if we have a 3D multivariate gaussian
-            # TODO: should we use a 2D log pdf for observations where we are missing one dimension?
-            X_c = X.copy()
-            for k in range(X_c.shape[1]):
-                X_c[:, k] = np.nan_to_num(X[:, k], nan=mean_c[k])
-
-            log_eps[:, c] = multivariate_normal.logpdf(x=X_c, mean=mean_c, cov=1)
-        return log_eps
-
-
 class Gaussian(Emission):
     """Gaussian emission model with various covariance options.
 
@@ -185,3 +149,77 @@ class GaussianTied(Gaussian):
         # Make sure no other covariance_type is specified
         kwargs.pop('covariance_type', None)
         super().__init__(covariance_type='tied', **kwargs)
+
+
+class GaussianNan(Emission):
+    """Gaussian emission model supporting missing values (Full Information Maximum
+    Likelihood)
+
+    This class assumes a diagonal covariance structure. The covariances are therefore represented as a
+    (n_components, n_features) array."""
+
+    def m_step(self, X, resp):
+        is_observed = ~np.isnan(X)
+
+        # Replace all nans with 0
+        X = np.nan_to_num(X)
+        resp_sums = list()
+
+        # Compute normalization factor over observed values for each feature
+        for i in range(X.shape[1]):
+            resp_i = resp[is_observed[:, i]]
+            resp_sums.append(resp_i.sum(axis=0))
+
+        self.parameters['means'] = self._compute_means(X, resp, resp_sums)
+        self.parameters['covariances'] = self._compute_cov(X, resp, resp_sums)
+
+    def _compute_means(self, X, resp, resp_sums):
+        means = (resp[..., np.newaxis] * X[:, np.newaxis, :]).sum(axis=0)
+
+        # Normalize
+        for i in range(means.shape[1]):
+            means[:, i] /= resp_sums[i]
+
+        return means
+
+    def _compute_cov(self, X, resp, resp_sums):
+        raise NotImplementedError('No covariance estimator is implemented.')
+
+    def log_likelihood(self, X):
+        # Naive loopy way to compute the log likelihood
+        # Children class should leverage their covariance structure to override
+        # this and make it more efficient
+        is_observed = ~np.isnan(X)
+
+        n, D = X.shape
+        log_eps = np.zeros((n, self.n_components))
+        for i in range(n):
+            # Only select observed dimensions
+            mask = is_observed[i]
+            if mask.any():
+                for c in range(self.n_components):
+                    x_i = X[i, mask]
+                    mean_c = self.parameters['means'][c, mask]
+                    cov_c = self.parameters['covariances'][c, mask]
+
+                    log_eps[i, c] = multivariate_normal.logpdf(x=x_i, mean=mean_c, cov=cov_c)
+            else:
+                # Undefined log likelihood
+                # We use 0, as it won't affect the overall likelihood when summing over independent models
+                log_eps[i, :] = 0
+        return log_eps
+
+    def sample(self, class_no, n_samples):
+        D = self.parameters['means'].shape[1]
+        X = self.random_state.normal(loc=self.parameters['means'][class_no],
+                                     scale=self.parameters['covariances'][class_no], size=(n_samples, D))
+        return X
+
+
+class GaussianUnitNan(GaussianNan):
+    """Gaussian emission model with unit covariance supporting missing values (Full Information Maximum
+    Likelihood)"""
+
+    def _compute_cov(self, X, resp, resp_sums):
+        """No estimate. Simply return diagonal covariance 1 for all features."""
+        return np.ones_like(self.parameters['means'])

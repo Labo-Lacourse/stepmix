@@ -1,7 +1,7 @@
 """Demo script for FIML models with missing values."""
 import numpy as np
 from lca.lca import LCA
-from lca.datasets import data_bakk_response, data_generation_gaussian
+from lca.datasets import data_gaussian_diag
 
 
 def print_results(log_likelihoods, means):
@@ -17,48 +17,44 @@ def print_results(log_likelihoods, means):
     for i, ll in enumerate(log_likelihoods):
         print(f'{get_exp_name(i)} log-likelihood : {ll:.3f}')
     for i, mean in enumerate(means):
-        print(f'{get_exp_name(i)} means : {np.sort(mean.flatten())}')
+        print(f'{get_exp_name(i)} means : {np.sort(mean.flatten()).round(2)}')
 
 
 np.random.seed(42)
-print('Bakk experiment on full data with the full implementation...')
-X, Y, c = data_bakk_response(n_samples=3000, sep_level=.7, random_state=42)
+print('Experiment on full data with the full implementation...')
+X, Y, c = data_gaussian_diag(n_samples=1000, sep_level=.9, random_state=42, nan_ratio=.00)
 
 ll_list = []
 means_list = []
 
 # Run experiment for 1-step on full data with the 'full' implementations
 m = LCA(n_steps=1, n_components=3, measurement='bernoulli', structural='gaussian_unit', tol=1e-5, n_init=10,
-        random_state=42, max_iter=200)
+        random_state=42, max_iter=100)
 m.fit(X, Y)
 
-print(m.get_parameters()['measurement']['pis'])
+print(m.get_parameters()['measurement']['pis'].round(2))
 means_list.append(m.get_parameters()['structural']['means'])
 ll_list.append(m.score(X, Y))
 
 # Run experiment for 1-step on full data with the 'nan' implementations
-print('\nBakk experiment on full data with the nan implementation...')
+print('\nExperiment on full data with the nan implementation...')
 m = LCA(n_steps=1, n_components=3, measurement='bernoulli_nan', structural='gaussian_unit_nan', tol=1e-5, n_init=10,
-        random_state=42, max_iter=200)
+        random_state=42, max_iter=100)
 m.fit(X, Y)
 
-print(m.get_parameters()['measurement']['pis'])
+print(m.get_parameters()['measurement']['pis'].round(2))
 means_list.append(m.get_parameters()['structural']['means'])
 ll_list.append(m.score(X, Y))
 
 # Run experiment for 1-step on partial data with the 'nan' implementations
-print('\nBakk experiment with 2/3 of observed data...')
-X_partial, Y_partial = X.copy().astype(float), Y.copy().astype(float)
-X_partial[:1000, [0, 1]] = np.nan
-X_partial[1000:2000, [2, 3]] = np.nan
-X_partial[2000:, [4, 5]] = np.nan
-Y_partial[::3] = np.nan
+print('\nExperiment with 2/3 of observed data...')
+X_partial, Y_partial, c = data_gaussian_diag(n_samples=1000, sep_level=.9, random_state=42, nan_ratio=1/3)
 
 # Run experiment for 1-step on partial data
 m = LCA(n_steps=1, n_components=3, measurement='bernoulli_nan', structural='gaussian_nan', tol=1e-5, n_init=10,
-        random_state=42, max_iter=200)
+        random_state=42, max_iter=100)
 m.fit(X_partial, Y_partial)
-print(m.get_parameters()['measurement']['pis'])
+print(m.get_parameters()['measurement']['pis'].round(2))
 means_list.append(m.get_parameters()['structural']['means'])
 
 # Score the complete dataset
