@@ -225,8 +225,7 @@ class GaussianNan(Emission):
 
     def _naive_ll(self, X):
         # Naive loopy way to compute the log likelihood
-        # Children class should leverage their covariance structure to override
-        # this and make it more efficient
+        # Useful for debugging, otherwise self._log_likelihood should be preferred
         is_observed = ~np.isnan(X)
 
         n, D = X.shape
