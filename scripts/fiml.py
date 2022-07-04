@@ -3,8 +3,12 @@ import numpy as np
 from lca.lca import LCA
 from lca.datasets import data_gaussian_diag
 
+# Specify covariance here. 'diag' or 'unit'
+COV = 'diag'
+N_SAMPLES = 1000
 
-def print_results(log_likelihoods, means):
+
+def print_results(log_likelihoods):
     # Helper function to quickly print experiment results
     def get_exp_name(i):
         if i == 0:
@@ -18,61 +22,80 @@ def print_results(log_likelihoods, means):
 
     for i, ll in enumerate(log_likelihoods):
         print(f'{get_exp_name(i)} log-likelihood : {ll:.3f}')
-    for i, mean in enumerate(means):
-        print(f'{get_exp_name(i)} means : {np.sort(mean.flatten()).round(2)}')
 
 
 np.random.seed(42)
 print('Experiment on full data with the full implementation...')
-X, Y, c = data_gaussian_diag(n_samples=1000, sep_level=.9, random_state=42, nan_ratio=.00)
+X, Y, c = data_gaussian_diag(n_samples=N_SAMPLES, sep_level=.9, random_state=42, nan_ratio=.00)
 
 ll_list = []
 means_list = []
+cov_list = []
 
 # Run experiment for 1-step on full data with the 'full' implementations
-m = LCA(n_steps=1, n_components=3, measurement='bernoulli', structural='gaussian_unit', tol=1e-5, n_init=10,
+m = LCA(n_steps=1, n_components=3, measurement='bernoulli', structural=f'gaussian_{COV}', tol=1e-5, n_init=10,
         random_state=42, max_iter=100)
 m.fit(X, Y)
 
-print(m.get_parameters()['measurement']['pis'].round(2))
 means_list.append(m.get_parameters()['structural']['means'])
+cov_list.append(m.get_parameters()['structural']['covariances'])
 ll_list.append(m.score(X, Y))
 
 # Run experiment for 1-step on full data with the 'nan' implementations
 print('\nExperiment on full data with the nan implementation...')
-m = LCA(n_steps=1, n_components=3, measurement='bernoulli_nan', structural='gaussian_unit_nan', tol=1e-5, n_init=10,
+m = LCA(n_steps=1, n_components=3, measurement='bernoulli_nan', structural=f'gaussian_{COV}_nan', tol=1e-5, n_init=10,
         random_state=42, max_iter=100)
 m.fit(X, Y)
 
-print(m.get_parameters()['measurement']['pis'].round(2))
 means_list.append(m.get_parameters()['structural']['means'])
+cov_list.append(m.get_parameters()['structural']['covariances'])
 ll_list.append(m.score(X, Y))
 
 # Run experiment for 1-step on partial data with the 'nan' implementations
 print('\nExperiment with 2/3 of observed data with the fast nan implementation...')
-X_partial, Y_partial, c = data_gaussian_diag(n_samples=1000, sep_level=.9, random_state=42, nan_ratio=1/4)
+X_partial, Y_partial, c = data_gaussian_diag(n_samples=N_SAMPLES, sep_level=.9, random_state=42, nan_ratio=1/3)
 
 # Run experiment for 1-step on partial data
-m = LCA(n_steps=1, n_components=3, measurement='bernoulli_nan', structural='gaussian_nan', tol=1e-5, n_init=10,
+m = LCA(n_steps=1, n_components=3, measurement='bernoulli_nan', structural=f'gaussian_{COV}_nan', tol=1e-5, n_init=10,
         random_state=42, max_iter=100)
 m.fit(X_partial, Y_partial)
-print(m.get_parameters()['measurement']['pis'].round(2))
+
 means_list.append(m.get_parameters()['structural']['means'])
+cov_list.append(m.get_parameters()['structural']['covariances'])
 
 # Score the complete dataset
 ll_list.append(m.score(X, Y))
 
 # Run experiment for 1-step on partial data using the debug likelihood
-print('\nExperiment with 2/3 of observed data with the debug nan implementation...')
-m = LCA(n_steps=1, n_components=3, measurement='bernoulli_nan', structural='gaussian_nan', tol=1e-5, n_init=10,
+print('\nExperiment with 2/3 of observed data with the debug nan implementation (this is slow)...')
+m = LCA(n_steps=1, n_components=3, measurement='bernoulli_nan', structural=f'gaussian_{COV}_nan', tol=1e-5, n_init=10,
         random_state=42, max_iter=100, structural_params=dict(debug_likelihood=True))
 m.fit(X_partial, Y_partial)
-print(m.get_parameters()['measurement']['pis'].round(2))
+
 means_list.append(m.get_parameters()['structural']['means'])
+cov_list.append(m.get_parameters()['structural']['covariances'])
 
 # Score the complete dataset
 ll_list.append(m.score(X, Y))
 
-# Report ll and means
+# Report ll
 print("\n\nExperiment summary...")
-print_results(ll_list, means_list)
+print_results(ll_list)
+
+print("\n\nStructural means of fully observed implementation...")
+print(means_list[0].round(2))
+
+print("\n\nStructural means of fast nan implementation on all data...")
+print(means_list[1].round(2))
+
+print("\n\nStructural means of fast nan implementation on 2/3 of data...")
+print(means_list[2].round(2))
+
+print("\n\nStructural covariances of fully observed implementation...")
+print(cov_list[0].round(2))
+
+print("\n\nStructural covariances of fast nan implementation on all data...")
+print(cov_list[1].round(2))
+
+print("\n\nStructural covariances of fast nan implementation on 2/3 of data...")
+print(cov_list[2].round(2))

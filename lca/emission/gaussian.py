@@ -157,6 +157,7 @@ class GaussianNan(Emission):
 
     This class assumes a diagonal covariance structure. The covariances are therefore represented as a
     (n_components, n_features) array."""
+
     def __init__(self, debug_likelihood=False, **kwargs):
         super().__init__(**kwargs)
         self.debug_likelihood = debug_likelihood
@@ -165,7 +166,6 @@ class GaussianNan(Emission):
         is_observed = ~np.isnan(X)
 
         # Replace all nans with 0
-        X = np.nan_to_num(X)
         resp_sums = list()
 
         # Compute normalization factor over observed values for each feature
@@ -177,6 +177,7 @@ class GaussianNan(Emission):
         self.parameters['covariances'] = self._compute_cov(X, resp, resp_sums)
 
     def _compute_means(self, X, resp, resp_sums):
+        X = np.nan_to_num(X)
         means = (resp[..., np.newaxis] * X[:, np.newaxis, :]).sum(axis=0)
 
         # Normalize
@@ -193,7 +194,7 @@ class GaussianNan(Emission):
             return self._log_likelihood(X)
         else:
             # Compute the log likelihood naively. Useful for debugging, but slow
-            return self._naive_ll(X)
+            return self._debug_ll(X)
 
     def _log_likelihood(self, X):
         # To be tested, but this should work for any diagonal covariance
@@ -208,7 +209,7 @@ class GaussianNan(Emission):
             diff = np.nan_to_num(diff)
 
             # First compute the likelihood from the term (x-\mu)^T \Sigma^-1 (x-\mu)
-            precision_c = 1/self.parameters['covariances'][c]
+            precision_c = 1 / self.parameters['covariances'][c]
             ll_diff = ((diff ** 2) * precision_c.reshape(1, -1)).sum(axis=1)
 
             # Then compute the likelihood from the term log det(2*\pi*\Sigma)
@@ -223,7 +224,7 @@ class GaussianNan(Emission):
 
         return log_eps
 
-    def _naive_ll(self, X):
+    def _debug_ll(self, X):
         # Naive loopy way to compute the log likelihood
         # Useful for debugging, otherwise self._log_likelihood should be preferred
         is_observed = ~np.isnan(X)
@@ -260,3 +261,25 @@ class GaussianUnitNan(GaussianNan):
     def _compute_cov(self, X, resp, resp_sums):
         """No estimate. Simply return diagonal covariance 1 for all features."""
         return np.ones_like(self.parameters['means'])
+
+
+class GaussianDiagNan(GaussianNan):
+    """Gaussian emission model with diagonal covariance supporting missing values (Full Information Maximum
+    Likelihood)"""
+
+    def _compute_cov(self, X, resp, resp_sums):
+        """One covariance parameter per column."""
+        covs = list()
+        for c in range(self.n_components):
+            diff = X - self.parameters['means'][c].reshape(1, -1)
+            diff = np.nan_to_num(diff)  # Zero out the nans
+            cov_c = resp[:, c][..., np.newaxis] * (diff ** 2)
+            covs.append(cov_c.sum(axis=0))
+
+        covs = np.vstack(covs)
+
+        # Normalize
+        for i in range(covs.shape[1]):
+            covs[:, i] /= resp_sums[i]
+
+        return covs
