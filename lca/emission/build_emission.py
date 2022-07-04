@@ -1,5 +1,5 @@
 from .categorical import Bernoulli, BernoulliNan, Multinoulli
-from .gaussian import GaussianUnit, GaussianSpherical, GaussianDiag, GaussianTied, GaussianFull, GaussianUnitNan, GaussianDiagNan
+from .gaussian import GaussianUnit, GaussianSpherical, GaussianDiag, GaussianTied, GaussianFull, GaussianUnitNan, GaussianDiagNan, GaussianSphericalNan
 from .covariate import Covariate
 from .nested import Nested
 
@@ -17,6 +17,7 @@ EMISSION_DICT = {
     'covariate': Covariate,
     'gaussian_nan': GaussianUnitNan,
     'gaussian_unit_nan': GaussianUnitNan,
+    'gaussian_spherical_nan': GaussianSphericalNan,
     'gaussian_diag_nan': GaussianDiagNan,
     'bernoulli_nan': BernoulliNan,
     'binary_nan': BernoulliNan,

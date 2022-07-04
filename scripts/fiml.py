@@ -3,7 +3,7 @@ import numpy as np
 from lca.lca import LCA
 from lca.datasets import data_gaussian_diag
 
-# Specify covariance here. 'diag' or 'unit'
+# Specify covariance here. 'unit', 'spherical' or 'diag'
 COV = 'diag'
 N_SAMPLES = 1000
 

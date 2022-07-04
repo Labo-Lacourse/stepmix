@@ -263,6 +263,31 @@ class GaussianUnitNan(GaussianNan):
         return np.ones_like(self.parameters['means'])
 
 
+class GaussianSphericalNan(GaussianNan):
+    """Gaussian emission model with spherical covariance supporting missing values (Full Information Maximum
+    Likelihood)"""
+
+    def _compute_cov(self, X, resp, resp_sums):
+        """One covariance parameter per component."""
+        covs = list()
+        is_observed = ~np.isnan(X)
+        is_observed_row = is_observed.sum(axis=1)
+
+        for c in range(self.n_components):
+            diff = X - self.parameters['means'][c].reshape(1, -1)
+            diff = np.nan_to_num(diff)  # Zero out the nans
+            cov_c = resp[:, c][..., np.newaxis] * (diff ** 2)
+            z = resp[:, c] @ is_observed_row
+            covs.append(cov_c.sum()/z)
+
+        covs = np.array(covs)
+
+        # Keep a diagonal format for compatibility with parent class
+        result = np.ones_like(self.parameters['means']) * covs.reshape((-1, 1))
+
+        return result
+
+
 class GaussianDiagNan(GaussianNan):
     """Gaussian emission model with diagonal covariance supporting missing values (Full Information Maximum
     Likelihood)"""
