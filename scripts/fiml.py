@@ -10,9 +10,11 @@ def print_results(log_likelihoods, means):
         if i == 0:
             return 'Fully observed (full implementation)'
         if i == 1:
-            return 'Fully observed  (nan implementation)'
+            return 'Fully observed  (fast nan implementation)'
         if i == 2:
-            return '2/3 observed    (nan implementation)'
+            return '2/3 observed    (fast nan implementation)'
+        if i == 3:
+            return '2/3 observed    (debug nan implementation)'
 
     for i, ll in enumerate(log_likelihoods):
         print(f'{get_exp_name(i)} log-likelihood : {ll:.3f}')
@@ -47,12 +49,23 @@ means_list.append(m.get_parameters()['structural']['means'])
 ll_list.append(m.score(X, Y))
 
 # Run experiment for 1-step on partial data with the 'nan' implementations
-print('\nExperiment with 2/3 of observed data...')
-X_partial, Y_partial, c = data_gaussian_diag(n_samples=1000, sep_level=.9, random_state=42, nan_ratio=1/3)
+print('\nExperiment with 2/3 of observed data with the fast nan implementation...')
+X_partial, Y_partial, c = data_gaussian_diag(n_samples=1000, sep_level=.9, random_state=42, nan_ratio=1/4)
 
 # Run experiment for 1-step on partial data
 m = LCA(n_steps=1, n_components=3, measurement='bernoulli_nan', structural='gaussian_nan', tol=1e-5, n_init=10,
         random_state=42, max_iter=100)
+m.fit(X_partial, Y_partial)
+print(m.get_parameters()['measurement']['pis'].round(2))
+means_list.append(m.get_parameters()['structural']['means'])
+
+# Score the complete dataset
+ll_list.append(m.score(X, Y))
+
+# Run experiment for 1-step on partial data using the debug likelihood
+print('\nExperiment with 2/3 of observed data with the debug nan implementation...')
+m = LCA(n_steps=1, n_components=3, measurement='bernoulli_nan', structural='gaussian_nan', tol=1e-5, n_init=10,
+        random_state=42, max_iter=100, structural_params=dict(debug_likelihood=True))
 m.fit(X_partial, Y_partial)
 print(m.get_parameters()['measurement']['pis'].round(2))
 means_list.append(m.get_parameters()['structural']['means'])

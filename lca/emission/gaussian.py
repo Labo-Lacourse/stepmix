@@ -157,6 +157,9 @@ class GaussianNan(Emission):
 
     This class assumes a diagonal covariance structure. The covariances are therefore represented as a
     (n_components, n_features) array."""
+    def __init__(self, debug_likelihood=False, **kwargs):
+        super().__init__(**kwargs)
+        self.debug_likelihood = debug_likelihood
 
     def m_step(self, X, resp):
         is_observed = ~np.isnan(X)
@@ -186,6 +189,41 @@ class GaussianNan(Emission):
         raise NotImplementedError('No covariance estimator is implemented.')
 
     def log_likelihood(self, X):
+        if not self.debug_likelihood:
+            return self._log_likelihood(X)
+        else:
+            # Compute the log likelihood naively. Useful for debugging, but slow
+            return self._naive_ll(X)
+
+    def _log_likelihood(self, X):
+        # To be tested, but this should work for any diagonal covariance
+        is_observed = ~np.isnan(X)
+        n, D = X.shape
+        log_eps = np.zeros((n, self.n_components))
+
+        for c in range(self.n_components):
+            diff = X - self.parameters['means'][c].reshape(1, -1)
+
+            # Zero out the nans
+            diff = np.nan_to_num(diff)
+
+            # First compute the likelihood from the term (x-\mu)^T \Sigma^-1 (x-\mu)
+            precision_c = 1/self.parameters['covariances'][c]
+            ll_diff = ((diff ** 2) * precision_c.reshape(1, -1)).sum(axis=1)
+
+            # Then compute the likelihood from the term log det(2*\pi*\Sigma)
+            pi_cov_c = 2 * np.pi * np.tile(self.parameters['covariances'][c], (n, 1))
+
+            # Replace nan dimensions with 1 since this won't affect the product of the diagonal (determinant)
+            pi_cov_c = np.where(is_observed, pi_cov_c, 1)
+
+            log_dets = np.log(pi_cov_c).sum(axis=1)
+
+            log_eps[:, c] = -.5 * (log_dets + ll_diff)
+
+        return log_eps
+
+    def _naive_ll(self, X):
         # Naive loopy way to compute the log likelihood
         # Children class should leverage their covariance structure to override
         # this and make it more efficient
