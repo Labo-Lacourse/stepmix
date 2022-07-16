@@ -110,6 +110,8 @@ class LCA(BaseEstimator):
         Measurement model, including parameters and estimation methods.
     _sm : lca.emission.Emission
         Structural model, including parameters and estimation methods.
+    n_parameters: int
+        Number of free parameters in the model.
     log_resp_ : ndarray of shape (n_samples, n_components)
         Initial log responsibilities.
     measurement_in_: int
@@ -312,6 +314,15 @@ class LCA(BaseEstimator):
         if init_emission:
             # Use the provided random_state instead of self.random_state to ensure we have a different init every run
             self._sm.initialize(Y, np.exp(self.log_resp_), random_state)
+
+    @property
+    def n_parameters(self):
+        """Get number of parameters."""
+        check_is_fitted(self)
+        n = self.n_components - 1 + self._mm.n_parameters
+        if hasattr(self, '_sm'):
+            n += self._sm.n_parameters
+        return n
 
     def _check_x_y(self, X=None, Y=None, reset=False):
         """Input validation function.

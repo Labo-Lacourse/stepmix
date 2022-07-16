@@ -1,7 +1,7 @@
 """Emission models.
 
 Encapsulate the M-step and log-likelihood computations of different conditional emission models."""
-from abc import ABC, abstractmethod
+from abc import ABC, abstractmethod, abstractproperty
 import copy
 
 from sklearn.utils.validation import check_random_state
@@ -36,6 +36,7 @@ class Emission(ABC):
     ----------
     self.parameters : dict
         Dictionary with all model parameters.
+    self.n_parameters :
 
     """
 
@@ -159,4 +160,10 @@ class Emission(ABC):
             Samples
 
         """
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def n_parameters(self):
+        """Number of free parameters in the model."""
         raise NotImplementedError

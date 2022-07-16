@@ -23,6 +23,10 @@ class Bernoulli(Emission):
         X = (self.random_state.uniform(size=(n_samples, K)) < feature_weights).astype(int)
         return X
 
+    @property
+    def n_parameters(self):
+        return self.parameters['pis'].shape[0] * self.parameters['pis'].shape[1]
+
 
 class BernoulliNan(Bernoulli):
     """Bernoulli (binary) emission model supporting missing values (Full Information Maximum Likelihood)."""
@@ -75,3 +79,8 @@ class Multinoulli(Emission):
         feature_weights = self.parameters['pis'][:, class_no, :]
         X = np.array([self.random_state.multinomial(1, feature_weights[k], size=n_samples) for k in range(K)])
         return X
+
+    @property
+    def n_parameters(self):
+        # TODO: Check with Robin
+        raise NotImplementedError

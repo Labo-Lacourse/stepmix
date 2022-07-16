@@ -89,3 +89,7 @@ class Covariate(Emission):
 
     def sample(self, class_no, n_samples):
         raise NotImplementedError
+
+    @property
+    def n_parameters(self):
+        return self.parameters['beta'].shape[0] * self.parameters['beta'].shape[1]

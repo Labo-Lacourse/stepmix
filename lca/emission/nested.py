@@ -82,6 +82,13 @@ class Nested(Emission):
         for key, item in parameters.items():
             self.models[key].set_parameters(item)
 
+    @property
+    def n_parameters(self):
+        n = 0
+        for m in self.models:
+            n = m.n_parameters
+        return n
+
 
 
 

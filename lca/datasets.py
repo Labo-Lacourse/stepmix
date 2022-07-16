@@ -234,7 +234,6 @@ def data_generation_gaussian(n_samples, sep_level, n_mm=6, random_state=None):
     return X, Y, labels
 
 
-# Data generation: Simulated problems from IFT6269 Hwk 4
 def data_gaussian_diag(n_samples, sep_level, n_mm=6, random_state=None, nan_ratio=0.0):
     """Bakk binary measurement model with 2D diagonal gaussian structural model.
 

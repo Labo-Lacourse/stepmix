@@ -29,6 +29,10 @@ class GaussianUnit(Emission):
         X = self.random_state.normal(loc=self.parameters['means'][class_no], scale=np.ones(D), size=(n_samples, D))
         return X
 
+    @property
+    def n_parameters(self):
+        return self.parameters['means'].shape[0] * self.parameters['means'].shape[1]
+
 
 class Gaussian(Emission):
     """Gaussian emission model with various covariance options.
@@ -121,6 +125,11 @@ class Gaussian(Emission):
             params['precisions_cholesky'] = _compute_precision_cholesky(params['covariances'], self.covariance_type)
         GaussianMixture._set_parameters(self,
                                         (None, params['means'], params['covariances'], params['precisions_cholesky']))
+
+    @property
+    def n_parameters(self):
+        n = GaussianMixture._n_parameters(self)
+        return n
 
 
 class GaussianFull(Gaussian):
@@ -262,6 +271,10 @@ class GaussianUnitNan(GaussianNan):
         """No estimate. Simply return diagonal covariance 1 for all features."""
         return np.ones_like(self.parameters['means'])
 
+    @property
+    def n_parameters(self):
+        return self.parameters['means'].shape[0] * self.parameters['means'].shape[1]
+
 
 class GaussianSphericalNan(GaussianNan):
     """Gaussian emission model with spherical covariance supporting missing values (Full Information Maximum
@@ -287,6 +300,15 @@ class GaussianSphericalNan(GaussianNan):
 
         return result
 
+    @property
+    def n_parameters(self):
+        mean_params = self.parameters['means'].shape[0] * self.parameters['means'].shape[1]
+
+        # Covariance are n latent class x n features, but we only have one degree of freedom per class
+        cov_params = self.parameters['covariances'].shape[0]
+
+        return mean_params + cov_params
+
 
 class GaussianDiagNan(GaussianNan):
     """Gaussian emission model with diagonal covariance supporting missing values (Full Information Maximum
@@ -308,3 +330,10 @@ class GaussianDiagNan(GaussianNan):
             covs[:, i] /= resp_sums[i]
 
         return covs
+
+    @property
+    def n_parameters(self):
+        mean_params = self.parameters['means'].shape[0] * self.parameters['means'].shape[1]
+        cov_params = self.parameters['covariances'].shape[0] * self.parameters['covariances'].shape[1]
+
+        return mean_params + cov_params
