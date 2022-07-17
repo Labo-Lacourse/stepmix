@@ -21,6 +21,7 @@ from . import utils
 from .corrections import compute_bch_matrix, compute_log_emission_pm
 from .emission.build_emission import EMISSION_DICT, build_emission
 
+
 class LCA(BaseEstimator):
     """Latent Class Analysis.
 
@@ -568,7 +569,8 @@ class LCA(BaseEstimator):
                 prev_lower_bound = lower_bound
 
                 # E-step
-                log_prob_norm, log_resp = self._e_step(X, Y=Y, sample_weight=sample_weight, log_emission_pm=log_emission_pm)
+                log_prob_norm, log_resp = self._e_step(X, Y=Y, sample_weight=sample_weight,
+                                                       log_emission_pm=log_emission_pm)
 
                 # M-step
                 self._m_step(X, np.exp(log_resp), Y, sample_weight=sample_weight, freeze_measurement=freeze_measurement)
@@ -744,6 +746,50 @@ class LCA(BaseEstimator):
 
         avg_ll, _ = self._e_step(X, Y=Y, sample_weight=sample_weight)
         return avg_ll
+
+    def bic(self, X, Y=None):
+        """Bayesian information criterion for the current model on the measurement data X and optionally the structural
+        data Y.
+
+        Adapted from https://github.com/scikit-learn/scikit-learn/blob/baf0ea25d6dd034403370fea552b21a6776bef18/sklearn/mixture/_base.py
+        
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
+            List of n_features-dimensional data points. Each row
+            corresponds to a single data point of the measurement model.
+        Y : array-like of shape (n_samples, n_structural), default = None
+            List of n_structural-dimensional data points. Each row
+            corresponds to a single data point of the structural model.
+        Returns
+        -------
+        bic : float
+            The lower the better.
+        """
+        return -2 * self.score(X, Y) * X.shape[0] + self.n_parameters * np.log(
+            X.shape[0]
+        )
+
+    def aic(self, X, Y=None):
+        """Akaike information criterion for the current model on the measurement data X and optionally the structural
+        data Y.
+
+        Adapted from https://github.com/scikit-learn/scikit-learn/blob/baf0ea25d6dd034403370fea552b21a6776bef18/sklearn/mixture/_base.py
+        
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
+            List of n_features-dimensional data points. Each row
+            corresponds to a single data point of the measurement model.
+        Y : array-like of shape (n_samples, n_structural), default = None
+            List of n_structural-dimensional data points. Each row
+            corresponds to a single data point of the structural model.
+        Returns
+        -------
+        aic : float
+            The lower the better.
+        """
+        return -2 * self.score(X, Y) * X.shape[0] + 2 * self.n_parameters
 
     def predict(self, X, Y=None):
         """Predict the labels for the data samples in X using the measurement model.
