@@ -1,6 +1,8 @@
 import numbers
 import numpy as np
 
+from sklearn.utils.validation import check_is_fitted
+
 
 # Check parameters utils copied from the PHATE library
 def check_positive(**params):
@@ -206,3 +208,131 @@ def modal(resp, clip=False):
         modal_resp = np.clip(modal_resp, 1e-15, 1 - 1e-15)
 
     return modal_resp
+
+
+def print_report(model, X, Y=None):
+    """Print detailed output for the model.
+
+    Parameters
+    ----------
+    model: lca.LCA
+        Fitted LCA instance.
+    X : array-like of shape (n_samples, n_features)
+        List of n_features-dimensional data points. Each row
+        corresponds to a single data point of the measurement model.
+    Y : array-like of shape (n_samples, n_structural), default = None
+        List of n_structural-dimensional data points. Each row
+        corresponds to a single data point of the structural model.
+    """
+    check_is_fitted(model)
+    n_classes = model.n_components
+    n_samples = X.shape[0]
+    n_parameters = model.n_parameters
+    ll = model.score(X, Y)
+    bic = model.bic(X, Y)
+    aic = model.aic(X, Y)
+
+    print("=" * 80)
+    print("MODEL REPORT")
+    print("=" * 80)
+    print("    " + "=" * 76)
+    print(f"    Measurement model parameters")
+    print("    " + "=" * 76)
+    model._mm.print_parameters(indent=2)
+
+    if hasattr(model, '_sm'):
+        print("    " + "=" * 76)
+        print(f"    Structural model parameters")
+        print("    " + "=" * 76)
+        model._sm.print_parameters(indent=2)
+
+    print("    " + "=" * 76)
+    print(f"    Class weights")
+    print("    " + "=" * 76)
+    for i, w in enumerate(model.weights_):
+        print(f"        Class {i + 1} : {w:.2f}")
+
+
+    print("    " + "=" * 76)
+    print(f"    Fit for {n_classes} latent classes")
+    print("    " + "=" * 76)
+    print(f"    Estimation method             : {model.n_steps}-step")
+    if model.n_steps == 3:
+        print(f"    Correction method             : {model.correction}")
+        print(f"    Assignment method             : {model.assignment}")
+    print(f"    Number of observations        : {n_samples}")
+    print(f"    Number of latent classes      : {n_classes}")
+    print(f"    Number of estimated parameters: {n_parameters}")
+    print(f"    Average log-likelihood        : {ll:.4f}")
+    print(f"    AIC                           : {aic:.2f}")
+    print(f"    BIC                           : {bic:.2f}")
+
+
+def print_parameters(params, model_name, indent=1, np_precision=2, intercept=False, print_mean=False,
+                     covariances=None, tied=False):
+    """Print model parameters with nice formatting.
+
+    Parameters
+    ----------
+    params: np.ndarray
+        Array of parameters to print. The first axis should correspond to latent classes.
+    model_name: str
+        Model name.
+    indent: int
+        Indent of the print.
+    np_precision: int
+        Float precision for numpy prints.
+    intercept: bool, default=False
+        One parameter is an intercept. Only used for covariate model.
+    print_mean: bool, default=False
+        Add a 'means' header before printing the first parameters. Used for gaussian models.
+    covariances: np.ndarray, default=None
+        If provided, also print covariances. Used for gaussian models.
+    tied: bool, default=False
+        Only print the covariance once and not by class. Used for gaussian model with tied covariance..
+    """
+    np.set_printoptions(precision=np_precision)
+    indent_str = "    " * indent
+    n_classes, n_features = params.shape
+
+    if intercept:
+        n_features -= 1
+
+    # Title
+    print(indent_str + '-' * (80 - indent * 4))
+    print(indent_str + f"{model_name} model with {n_features} feature" + ("s" if n_features > 1 else "") + (
+        " and intercept" if intercept else ""))
+    print(indent_str + '-' * (80 - indent * 4))
+
+    # Clarification message for covariate model
+    if intercept:
+        print(indent_str + "Intercept coefficients are in the first column.")
+
+    # Specify that the following parameters are means
+    if print_mean:
+        print(indent_str + "Means")
+        print(indent_str + "-----")
+
+    # Print parameters
+    for i, p in enumerate(params):
+        print(indent_str + f"Class {i + 1} : {p}")
+
+    # Print covariances if provided
+    if covariances is not None:
+        print()
+        print(indent_str + "Covariance"  + ("s" if not tied else ""))
+        print(indent_str + "-----------")
+        if tied:
+            for c in covariances:
+                print(indent_str + f"{c}")
+        else:
+            for i, p in enumerate(covariances):
+                if isinstance(p, np.ndarray) and len(p.shape) == 2:
+                    print(indent_str + f"Class {i + 1} :")
+                    for c in p:
+                        print(indent_str + f"{c}")
+                    print()
+                elif isinstance(p, np.ndarray):
+                    print(indent_str + f"Class {i + 1} : {p}")
+                else:
+                    print(indent_str + f"Class {i + 1} : {p:.2f}")

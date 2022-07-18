@@ -2,7 +2,7 @@ import numpy as np
 from scipy.special import softmax
 
 from lca.emission.emission import Emission
-from lca.utils import check_in
+from lca.utils import check_in, print_parameters
 
 
 class Covariate(Emission):
@@ -89,6 +89,9 @@ class Covariate(Emission):
 
     def sample(self, class_no, n_samples):
         raise NotImplementedError
+
+    def print_parameters(self, indent):
+        print_parameters(self.parameters['beta'].T, 'Covariate', np_precision=2, indent=indent, intercept=True)
 
     @property
     def n_parameters(self):

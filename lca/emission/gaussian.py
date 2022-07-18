@@ -4,7 +4,7 @@ from sklearn.mixture import GaussianMixture
 from sklearn.mixture._gaussian_mixture import _estimate_gaussian_parameters, _compute_precision_cholesky
 
 from lca.emission.emission import Emission
-from lca.utils import check_in, check_nonneg
+from lca.utils import check_in, check_nonneg, print_parameters
 
 
 class GaussianUnit(Emission):
@@ -28,6 +28,10 @@ class GaussianUnit(Emission):
         D = self.parameters['means'].shape[1]
         X = self.random_state.normal(loc=self.parameters['means'][class_no], scale=np.ones(D), size=(n_samples, D))
         return X
+
+    def print_parameters(self, indent):
+        print_parameters(self.parameters['means'], 'Gaussian (unit variance)', np_precision=2, indent=indent,
+                         print_mean=True)
 
     @property
     def n_parameters(self):
@@ -125,6 +129,10 @@ class Gaussian(Emission):
             params['precisions_cholesky'] = _compute_precision_cholesky(params['covariances'], self.covariance_type)
         GaussianMixture._set_parameters(self,
                                         (None, params['means'], params['covariances'], params['precisions_cholesky']))
+
+    def print_parameters(self, indent):
+        print_parameters(self.means_, f'Gaussian ({self.covariance_type} covariance)', np_precision=2, indent=indent,
+                         print_mean=True, covariances=self.covariances_, tied=self.covariance_type == 'tied')
 
     @property
     def n_parameters(self):
@@ -271,6 +279,10 @@ class GaussianUnitNan(GaussianNan):
         """No estimate. Simply return diagonal covariance 1 for all features."""
         return np.ones_like(self.parameters['means'])
 
+    def print_parameters(self, indent):
+        print_parameters(self.parameters['means'], f'Gaussian (unit covariance)', np_precision=2, indent=indent,
+                         print_mean=True)
+
     @property
     def n_parameters(self):
         return self.parameters['means'].shape[0] * self.parameters['means'].shape[1]
@@ -291,7 +303,7 @@ class GaussianSphericalNan(GaussianNan):
             diff = np.nan_to_num(diff)  # Zero out the nans
             cov_c = resp[:, c][..., np.newaxis] * (diff ** 2)
             z = resp[:, c] @ is_observed_row
-            covs.append(cov_c.sum()/z)
+            covs.append(cov_c.sum() / z)
 
         covs = np.array(covs)
 
@@ -299,6 +311,11 @@ class GaussianSphericalNan(GaussianNan):
         result = np.ones_like(self.parameters['means']) * covs.reshape((-1, 1))
 
         return result
+
+    def print_parameters(self, indent):
+        # Only print first column, since covariance is shared across dimensions
+        print_parameters(self.parameters['means'], f'Gaussian (spherical covariance)', np_precision=2, indent=indent,
+                         print_mean=True, covariances=self.parameters['covariances'][:, 0])
 
     @property
     def n_parameters(self):
@@ -330,6 +347,10 @@ class GaussianDiagNan(GaussianNan):
             covs[:, i] /= resp_sums[i]
 
         return covs
+
+    def print_parameters(self, indent):
+        print_parameters(self.parameters['means'], f'Gaussian (diag covariance)', np_precision=2, indent=indent,
+                         print_mean=True, covariances=self.parameters['covariances'])
 
     @property
     def n_parameters(self):

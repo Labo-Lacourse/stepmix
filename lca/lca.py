@@ -96,10 +96,7 @@ class LCA(BaseEstimator):
         Controls the random seed given to the method chosen to initialize the
         parameters. Pass an int for reproducible output across multiple function calls.
     verbose : int, default=0
-        Enable verbose output. If 1 then it prints the current
-        initialization and each iteration step. If greater than 1 then
-        it prints also the log probability and the time needed
-        for each step. TODO: Not currently implemented.
+        Enable verbose output. If 1, will priunt detailed report of the model and the performance metrics after fitting.
     verbose_interval : int, default=10
         Number of iteration done before the next print. TODO: Not currently implemented.
 
@@ -503,6 +500,25 @@ class LCA(BaseEstimator):
 
             # 3) Degenerate EM with fixed log_emission_pm
             self.em(X, Y, freeze_measurement=True, log_emission_pm=log_emission_pm)
+
+        # Print report if required
+        if self.verbose == 1:
+            self.report(X, Y)
+
+    def report(self, X, Y=None):
+        """Print detailed report of the model and performance metrics.
+
+
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
+            List of n_features-dimensional data points. Each row
+            corresponds to a single data point of the measurement model.
+        Y : array-like of shape (n_samples, n_structural), default = None
+            List of n_structural-dimensional data points. Each row
+            corresponds to a single data point of the structural model.
+        """
+        utils.print_report(self, X, Y)
 
     def em(self, X, Y=None, sample_weight=None, freeze_measurement=False, log_emission_pm=None):
         """EM algorithm to fit the weights, measurement parameters and structural parameters.
