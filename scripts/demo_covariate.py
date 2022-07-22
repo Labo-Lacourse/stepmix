@@ -43,7 +43,6 @@ def print_results(log_likelihoods, rand_scores, means, intercepts):
         print(f'{i + 1}-step intercepts   : {intercepts[i][order].flatten()}')
         print("\n")
 
-
 print('Bakk covariate experiment...')
 
 ll_list = []

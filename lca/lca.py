@@ -234,6 +234,7 @@ class LCA(BaseEstimator):
         utils.check_emission_param(self.structural, keys=EMISSION_DICT.keys())
         utils.check_type(dict, measurement_params=self.measurement_params, structural_params=self.structural_params)
 
+
     def _initialize_parameters(self, X, random_state):
         """Initialize the weights and measurement model parameters.
 
@@ -279,6 +280,7 @@ class LCA(BaseEstimator):
 
         # Initialize measurement model
         self._initialize_parameters_measurement(X, random_state)
+
 
     def _initialize_parameters_measurement(self, X, random_state=None, init_emission=True):
         """Initialize parameters of measurement model.
@@ -472,7 +474,7 @@ class LCA(BaseEstimator):
             resp = utils.modal(soft_resp, clip=True) if self.assignment == 'modal' else soft_resp
 
             # Apply BCH correction
-            _, D_inv = compute_bch_matrix(soft_resp)
+            _, D_inv = compute_bch_matrix(soft_resp, self.assignment)
             resp = resp @ D_inv
 
             # 3) M-step on the structural model
@@ -487,7 +489,7 @@ class LCA(BaseEstimator):
             soft_resp = self.predict_proba(X)
 
             # Compute D
-            D, _ = compute_bch_matrix(soft_resp)
+            D, _ = compute_bch_matrix(soft_resp, self.assignment)
 
             # Compute log_emission_pm
             log_emission_pm = compute_log_emission_pm(soft_resp.argmax(axis=1), D)

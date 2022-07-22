@@ -5,8 +5,7 @@ import numpy as np
 
 from lca import utils
 
-
-def compute_bch_matrix(resp):
+def compute_bch_matrix(resp, is_modal=True):
     """Compute the probability D[c,s] = P(X_pred=s | X=c) of predicting class latent class s given
     that a point belongs to latent class c.
 
@@ -15,7 +14,8 @@ def compute_bch_matrix(resp):
     Parameters
     ----------
     resp : array-like of shape (n_samples, n_components)
-        Class responsibilities.
+           Class responsibilities (i.e. proportional probabilities)
+    is_modal : is_modal=true to compute the modal version of BCH, is_modal=false for the proportional version
 
     Returns
     ----------
@@ -26,11 +26,11 @@ def compute_bch_matrix(resp):
     """
     # Dimensions
     n = resp.shape[0]
-    X_pred = utils.modal(resp)
+    resp_pred = utils.modal(resp) if is_modal else resp
     weights = resp.mean(axis=0)
 
     # BCH correction (based on the empirical distribution: eq (6))
-    D = (resp.T @ X_pred / weights.reshape((-1, 1))) / n
+    D = (resp.T @ resp_pred / weights.reshape((-1, 1))) / n
     D_inv = np.linalg.pinv(D)
 
     return D, D_inv
