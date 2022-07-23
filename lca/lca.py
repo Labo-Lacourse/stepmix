@@ -469,12 +469,11 @@ class LCA(BaseEstimator):
             # 2) Assign class probabilities
             soft_resp = self.predict_proba(X)
 
-            # Modal assignment (clipped for numerical reasons)
-            # Else we simply keep the assignment as is (soft)
-            resp = utils.modal(soft_resp, clip=True) if self.assignment == 'modal' else soft_resp
-
             # Apply BCH correction
             _, D_inv = compute_bch_matrix(soft_resp, self.assignment)
+
+            # Modal assignment (clipped for numerical reasons) or assignment as is (soft)
+            resp = utils.modal(soft_resp, clip=True) if self.assignment == 'modal' else soft_resp
             resp = resp @ D_inv
 
             # 3) M-step on the structural model
@@ -488,13 +487,10 @@ class LCA(BaseEstimator):
             # 2) Assign class probabilities
             soft_resp = self.predict_proba(X)
 
-            # Compute D
-            D, _ = compute_bch_matrix(soft_resp, self.assignment)
-
             # Compute log_emission_pm
-            log_emission_pm = compute_log_emission_pm(soft_resp.argmax(axis=1), D)
+            log_emission_pm = compute_log_emission_pm(soft_resp, self.assignment)
 
-            # 3) Degenerate EM with fixed log_emission_pm
+            # 3) Fit the the structural model by keeping the parameters of the measurement model fixed
             self.em(X, Y, freeze_measurement=True, log_emission_pm=log_emission_pm)
 
     def em(self, X, Y=None, sample_weight=None, freeze_measurement=False, log_emission_pm=None):
