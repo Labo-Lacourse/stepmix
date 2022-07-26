@@ -79,9 +79,12 @@ class LCA(BaseEstimator):
             - None : No correction. Run Naive 3-step.
             - 'BCH' : Apply the empirical BCH correction from *Vermunt, 2004*.
             - 'ML' : Apply the ML correction from *Vermunt, 2010; Bakk et al., 2013*.
-    tol : float, default=1e-3
+    abs_tol : float, default=1e-3
         The convergence threshold. EM iterations will stop when the
         lower bound average gain is below this threshold.
+    rel_tol : float, default=1e-10
+        The convergence threshold. EM iterations will stop when the
+        relative lower bound average gain is below this threshold.
     max_iter : int, default=100
         The number of EM iterations to perform.
     n_init : int, default=1
@@ -169,7 +172,8 @@ class LCA(BaseEstimator):
             structural="gaussian_unit",
             assignment="modal",
             correction=None,
-            tol=1e-3,
+            abs_tol=1e-3,
+            rel_tol=1e-10,
             max_iter=100,
             n_init=1,
             init_params="random",
@@ -181,7 +185,8 @@ class LCA(BaseEstimator):
     ):
         # Attributes of the base LCA class
         self.n_components = n_components
-        self.tol = tol
+        self.abs_tol = abs_tol
+        self.rel_tol = rel_tol
         self.max_iter = max_iter
         self.n_init = n_init
         self.init_params = init_params
@@ -222,7 +227,8 @@ class LCA(BaseEstimator):
                          verbose=self.verbose, verbose_interval=self.verbose_interval)
         utils.check_positive(n_components=self.n_components, max_iter=self.max_iter, n_init=self.n_init,
                              verbose_interval=self.verbose_interval)
-        utils.check_nonneg(tol=self.tol, verbose=self.verbose)
+        utils.check_nonneg(abs_tol=self.abs_tol, verbose=self.verbose)
+        utils.check_nonneg(rel_tol=self.rel_tol, verbose=self.verbose)
         utils.check_in([1, 2, 3], n_steps=self.n_steps)
         utils.check_in(["kmeans", "random"], init_params=self.init_params)
         utils.check_in(["modal", "soft"], init_params=self.assignment)
@@ -230,6 +236,7 @@ class LCA(BaseEstimator):
         utils.check_emission_param(self.measurement, keys=EMISSION_DICT.keys())
         utils.check_emission_param(self.structural, keys=EMISSION_DICT.keys())
         utils.check_type(dict, measurement_params=self.measurement_params, structural_params=self.structural_params)
+
 
     def _initialize_parameters(self, X, random_state):
         """Initialize the weights and measurement model parameters.
@@ -276,6 +283,7 @@ class LCA(BaseEstimator):
 
         # Initialize measurement model
         self._initialize_parameters_measurement(X, random_state)
+
 
     def _initialize_parameters_measurement(self, X, random_state=None, init_emission=True):
         """Initialize parameters of measurement model.
@@ -473,12 +481,11 @@ class LCA(BaseEstimator):
             # 2) Assign class probabilities
             soft_resp = self.predict_proba(X)
 
-            # Modal assignment (clipped for numerical reasons)
-            # Else we simply keep the assignment as is (soft)
-            resp = utils.modal(soft_resp, clip=True) if self.assignment == 'modal' else soft_resp
-
             # Apply BCH correction
-            _, D_inv = compute_bch_matrix(soft_resp)
+            _, D_inv = compute_bch_matrix(soft_resp, self.assignment)
+
+            # Modal assignment (clipped for numerical reasons) or assignment as is (soft)
+            resp = utils.modal(soft_resp, clip=True) if self.assignment == 'modal' else soft_resp
             resp = resp @ D_inv
 
             # 3) M-step on the structural model
@@ -492,13 +499,10 @@ class LCA(BaseEstimator):
             # 2) Assign class probabilities
             soft_resp = self.predict_proba(X)
 
-            # Compute D
-            D, _ = compute_bch_matrix(soft_resp)
-
             # Compute log_emission_pm
-            log_emission_pm = compute_log_emission_pm(soft_resp.argmax(axis=1), D)
+            log_emission_pm = compute_log_emission_pm(soft_resp, self.assignment)
 
-            # 3) Degenerate EM with fixed log_emission_pm
+            # 3) Fit the the structural model by keeping the parameters of the measurement model fixed
             self.em(X, Y, freeze_measurement=True, log_emission_pm=log_emission_pm)
 
         # Print report if required
@@ -594,8 +598,11 @@ class LCA(BaseEstimator):
                 # Likelihood & stopping criterion
                 lower_bound = log_prob_norm
                 change = lower_bound - prev_lower_bound
+                rel_change = change/lower_bound
 
-                if abs(change) < self.tol:
+                # if both an absolute and a relative tolerance threshold are given, the EM algorithm stops
+                # as soon as one of them is respected
+                if abs(change) < self.abs_tol or abs(rel_change) < self.rel_tol:
                     self.converged_ = True
                     break
 
@@ -608,7 +615,7 @@ class LCA(BaseEstimator):
             warnings.warn(
                 "Initializations did not converge. "
                 "Try different init parameters, "
-                "or increase max_iter, tol "
+                "or increase max_iter, abs_tol, rel_tol "
                 "or check for degenerate data.",
                 ConvergenceWarning,
             )

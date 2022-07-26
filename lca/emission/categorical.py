@@ -10,6 +10,7 @@ class Bernoulli(Emission):
     def m_step(self, X, resp):
         pis = X.T @ resp
         pis /= resp.sum(axis=0, keepdims=True)
+        pis = np.clip(pis, 1e-15, 1 - 1e-15)  # avoid probabilities 0 or 1
         self.parameters['pis'] = pis
 
     def log_likelihood(self, X):
@@ -66,22 +67,30 @@ class Multinoulli(Emission):
     """Multinoulli (categorical) emission model."""
 
     def m_step(self, X, resp):
-        pis = np.swapaxes((X.T @ resp).T, 0, 1)
-        pis /= np.swapaxes((X.T @ resp).T.sum(axis=2, keepdims=True), 0, 1)
+        pis = X.T @ resp
+        pis /= resp.sum(axis=0, keepdims=True)
         pis = np.clip(pis, 1e-15, 1 - 1e-15)  # avoid probabilities 0 or 1
         self.parameters['pis'] = pis
 
     def log_likelihood(self, X):
         # compute log emission probabilities
-        pis = np.clip(self.parameters['pis'], 1e-15, 1 - 1e-15)  # avoid probabilities 0 or 1
-        n, K, L = X.shape  # n individuals, K features, L possible outcomes for each multinoulli
-        K, C, L = pis.shape  # C latent classes
-        log_eps = np.reshape(X, (n, K * L)) @ np.reshape(np.swapaxes(np.log(pis), 0, 1), (C, K * L)).T
+        #
+        # n individuals, K features, L possible outcomes for each multinoulli. X[n,KL], pis[KL,C]
+        # X[n,k*L+l]=1 if l is the observed outcome for the kth attribute of individual n
+        # pis[k*L+l,c]=P[ X[n,k*L+l]=1 | n belongs to class c]
+        #
+        pis = np.clip(self.parameters['pis'], 1e-15, 1 - 1e-15)
+        log_eps = X @ np.log(pis)
         return log_eps
 
     def sample(self, class_no, n_samples):
-        feature_weights = self.parameters['pis'][:, class_no, :]
+        pis = self.parameters['pis']
+        KL, C = pis.shape
+        L = 1 + np.where(np.isclose(np.cumsum(pis, axis=0)[:, 0], 1))[0][0]
+        K = int(KL / L)
+        feature_weights = pis[:, class_no].reshape(K,L)
         X = np.array([self.random_state.multinomial(1, feature_weights[k], size=n_samples) for k in range(K)])
+        X = np.reshape(np.swapaxes(X, 0, 1), (n_samples, KL))
         return X
 
     def print_parameters(self, indent):

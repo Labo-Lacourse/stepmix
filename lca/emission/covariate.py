@@ -7,11 +7,11 @@ from lca.utils import check_in, print_parameters
 
 class Covariate(Emission):
     """Covariate model with simple gradient update.
-    TODO: Add better stopping criterion
     """
-    def __init__(self, iter=1, lr=1e-3, intercept=True, method='gradient', **kwargs):
+    def __init__(self, tol=1e-4, max_iter=1, lr=1e-3, intercept=True, method='gradient', **kwargs):
         super().__init__(**kwargs)
-        self.iter = iter
+        self.tol = tol
+        self.max_iter = max_iter
         self.lr = lr
         self.intercept = intercept
         self.method = method
@@ -45,14 +45,14 @@ class Covariate(Emission):
             return X
 
     # m-step using Newton-Raphson instead or gradient descent
-    # Adapted from code by Thalles Silva
+    # Adapted from code by Thalles Silva: https://towardsdatascience.com/logistic-regression-the-good-parts-55efa68e11df
     def m_step(self, X, resp):
         X_full = self.get_full_matrix(X)
         n, D = X_full.shape
         _, K = resp.shape
         beta_shape = self.parameters['beta'].shape
 
-        for _ in range(self.iter):
+        for _ in range(self.max_iter):
             logits = self._forward(X_full)
 
             if self.method == 'newton-raphson':
@@ -67,11 +67,15 @@ class Covariate(Emission):
             # gradient of the cross-entropy
             G = np.dot(X_full.T, (logits - resp))
 
+            # stopping criterion: iterations stop when all the components of the gradient are under tol
+            if(np.max(np.abs(G)) < self.tol):
+                break
+
             if self.method == 'newton-raphson':
                 # Newton's update
                 self.parameters['beta'] = self.parameters['beta'].reshape(-1) - np.dot(np.linalg.pinv(H), G.reshape(-1))
                 self.parameters['beta'] = np.reshape(self.parameters['beta'], beta_shape)
-            else:
+            elif self.method == 'gradient':
                 # follow the gradient with GD
                 self.parameters['beta'] = self.parameters['beta'] - self.lr * G/n
 

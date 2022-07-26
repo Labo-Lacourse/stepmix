@@ -22,7 +22,7 @@ means_list = []
 
 # Run experiment for 1-step, 2-step and 3-step
 for n_steps in [1, 2, 3]:
-    m = LCA(n_steps=n_steps, n_components=3, measurement='bernoulli', structural='gaussian_unit', tol=1e-5, n_init=10,
+    m = LCA(n_steps=n_steps, n_components=3, measurement='bernoulli', structural='gaussian_unit', abs_tol=1e-5, n_init=10,
             random_state=42, max_iter=200)
     m.fit(X, Y)
 
@@ -40,13 +40,13 @@ print_results(ll_list, means_list)
 print('\n\nBakk experiment (explicit step decomposition)...')
 
 # ONE-STEP
-m_1 = LCA(n_components=3, measurement='bernoulli', structural='gaussian_unit', tol=1e-5, n_init=10,
+m_1 = LCA(n_components=3, measurement='bernoulli', structural='gaussian_unit', abs_tol=1e-5, n_init=10,
           random_state=42, max_iter=200)
 # 1) Maximum likelihood with both measurement and structural models
 m_1.em(X, Y)
 
 # TWO-STEP
-m_2 = LCA(n_components=3, measurement='bernoulli', structural='gaussian_unit', tol=1e-5, n_init=10,
+m_2 = LCA(n_components=3, measurement='bernoulli', structural='gaussian_unit', abs_tol=1e-5, n_init=10,
           random_state=42, max_iter=200)
 # 1) Fit the measurement model
 # 2) Fit the structural model by keeping the parameters of the measurement model fixed
@@ -54,7 +54,7 @@ m_2.em(X)
 m_2.em(X, Y, freeze_measurement=True)
 
 # THREE-STEP
-m_3 = LCA(n_components=3, measurement='bernoulli', structural='gaussian_unit', tol=1e-5, n_init=10,
+m_3 = LCA(n_components=3, measurement='bernoulli', structural='gaussian_unit', abs_tol=1e-5, n_init=10,
           random_state=42, max_iter=200)
 # 1) Fit the measurement model
 # 2) Assign class probabilities
@@ -81,7 +81,7 @@ means_list = []
 
 # Run experiment for 1-step, 2-step and 3-step
 for n_steps in [1, 2, 3]:
-    m = LCA(n_steps=n_steps, n_components=3, measurement='gaussian_unit', structural='bernoulli', tol=1e-5, n_init=10,
+    m = LCA(n_steps=n_steps, n_components=3, measurement='gaussian_unit', structural='bernoulli', abs_tol=1e-5, n_init=10,
             random_state=42, max_iter=200)
     m.fit(Y, X)
 
@@ -97,7 +97,7 @@ print_results(ll_list, means_list)
 print('\n\nGaussian experiment...')
 for cov_string in ["unit", "spherical", "tied", "diag", "full"]:
     m = LCA(n_steps=1, n_components=4, measurement='bernoulli', structural='gaussian_' + cov_string,
-            tol=1e-5, n_init=10, random_state=42, max_iter=200)
+            abs_tol=1e-5, n_init=10, random_state=42, max_iter=200)
     X, Y, c = data_generation_gaussian(n_samples=3000, random_state=42,
                                        sep_level=.9)  # Bernoulli measurements, Gaussian responses
 
@@ -112,7 +112,7 @@ X, Y, _ = data_bakk_response(n_samples=10000, sep_level=.9, random_state=42)
 print('\n\nBakk experiment with different 1-step and 2-step...')
 for step in [1, 2, 3]:
     # Run experiment for 1-step, 2-step and 3-step
-    m = LCA(n_steps=step, n_components=3, measurement='bernoulli', structural='gaussian_unit', tol=1e-5,
+    m = LCA(n_steps=step, n_components=3, measurement='bernoulli', structural='gaussian_unit', abs_tol=1e-5,
             n_init=10, random_state=42, max_iter=200)
     m.fit(X, Y)
 
@@ -124,11 +124,11 @@ for step in [1, 2, 3]:
     print(f'{pr:<75} : {mu_2 - 1:.3f}')
 
 print('\nBakk experiment with different 3-step flavors...')
-for assignment in ['modal']:
+for assignment in ['modal', 'soft']:
     for correction in [None, 'BCH', 'ML']:
 
         # Run experiment for 1-step, 2-step and 3-step
-        m = LCA(n_steps=3, n_components=3, measurement='bernoulli', structural='gaussian_unit', tol=1e-5,
+        m = LCA(n_steps=3, n_components=3, measurement='bernoulli', structural='gaussian_unit', abs_tol=1e-5,
                 n_init=10, random_state=42, max_iter=1000, assignment=assignment, correction=correction)
         m.fit(X, Y)
 
