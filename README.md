@@ -1,4 +1,4 @@
-Latent Class Analysis
+StepMix
 ==============================
 *This project is currently in development and a stable release is expected sometime during summer 2022.*
 
