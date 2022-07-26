@@ -1,7 +1,7 @@
 """Demo script."""
 import numpy as np
-from lca.lca import LCA
-from lca.datasets import data_bakk_response, data_generation_gaussian
+from stepmix.stepmix import StepMix
+from stepmix.datasets import data_bakk_response, data_generation_gaussian
 
 
 def print_results(log_likelihoods, means):
@@ -22,8 +22,9 @@ means_list = []
 
 # Run experiment for 1-step, 2-step and 3-step
 for n_steps in [1, 2, 3]:
-    m = LCA(n_steps=n_steps, n_components=3, measurement='bernoulli', structural='gaussian_unit', abs_tol=1e-5, n_init=10,
-            random_state=42, max_iter=200)
+    m = StepMix(n_steps=n_steps, n_components=3, measurement='bernoulli', structural='gaussian_unit', abs_tol=1e-5,
+                n_init=10,
+                random_state=42, max_iter=200)
     m.fit(X, Y)
 
     means_list.append(m.get_parameters()['structural']['means'])
@@ -40,22 +41,22 @@ print_results(ll_list, means_list)
 print('\n\nBakk experiment (explicit step decomposition)...')
 
 # ONE-STEP
-m_1 = LCA(n_components=3, measurement='bernoulli', structural='gaussian_unit', abs_tol=1e-5, n_init=10,
-          random_state=42, max_iter=200)
+m_1 = StepMix(n_components=3, measurement='bernoulli', structural='gaussian_unit', abs_tol=1e-5, n_init=10,
+              random_state=42, max_iter=200)
 # 1) Maximum likelihood with both measurement and structural models
 m_1.em(X, Y)
 
 # TWO-STEP
-m_2 = LCA(n_components=3, measurement='bernoulli', structural='gaussian_unit', abs_tol=1e-5, n_init=10,
-          random_state=42, max_iter=200)
+m_2 = StepMix(n_components=3, measurement='bernoulli', structural='gaussian_unit', abs_tol=1e-5, n_init=10,
+              random_state=42, max_iter=200)
 # 1) Fit the measurement model
 # 2) Fit the structural model by keeping the parameters of the measurement model fixed
 m_2.em(X)
 m_2.em(X, Y, freeze_measurement=True)
 
 # THREE-STEP
-m_3 = LCA(n_components=3, measurement='bernoulli', structural='gaussian_unit', abs_tol=1e-5, n_init=10,
-          random_state=42, max_iter=200)
+m_3 = StepMix(n_components=3, measurement='bernoulli', structural='gaussian_unit', abs_tol=1e-5, n_init=10,
+              random_state=42, max_iter=200)
 # 1) Fit the measurement model
 # 2) Assign class probabilities
 # 3) M-step on the structural model
@@ -81,8 +82,9 @@ means_list = []
 
 # Run experiment for 1-step, 2-step and 3-step
 for n_steps in [1, 2, 3]:
-    m = LCA(n_steps=n_steps, n_components=3, measurement='gaussian_unit', structural='bernoulli', abs_tol=1e-5, n_init=10,
-            random_state=42, max_iter=200)
+    m = StepMix(n_steps=n_steps, n_components=3, measurement='gaussian_unit', structural='bernoulli', abs_tol=1e-5,
+                n_init=10,
+                random_state=42, max_iter=200)
     m.fit(Y, X)
 
     means_list.append(m.get_parameters()['measurement']['means'])
@@ -96,8 +98,8 @@ print_results(ll_list, means_list)
 # sklearn GaussianMixture class
 print('\n\nGaussian experiment...')
 for cov_string in ["unit", "spherical", "tied", "diag", "full"]:
-    m = LCA(n_steps=1, n_components=4, measurement='bernoulli', structural='gaussian_' + cov_string,
-            abs_tol=1e-5, n_init=10, random_state=42, max_iter=200)
+    m = StepMix(n_steps=1, n_components=4, measurement='bernoulli', structural='gaussian_' + cov_string,
+                abs_tol=1e-5, n_init=10, random_state=42, max_iter=200)
     X, Y, c = data_generation_gaussian(n_samples=3000, random_state=42,
                                        sep_level=.9)  # Bernoulli measurements, Gaussian responses
 
@@ -105,15 +107,14 @@ for cov_string in ["unit", "spherical", "tied", "diag", "full"]:
     pr = f'Log-likelihood of Gaussian Structural Model with {cov_string} covariance'
     print(f'{pr:<70} : {m.score(X, Y):.3f}')
 
-
 ########################################################################################################################
 # 3-step estimation supports modal and soft assignments.
 X, Y, _ = data_bakk_response(n_samples=10000, sep_level=.9, random_state=42)
 print('\n\nBakk experiment with different 1-step and 2-step...')
 for step in [1, 2, 3]:
     # Run experiment for 1-step, 2-step and 3-step
-    m = LCA(n_steps=step, n_components=3, measurement='bernoulli', structural='gaussian_unit', abs_tol=1e-5,
-            n_init=10, random_state=42, max_iter=200)
+    m = StepMix(n_steps=step, n_components=3, measurement='bernoulli', structural='gaussian_unit', abs_tol=1e-5,
+                n_init=10, random_state=42, max_iter=200)
     m.fit(X, Y)
 
     # Get mu_2 estimation (which we assume is the max parameter)
@@ -126,10 +127,9 @@ for step in [1, 2, 3]:
 print('\nBakk experiment with different 3-step flavors...')
 for assignment in ['modal', 'soft']:
     for correction in [None, 'BCH', 'ML']:
-
         # Run experiment for 1-step, 2-step and 3-step
-        m = LCA(n_steps=3, n_components=3, measurement='bernoulli', structural='gaussian_unit', abs_tol=1e-5,
-                n_init=10, random_state=42, max_iter=1000, assignment=assignment, correction=correction)
+        m = StepMix(n_steps=3, n_components=3, measurement='bernoulli', structural='gaussian_unit', abs_tol=1e-5,
+                    n_init=10, random_state=42, max_iter=1000, assignment=assignment, correction=correction)
         m.fit(X, Y)
 
         # Get mu_2 estimation (which we assume is the max parameter)

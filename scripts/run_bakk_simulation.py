@@ -4,24 +4,24 @@ import argparse
 import pandas as pd
 import numpy as np
 
-from lca.lca import LCA
-from lca.datasets import data_bakk_response, data_bakk_covariate
-from lca.utils import identify_coef
+from stepmix.stepmix import StepMix
+from stepmix.datasets import data_bakk_response, data_bakk_covariate
+from stepmix.utils import identify_coef
 
 
 def main(n_simulations=10, latex=False, covariate=False):
     # Common arguments for all models
-    lca_args = dict(n_components=3,
-                    measurement='bernoulli',
-                    structural='covariate' if covariate else 'gaussian_unit',
-                    rel_tol=1e-5,
-                    n_init=1,
-                    max_iter=1000)
+    stepmix_args = dict(n_components=3,
+                        measurement='bernoulli',
+                        structural='covariate' if covariate else 'gaussian_unit',
+                        rel_tol=1e-5,
+                        n_init=1,
+                        max_iter=1000)
 
     # Model-specific arguments
     # Specify optimization parameters if we have a covariate model
     structural_params_12 = dict(lr=5e-3, iter=1) if covariate else dict()
-    structural_params_3 = dict(lr=5e-3, iter=lca_args['max_iter']) if covariate else dict()
+    structural_params_3 = dict(lr=5e-3, iter=stepmix_args['max_iter']) if covariate else dict()
     models = {
         '1-step': dict(n_steps=1, structural_params=structural_params_12),
         '2-step': dict(n_steps=2, structural_params=structural_params_12),
@@ -47,7 +47,7 @@ def main(n_simulations=10, latex=False, covariate=False):
 
                 # Loop over models
                 for name, model_args in models.items():
-                    model = LCA(**lca_args, **model_args, random_state=random_state)
+                    model = StepMix(**stepmix_args, **model_args, random_state=random_state)
                     model.fit(X, Y)
 
                     # Get max mean

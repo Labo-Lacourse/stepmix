@@ -15,18 +15,18 @@ pip install --upgrade git+https://github.com/sachaMorin/lca.git
 A simple example for 3-step estimation on simulated data :
 
 ```python
-from lca.datasets import data_bakk_response
-from lca.lca import LCA
+from stepmix.datasets import data_bakk_response
+from stepmix.stepmix import StepMix
 
 # Soft 3-step 
-X, Y = data_bakk_response(n_samples=1000, sep_level=.7, random_state=42)
-model = LCA(n_components=3, n_steps=3, measurement='bernoulli', structural='gaussian_unit', assignment='soft',
+X, Y, _ = data_bakk_response(n_samples=1000, sep_level=.7, random_state=42)
+model = StepMix(n_components=3, n_steps=3, measurement='bernoulli', structural='gaussian_unit', assignment='soft',
             random_state=42)
 model.fit(X, Y)
 print(model.score(X, Y))  # Average log-likelihood
 
 # Equivalently, each step can be performed individually. See the code of the fit method for details.
-model = LCA(n_components=3, measurement='bernoulli', structural='gaussian_unit', random_state=42)
+model = StepMix(n_components=3, measurement='bernoulli', structural='gaussian_unit', random_state=42)
 model.em(X)  # Step 1
 probs = model.predict_proba(X)  # Step 2
 model.m_step_structural(probs, Y)  # Step 3

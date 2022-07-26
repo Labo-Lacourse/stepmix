@@ -1,7 +1,7 @@
 import numpy as np
 
-from lca.emission.emission import Emission
-from lca.utils import print_parameters
+from stepmix.emission.emission import Emission
+from stepmix.utils import print_parameters
 
 
 class Bernoulli(Emission):

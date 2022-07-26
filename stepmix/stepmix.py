@@ -22,14 +22,14 @@ from .corrections import compute_bch_matrix, compute_log_emission_pm
 from .emission.build_emission import EMISSION_DICT, build_emission
 
 
-class LCA(BaseEstimator):
-    """Latent Class Analysis.
+class StepMix(BaseEstimator):
+    """StepMix estimator for Latent Class Analysis.
 
     Multi-step EM estimation of latent class models with measurement and structural models. The measurement and
     structural models can be fit together (1-step) or sequentially (2-step and 3-step). This estimator implements
     the BCH and ML bias correction methods for 3-step estimation.
 
-    The measurement and structural models can be any of those defined in lca.emission.py. The measurement model
+    The measurement and structural models can be any of those defined in stepmix.emission. The measurement model
     can be used alone to effectively fit a latent mixture model.
 
     This class was adapted from the scikit-learn BaseMixture and GaussianMixture classes.
@@ -64,7 +64,7 @@ class LCA(BaseEstimator):
 
         Alternatively accepts a dict to define a nested model. E.g., dict(gaussian=3, bernoulli=2) will
         expect an n x 5 matrix and fit a gaussian model on the first 3 features and a bernoulli model on the last 2.
-        See lca.emission.nested for details and advanced usage.
+        See stepmix.emission.nested for details and advanced usage.
 
     structural : {'bernoulli', 'binary', 'multinoulli', 'categorical', 'covariate, 'gaussian', 'gaussian_unit', 'gaussian_spherical', 'gaussian_tied', 'gaussian_full', 'gaussian_diag', dict} or dict, default='gaussian_unit'
         String describing the structural model. Same options as those for the measurement model.
@@ -99,7 +99,7 @@ class LCA(BaseEstimator):
         Controls the random seed given to the method chosen to initialize the
         parameters. Pass an int for reproducible output across multiple function calls.
     verbose : int, default=0
-        Enable verbose output. If 1, will priunt detailed report of the model and the performance metrics after fitting.
+        Enable verbose output. If 1, will print detailed report of the model and the performance metrics after fitting.
     verbose_interval : int, default=10
         Number of iteration done before the next print. TODO: Not currently implemented.
 
@@ -107,9 +107,9 @@ class LCA(BaseEstimator):
     ----------
     weights_ : ndarray of shape (n_components,)
         The weights of each mixture components.
-    _mm : lca.emission.Emission
+    _mm : stepmix.emission.Emission
         Measurement model, including parameters and estimation methods.
-    _sm : lca.emission.Emission
+    _sm : stepmix.emission.Emission
         Structural model, including parameters and estimation methods.
     n_parameters: int
         Number of free parameters in the model.
@@ -146,16 +146,16 @@ class LCA(BaseEstimator):
 
     Examples
     --------
-    >>> from lca.datasets import data_bakk_response
-    >>> from lca.lca import LCA
+    >>> from stepmix.datasets import data_bakk_response
+    >>> from stepmix.stepmix import StepMix
     >>> # Soft 3-step
     >>> X, Y, _ = data_bakk_response(n_samples=1000, sep_level=.7, random_state=42)
-    >>> model = LCA(n_components=3, n_steps=3, measurement='bernoulli', structural='gaussian_unit', random_state=42, assignment='soft')
+    >>> model = StepMix(n_components=3, n_steps=3, measurement='bernoulli', structural='gaussian_unit', random_state=42, assignment='soft')
     >>> model.fit(X, Y)
     >>> model.score(X, Y)  # Average log-likelihood
     -5.936162775486148
     >>> # Equivalently, each step can be performed individually. See the code of the fit method for details.
-    >>> model = LCA(n_components=3, measurement='bernoulli', structural='gaussian_unit', random_state=42)
+    >>> model = StepMix(n_components=3, measurement='bernoulli', structural='gaussian_unit', random_state=42)
     >>> model.em(X) # Step 1
     >>> probs = model.predict_proba(X) # Step 2
     >>> model.m_step_structural(probs, Y) # Step 3
@@ -183,7 +183,7 @@ class LCA(BaseEstimator):
             measurement_params=dict(),
             structural_params=dict(),
     ):
-        # Attributes of the base LCA class
+        # Attributes of the base StepMix class
         self.n_components = n_components
         self.abs_tol = abs_tol
         self.rel_tol = rel_tol
@@ -241,7 +241,7 @@ class LCA(BaseEstimator):
     def _initialize_parameters(self, X, random_state):
         """Initialize the weights and measurement model parameters.
 
-        We do not initialize the structural model here, since the LCA class can be used without one.
+        We do not initialize the structural model here, since the StepMix class can be used without one.
 
         Parameters
         ----------
@@ -368,11 +368,11 @@ class LCA(BaseEstimator):
                 self.structural_in_ = Y.shape[1]
         else:
             if X is not None and X.shape[1] != self.measurement_in_:
-                raise ValueError(f"X has {X.shape[1]} features, but LCA is expecting {self.measurement_in_} measurement"
+                raise ValueError(f"X has {X.shape[1]} features, but StepMix is expecting {self.measurement_in_} measurement"
                                  f" features as input.")
 
             if Y is not None and hasattr(self, 'structural_in_') and Y.shape[1] != self.structural_in_:
-                raise ValueError(f"Y has {Y.shape[1]} features, but LCA is expecting {self.structural_in_} structural "
+                raise ValueError(f"Y has {Y.shape[1]} features, but StepMix is expecting {self.structural_in_} structural "
                                  f"features as input.")
 
         return X, Y
@@ -425,7 +425,7 @@ class LCA(BaseEstimator):
     #######################################################################################################################
     # ESTIMATION AND EM METHODS
     def fit(self, X, Y=None, sample_weight=None):
-        """Fit LCA measurement model and optionally the structural model.
+        """Fit StepMix measurement model and optionally the structural model.
 
         Setting Y=None will fit the measurement model only. Providing both X and Y will fit the full model following
         the self.n_steps argument.
@@ -858,7 +858,7 @@ class LCA(BaseEstimator):
         return np.exp(log_resp)
 
     def sample(self, n_samples, labels=None):
-        """Sample method for fitted LCA model.
+        """Sample method for fitted StepMix model.
 
         Adapted from the sklearn BaseMixture sample method.
 

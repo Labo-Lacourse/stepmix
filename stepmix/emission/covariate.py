@@ -1,8 +1,8 @@
 import numpy as np
 from scipy.special import softmax
 
-from lca.emission.emission import Emission
-from lca.utils import check_in, print_parameters
+from stepmix.emission.emission import Emission
+from stepmix.utils import check_in, print_parameters
 
 
 class Covariate(Emission):

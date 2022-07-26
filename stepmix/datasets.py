@@ -5,7 +5,7 @@ import numpy as np
 from sklearn.utils.validation import check_random_state
 from scipy.special import softmax
 
-from .lca import LCA
+from .stepmix import StepMix
 
 
 def bakk_measurements(n_classes, n_mm, sep_level):
@@ -88,7 +88,7 @@ def data_bakk_response(n_samples, sep_level, n_classes=3, n_mm=6, random_state=N
     )
 
     # Sample data
-    generator = LCA(n_components=n_classes, measurement='bernoulli', structural='gaussian_unit',
+    generator = StepMix(n_components=n_classes, measurement='bernoulli', structural='gaussian_unit',
                     random_state=random_state)
     generator.set_parameters(params)
     X, Y, labels = generator.sample(n_samples)
@@ -160,7 +160,7 @@ def data_bakk_covariate(n_samples, sep_level, n_mm=6, random_state=None):
     )
 
     # Sample data
-    generator = LCA(n_components=n_classes, measurement='bernoulli', random_state=random_state)
+    generator = StepMix(n_components=n_classes, measurement='bernoulli', random_state=random_state)
     generator.set_parameters(params)
     X, _, labels_new = generator.sample(n_samples, labels=labels)
 
@@ -226,7 +226,7 @@ def data_generation_gaussian(n_samples, sep_level, n_mm=6, random_state=None):
     )
 
     # Sample data
-    generator = LCA(n_components=n_classes, measurement='bernoulli', structural='gaussian_full',
+    generator = StepMix(n_components=n_classes, measurement='bernoulli', structural='gaussian_full',
                     random_state=random_state)
     generator.set_parameters(params)
     X, Y, labels = generator.sample(n_samples)
@@ -294,7 +294,7 @@ def data_gaussian_diag(n_samples, sep_level, n_mm=6, random_state=None, nan_rati
     )
 
     # Sample data
-    generator = LCA(n_components=n_classes, measurement='bernoulli', structural='gaussian_full',
+    generator = StepMix(n_components=n_classes, measurement='bernoulli', structural='gaussian_full',
                     random_state=random_state)
     generator.set_parameters(params)
     X, Y, labels = generator.sample(n_samples)

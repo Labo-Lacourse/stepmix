@@ -1,9 +1,9 @@
 import numpy as np
-from lca.datasets import data_bakk_covariate
-from lca.lca import LCA
-from lca.emission.covariate import Covariate
+from stepmix.datasets import data_bakk_covariate
+from stepmix.stepmix import StepMix
+from stepmix.emission.covariate import Covariate
 from sklearn.metrics import adjusted_rand_score, accuracy_score
-from lca.utils import identify_coef
+from stepmix.utils import identify_coef
 
 n = 1000
 sep_level = .90
@@ -22,7 +22,7 @@ print(f'Trained on GT Accuracy : {accuracy_score(c, pred):.3f}\n')
 print(m.get_parameters())
 
 
-# Then we train the full LCA models
+# Then we train the full StepMix models
 # Helper function to quickly print experiment results
 def print_results(log_likelihoods, rand_scores, means, intercepts):
     print("Log-likelihoods")
@@ -52,7 +52,7 @@ intercepts_list = []
 
 # Run experiment for 1-step, 2-step and 3-step
 for n_steps in [1, 2, 3]:
-    m = LCA(n_steps=n_steps, n_components=3, measurement='bernoulli', structural='covariate', n_init=10,
+    m = StepMix(n_steps=n_steps, n_components=3, measurement='bernoulli', structural='covariate', n_init=10,
             random_state=42, max_iter=10000, abs_tol=1e-5,
             structural_params=dict(method='gradient', lr=1e-2, max_iter=1 if n_steps < 3 else 100000))
     m.fit(X, Y)

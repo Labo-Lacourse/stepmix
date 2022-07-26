@@ -6,13 +6,13 @@ import copy
 
 from sklearn.utils.validation import check_random_state
 
-from lca.utils import check_int, check_positive
+from stepmix.utils import check_int, check_positive
 
 
 class Emission(ABC):
     """Abstract class for Emission models.
 
-    Emission models can be used by the LCA class for both the structural and the measurement model. Emission instances
+    Emission models can be used by the StepMix class for both the structural and the measurement model. Emission instances
     encapsulate maximum likelihood computations for a given model.
 
     All model parameters should be values of the self.parameters dict attribute. See the Bernoulli and GaussianUnit
@@ -22,7 +22,7 @@ class Emission(ABC):
         - Inherit from Emission.
         - Implement the m_step, log_likelihood and sample methods.
         - Add a corresponding string in the EMISSION_DICT at the end of emission.py.
-        - Update the LCA docstring for the measurement and structural arguments!
+        - Update the StepMix docstring for the measurement and structural arguments!
 
     Parameters
     ----------
@@ -89,7 +89,7 @@ class Emission(ABC):
         self.random_state = self.check_random_state(random_state)
 
         # Measurement and structural models are initialized by running their M-step on the initial log responsibilities
-        # obtained via kmeans or sampled uniformly (See LCA._initialize_parameters)
+        # obtained via kmeans or sampled uniformly (See StepMix._initialize_parameters)
         self.m_step(X, resp)
 
     def get_parameters(self):

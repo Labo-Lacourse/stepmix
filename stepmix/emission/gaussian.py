@@ -3,8 +3,8 @@ from scipy.stats import multivariate_normal
 from sklearn.mixture import GaussianMixture
 from sklearn.mixture._gaussian_mixture import _estimate_gaussian_parameters, _compute_precision_cholesky
 
-from lca.emission.emission import Emission
-from lca.utils import check_in, check_nonneg, print_parameters
+from stepmix.emission.emission import Emission
+from stepmix.utils import check_in, check_nonneg, print_parameters
 
 
 class GaussianUnit(Emission):

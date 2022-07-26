@@ -1,7 +1,7 @@
 """Utility functions to compute 3-step bias corrections."""
 import numpy as np
 
-from lca import utils
+from stepmix import utils
 
 def compute_bch_matrix(resp, assignment='modal'):
     """Compute the probability D[c,s] = P(X_pred=s | X=c) of predicting class latent class s given

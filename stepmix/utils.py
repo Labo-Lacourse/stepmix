@@ -215,8 +215,8 @@ def print_report(model, X, Y=None):
 
     Parameters
     ----------
-    model: lca.LCA
-        Fitted LCA instance.
+    model: stepmix.StepMix
+        Fitted StepMix instance.
     X : array-like of shape (n_samples, n_features)
         List of n_features-dimensional data points. Each row
         corresponds to a single data point of the measurement model.
