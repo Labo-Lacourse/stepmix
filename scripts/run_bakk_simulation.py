@@ -14,7 +14,7 @@ def main(n_simulations=10, latex=False, covariate=False):
     lca_args = dict(n_components=3,
                     measurement='bernoulli',
                     structural='covariate' if covariate else 'gaussian_unit',
-                    tol=1e-5,
+                    rel_tol=1e-5,
                     n_init=1,
                     max_iter=1000)
 
