@@ -62,9 +62,8 @@ class StepMix(BaseEstimator):
         - 'gaussian_full': each gaussian component has its own general covariance matrix.
         - 'gaussian_diag': each gaussian component has its own diagonal covariance matrix.
 
-        Alternatively accepts a dict to define a nested model. E.g., dict(gaussian=3, bernoulli=2) will
-        expect an n x 5 matrix and fit a gaussian model on the first 3 features and a bernoulli model on the last 2.
-        See stepmix.emission.nested for details and advanced usage.
+        Alternatively accepts a dict to define a nested model, e.g., 3 gaussian features and 2 binary features. Please
+        refer to stepmix.emission.nested.Nested for details
 
     structural : {'bernoulli', 'binary', 'multinoulli', 'categorical', 'covariate, 'gaussian', 'gaussian_unit', 'gaussian_spherical', 'gaussian_tied', 'gaussian_full', 'gaussian_diag', dict} or dict, default='gaussian_unit'
         String describing the structural model. Same options as those for the measurement model.
