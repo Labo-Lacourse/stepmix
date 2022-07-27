@@ -74,6 +74,21 @@ def test_corrections(data, kwargs, correction, assignment):
     ll_1 = model_1.score(X, Y)  # Average log-likelihood
 
 
+def test_2_v_3(data, kwargs):
+    """Test that 2-step and 3-step end up with the same measurement model."""
+    X, Y = data
+
+    model_1 = StepMix(n_steps=2, **kwargs)
+    model_1.fit(X, Y)
+    ll_1 = model_1.score(X)  # Average log-likelihood of measurement model
+
+    model_2 = StepMix(n_steps=3, **kwargs)
+    model_2.fit(X, Y)
+    ll_2 = model_2.score(X)  # Average log-likelihood of measurement model
+
+    assert ll_1 == ll_2
+
+
 def test_1_step_sym(data, kwargs):
     """Check 3 equivalent definition of a 1-step estimator.
 
@@ -122,5 +137,3 @@ def test_1_step_sym(data, kwargs):
     # Assert
     assert ll_1 == ll_2
     assert ll_2 == ll_3
-
-
