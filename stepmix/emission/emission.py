@@ -36,7 +36,8 @@ class Emission(ABC):
     ----------
     self.parameters : dict
         Dictionary with all model parameters.
-    self.n_parameters :
+    self.n_parameters : int
+        Number of free parameters in the model.
 
     """
 
