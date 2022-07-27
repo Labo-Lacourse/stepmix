@@ -207,6 +207,9 @@ class StepMix(BaseEstimator):
         # TODO : check if the provided measurement and structural models do support nans
         self.allow_nan = 'allow-nan'
 
+        # Buffer to save the likelihoods of different inits for debugging
+        self.lower_bound_buffer_ = list()
+
     ########################################################################################################################
     # INPUT VALIDATION, INITIALIZATIONS AND PARAMETER MANAGEMENT
     def _check_initial_parameters(self, X):
@@ -598,6 +601,9 @@ class StepMix(BaseEstimator):
                 lower_bound = log_prob_norm
                 change = lower_bound - prev_lower_bound
                 rel_change = change/lower_bound
+
+                # Save lower bound
+                self.lower_bound_buffer_.append(lower_bound)
 
                 # if both an absolute and a relative tolerance threshold are given, the EM algorithm stops
                 # as soon as one of them is respected
