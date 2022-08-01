@@ -94,7 +94,7 @@ class Covariate(Emission):
     def sample(self, class_no, n_samples):
         raise NotImplementedError
 
-    def print_parameters(self, indent):
+    def print_parameters(self, indent=1):
         print_parameters(self.parameters['beta'].T, 'Covariate', np_precision=2, indent=indent, intercept=True)
 
     @property

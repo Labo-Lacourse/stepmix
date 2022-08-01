@@ -29,7 +29,7 @@ class GaussianUnit(Emission):
         X = self.random_state.normal(loc=self.parameters['means'][class_no], scale=np.ones(D), size=(n_samples, D))
         return X
 
-    def print_parameters(self, indent):
+    def print_parameters(self, indent=1):
         print_parameters(self.parameters['means'], 'Gaussian (unit variance)', np_precision=2, indent=indent,
                          print_mean=True)
 
@@ -130,7 +130,7 @@ class Gaussian(Emission):
         GaussianMixture._set_parameters(self,
                                         (None, params['means'], params['covariances'], params['precisions_cholesky']))
 
-    def print_parameters(self, indent):
+    def print_parameters(self, indent=1):
         print_parameters(self.means_, f'Gaussian ({self.covariance_type} covariance)', np_precision=2, indent=indent,
                          print_mean=True, covariances=self.covariances_, tied=self.covariance_type == 'tied')
 
@@ -279,7 +279,7 @@ class GaussianUnitNan(GaussianNan):
         """No estimate. Simply return diagonal covariance 1 for all features."""
         return np.ones_like(self.parameters['means'])
 
-    def print_parameters(self, indent):
+    def print_parameters(self, indent=1):
         print_parameters(self.parameters['means'], f'Gaussian (unit covariance)', np_precision=2, indent=indent,
                          print_mean=True)
 
@@ -312,7 +312,7 @@ class GaussianSphericalNan(GaussianNan):
 
         return result
 
-    def print_parameters(self, indent):
+    def print_parameters(self, indent=1):
         # Only print first column, since covariance is shared across dimensions
         print_parameters(self.parameters['means'], f'Gaussian (spherical covariance)', np_precision=2, indent=indent,
                          print_mean=True, covariances=self.parameters['covariances'][:, 0])
@@ -348,7 +348,7 @@ class GaussianDiagNan(GaussianNan):
 
         return covs
 
-    def print_parameters(self, indent):
+    def print_parameters(self, indent=1):
         print_parameters(self.parameters['means'], f'Gaussian (diag covariance)', np_precision=2, indent=indent,
                          print_mean=True, covariances=self.parameters['covariances'])
 

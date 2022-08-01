@@ -25,7 +25,7 @@ class Bernoulli(Emission):
         X = (self.random_state.uniform(size=(n_samples, K)) < feature_weights).astype(int)
         return X
 
-    def print_parameters(self, indent):
+    def print_parameters(self, indent=1):
         print_parameters(self.parameters['pis'].T, 'Bernoulli', indent=indent, np_precision=4)
 
     @property
@@ -66,6 +66,20 @@ class BernoulliNan(Bernoulli):
 class Multinoulli(Emission):
     """Multinoulli (categorical) emission model."""
 
+
+    def __init__(self, n_components=2, random_state=None, n_outcomes=2):
+        super().__init__(n_components=n_components, random_state=random_state)
+        self.n_outcomes = n_outcomes
+
+    def get_KL(self):
+        # K features
+        # L=n_outcomes (number of possible outcomes for each multinoulli. (L=2 in the case of bernoulli))
+        pis = self.parameters['pis']
+        KL, C = pis.shape
+        L = self.n_outcomes
+        K = int(KL / L)
+        return K, L
+
     def m_step(self, X, resp):
         pis = X.T @ resp
         pis /= resp.sum(axis=0, keepdims=True)
@@ -85,19 +99,17 @@ class Multinoulli(Emission):
 
     def sample(self, class_no, n_samples):
         pis = self.parameters['pis']
-        KL, C = pis.shape
-        L = 1 + np.where(np.isclose(np.cumsum(pis, axis=0)[:, 0], 1))[0][0]
-        K = int(KL / L)
+        K, L = self.get_KL()
         feature_weights = pis[:, class_no].reshape(K,L)
         X = np.array([self.random_state.multinomial(1, feature_weights[k], size=n_samples) for k in range(K)])
-        X = np.reshape(np.swapaxes(X, 0, 1), (n_samples, KL))
+        X = np.reshape(np.swapaxes(X, 0, 1), (n_samples, K*L))
         return X
 
-    def print_parameters(self, indent):
-        # TODO: after merge with Robin's branch
-        raise NotImplementedError
+    def print_parameters(self, indent=1):
+        K, L = self.get_KL()
+        print_parameters(self.parameters['pis'].T, 'Multinoulli', n_outcomes=L, indent=indent, np_precision=4)
 
     @property
     def n_parameters(self):
-        # TODO: after merge with Robin's branch
-        raise NotImplementedError
+        n_params = self.parameters['pis'].shape[0] * self.parameters['pis'].shape[1]
+        return n_params

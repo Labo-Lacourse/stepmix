@@ -89,7 +89,7 @@ class Nested(Emission):
         for key, item in parameters.items():
             self.models[key].set_parameters(item)
 
-    def print_parameters(self, indent):
+    def print_parameters(self, indent=1):
         for m in self.models.values():
             m.print_parameters(indent)
 

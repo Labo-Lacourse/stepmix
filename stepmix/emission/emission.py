@@ -164,7 +164,7 @@ class Emission(ABC):
         raise NotImplementedError
 
     # @abstractmethod
-    def print_parameters(self, indent):
+    def print_parameters(self, indent=1):
         """Print parameters with nice formatting.
 
         Parameters

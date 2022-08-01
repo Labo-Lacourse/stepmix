@@ -260,7 +260,7 @@ def print_report(model, X, Y=None):
     print(f"    BIC                           : {bic:.2f}")
 
 
-def print_parameters(params, model_name, indent=1, np_precision=2, intercept=False, print_mean=False,
+def print_parameters(params, model_name, indent=1, np_precision=2, n_outcomes=1, intercept=False, print_mean=False,
                      covariances=None, tied=False):
     """Print model parameters with nice formatting.
 
@@ -274,6 +274,8 @@ def print_parameters(params, model_name, indent=1, np_precision=2, intercept=Fal
         Indent of the print.
     np_precision: int
         Float precision for numpy prints.
+    n_outcomes: int
+        Number of possible categorical outcomes. Only used for multinoulli model
     intercept: bool, default=False
         One parameter is an intercept. Only used for covariate model.
     print_mean: bool, default=False
@@ -290,11 +292,21 @@ def print_parameters(params, model_name, indent=1, np_precision=2, intercept=Fal
     if intercept:
         n_features -= 1
 
+    if (n_outcomes >= 2):
+        n_features = int(n_features/n_outcomes)
+
     # Title
     print(indent_str + '-' * (80 - indent * 4))
-    print(indent_str + f"{model_name} model with {n_features} feature" + ("s" if n_features > 1 else "") + (
-        " and intercept" if intercept else ""))
+    print(indent_str + f"{model_name} model with {n_features} feature" + ("s" if n_features > 1 else "") +
+          (f", each with {n_outcomes} possible outcomes" if n_outcomes >= 2 else "") +
+          (" and intercept" if intercept else "")
+          )
     print(indent_str + '-' * (80 - indent * 4))
+
+    # Clarification message for multinoulli model
+    if (n_outcomes >= 2 and n_features >= 2):
+        print(indent_str + "Columns 1 to", n_outcomes,"are associated with the first feature,")
+        print(indent_str + "columns",n_outcomes+1,"to", 2*n_outcomes, "are associated with the second feature, etc.\n")
 
     # Clarification message for covariate model
     if intercept:
