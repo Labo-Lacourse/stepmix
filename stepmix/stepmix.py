@@ -458,7 +458,7 @@ class StepMix(BaseEstimator):
             # Two-step estimation
             # 1) Fit the measurement model
             self.em(X, sample_weight=sample_weight)
-            # 2) Fit the the structural model by keeping the parameters of the measurement model fixed
+            # 2) Fit the structural model by keeping the parameters of the measurement model fixed
             self.em(X, Y, sample_weight=sample_weight, freeze_measurement=True)
 
         elif self.n_steps == 3 and self.correction is None:
@@ -553,7 +553,7 @@ class StepMix(BaseEstimator):
             Log probabilities of the predicted class given the true latent class for ML correction.
         """
         # First validate the input and the class attributes
-        n_samples, _ = X.shape
+        n_samples = X.shape[0]
         X, Y = self._check_x_y(X, Y, reset=True)
 
         # If sample weights exist, convert them to array (support for lists)
