@@ -31,26 +31,6 @@ def test_emissions(data, kwargs, model):
     ll_1 = model_1.score(X, Y)  # Average log-likelihood
     preds_1 = model_1.predict(X, Y)  # Class predictions
 
-
-@pytest.mark.filterwarnings(
-    "ignore::RuntimeWarning")  # Ignore most numerical errors since we do not run the emission models on appropriate data
-@pytest.mark.filterwarnings(
-    "ignore::sklearn.exceptions.ConvergenceWarning")  # Ignore convergence warnings for same reason
-@pytest.mark.parametrize("model", EMISSION_DICT.keys())
-def test_emissions_sample(data, kwargs, model):
-    """Fit all emission models and then sample from them.
-
-    The data may not make sense for the model. We therefore do not test a particular output here."""
-    X, Y = data
-
-    # Replace measurement model with the emission model we aim to test
-    kwargs['measurement'] = model
-    kwargs['verbose'] = 0
-
-    model_1 = StepMix(n_steps=1, **kwargs)
-    model_1.fit(X, Y)
-    ll_1 = model_1.score(X, Y)  # Average log-likelihood
-
     if model == 'covariate':
         # We do not expect covariate to have a sampling method
         with pytest.raises(NotImplementedError) as e_info:
