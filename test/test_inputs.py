@@ -1,4 +1,6 @@
+import pytest
 import pandas as pd
+import numpy as np
 
 from stepmix.stepmix import StepMix
 
@@ -18,3 +20,22 @@ def test_dataframe(data, kwargs):
     ll_2 = model_1.score(X_df, Y_df)  # Average log-likelihood
 
     assert ll_1 == ll_2
+
+
+def test_nan(data, kwargs):
+    X, Y = data
+
+    # Test on numpy arrays
+    model_1 = StepMix(n_steps=1, **kwargs)
+
+    # Make sure vanilla models raise an Error if a missing value is found in the input
+    X = X.astype(float)
+    X_nan = X.copy()
+    X_nan[0, 0] = np.nan
+    with pytest.raises(ValueError) as e_info:
+        model_1.fit(X_nan, Y)
+
+    Y_nan = Y.copy()
+    Y_nan[0, 0] = np.nan
+    with pytest.raises(ValueError) as e_info:
+        model_1.fit(X, Y_nan)

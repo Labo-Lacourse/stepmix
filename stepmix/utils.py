@@ -117,7 +117,7 @@ def check_between(v_min, v_max, **params):
             )
 
 
-def check_emission_param(descriptor, keys):
+def check_descriptor(descriptor, keys):
     """Check if the emission descriptor is valid.
 
     A string describes a homogeneous model (e.g., all binary, all gaussian).
@@ -126,7 +126,7 @@ def check_emission_param(descriptor, keys):
 
     Parameters
     ----------
-    descriptor: str or list, parameter description.
+    descriptor: str or dict, parameter description.
     keys: list, list of valid emission strings.
 
     Returns
@@ -148,6 +148,27 @@ def check_emission_param(descriptor, keys):
             else:
                 raise ValueError(f'Items in a nested model description should be dicts.')
 
+    else:
+        raise ValueError(f'Emission descriptor should be either a string or a dict.')
+
+
+def check_descriptor_nan(descriptor):
+    """Check if the provided descriptor describes a model supporting missing values.
+
+    Parameters
+    ----------
+    descriptor: str or dict, parameter description.
+
+    Returns
+    -------
+    is_valid: bool, indicating a valid parameter description.
+
+    """
+    if isinstance(descriptor, str):
+        # Models supporting missing values end with nan
+        return descriptor.endswith('nan')
+    elif isinstance(descriptor, dict):
+        return any([k.endswith('nan') for k in descriptor.keys()])
     else:
         raise ValueError(f'Emission descriptor should be either a string or a dict.')
 
@@ -244,7 +265,6 @@ def print_report(model, X, Y=None):
     for i, w in enumerate(model.weights_):
         print(f"        Class {i + 1} : {w:.2f}")
 
-
     print("    " + "=" * 76)
     print(f"    Fit for {n_classes} latent classes")
     print("    " + "=" * 76)
@@ -293,7 +313,7 @@ def print_parameters(params, model_name, indent=1, np_precision=2, n_outcomes=1,
         n_features -= 1
 
     if (n_outcomes >= 2):
-        n_features = int(n_features/n_outcomes)
+        n_features = int(n_features / n_outcomes)
 
     # Title
     print(indent_str + '-' * (80 - indent * 4))
@@ -305,8 +325,9 @@ def print_parameters(params, model_name, indent=1, np_precision=2, n_outcomes=1,
 
     # Clarification message for multinoulli model
     if (n_outcomes >= 2 and n_features >= 2):
-        print(indent_str + "Columns 1 to", n_outcomes,"are associated with the first feature,")
-        print(indent_str + "columns",n_outcomes+1,"to", 2*n_outcomes, "are associated with the second feature, etc.\n")
+        print(indent_str + "Columns 1 to", n_outcomes, "are associated with the first feature,")
+        print(indent_str + "columns", n_outcomes + 1, "to", 2 * n_outcomes,
+              "are associated with the second feature, etc.\n")
 
     # Clarification message for covariate model
     if intercept:
@@ -324,7 +345,7 @@ def print_parameters(params, model_name, indent=1, np_precision=2, n_outcomes=1,
     # Print covariances if provided
     if covariances is not None:
         print()
-        print(indent_str + "Covariance"  + ("s" if not tied else ""))
+        print(indent_str + "Covariance" + ("s" if not tied else ""))
         print(indent_str + "-----------")
         if tied:
             for c in covariances:

@@ -204,8 +204,10 @@ class StepMix(BaseEstimator):
         self.structural = structural
         self.structural_params = structural_params
 
-        # TODO : check if the provided measurement and structural models do support nans
-        self.allow_nan = 'allow-nan'
+        # Check if models support missing values
+        # This is passed to sklearn.utils.check_array
+        self.force_all_finite_mm = 'allow-nan' if utils.check_descriptor_nan(measurement) else True
+        self.force_all_finite_sm = 'allow-nan' if utils.check_descriptor_nan(structural) else True
 
         # Buffer to save the likelihoods of different inits for debugging
         self.lower_bound_buffer_ = list()
@@ -235,8 +237,8 @@ class StepMix(BaseEstimator):
         utils.check_in(["kmeans", "random"], init_params=self.init_params)
         utils.check_in(["modal", "soft"], init_params=self.assignment)
         utils.check_in([None, "BCH", "ML"], init_params=self.correction)
-        utils.check_emission_param(self.measurement, keys=EMISSION_DICT.keys())
-        utils.check_emission_param(self.structural, keys=EMISSION_DICT.keys())
+        utils.check_descriptor(self.measurement, keys=EMISSION_DICT.keys())
+        utils.check_descriptor(self.structural, keys=EMISSION_DICT.keys())
         utils.check_type(dict, measurement_params=self.measurement_params, structural_params=self.structural_params)
 
 
@@ -359,9 +361,9 @@ class StepMix(BaseEstimator):
         """
         # We use reset True since we take care of dimensions in this class (and not in the parent)
         if X is not None:
-            X = self._validate_data(X, dtype=[np.float64, np.float32], reset=True, force_all_finite=self.allow_nan)
+            X = self._validate_data(X, dtype=[np.float64, np.float32], reset=True, force_all_finite=self.force_all_finite_mm)
         if Y is not None:
-            Y = self._validate_data(Y, dtype=[np.float64, np.float32], reset=True, force_all_finite=self.allow_nan)
+            Y = self._validate_data(Y, dtype=[np.float64, np.float32], reset=True, force_all_finite=self.force_all_finite_sm)
 
         if reset:
             if X is not None:
