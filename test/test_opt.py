@@ -29,7 +29,7 @@ def test_inits(data, kwargs, n_init_1, n_init_2):
     X, Y = data
 
     # For this test, ignore default n_inits
-    kwargs.pop('n_init')
+    kwargs.pop("n_init")
 
     model_1 = StepMix(n_steps=1, n_init=n_init_1, **kwargs)
     model_1.fit(X, Y)
@@ -43,7 +43,8 @@ def test_inits(data, kwargs, n_init_1, n_init_2):
 
 
 @pytest.mark.filterwarnings(
-    "ignore::sklearn.exceptions.ConvergenceWarning")  # Ignore convergence warnings for same reason
+    "ignore::sklearn.exceptions.ConvergenceWarning"
+)  # Ignore convergence warnings for same reason
 def test_diff_inits(data, kwargs):
     """Make sure that different inits of the same call to fit are indeed different.
 
@@ -51,8 +52,8 @@ def test_diff_inits(data, kwargs):
     X, Y = data
 
     # For this test, ignore default n_inits
-    kwargs.pop('n_init')
-    kwargs['max_iter'] = 1  # Few iterations to make convergence to same point unlikely
+    kwargs.pop("n_init")
+    kwargs["max_iter"] = 1  # Few iterations to make convergence to same point unlikely
 
     model_1 = StepMix(n_steps=1, n_init=1, **kwargs)
     model_1.fit(X, Y)

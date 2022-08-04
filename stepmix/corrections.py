@@ -3,7 +3,8 @@ import numpy as np
 
 from stepmix import utils
 
-def compute_bch_matrix(resp, assignment='modal'):
+
+def compute_bch_matrix(resp, assignment="modal"):
     """Compute the probability D[c,s] = P(X_pred=s | X=c) of predicting class latent class s given
     that a point belongs to latent class c.
 
@@ -24,7 +25,7 @@ def compute_bch_matrix(resp, assignment='modal'):
     """
     # Dimensions
     n = resp.shape[0]
-    resp_pred = utils.modal(resp) if (assignment=='modal') else resp
+    resp_pred = utils.modal(resp) if (assignment == "modal") else resp
     weights = resp.mean(axis=0)
 
     # BCH correction (based on the empirical distribution: eq (6))
@@ -34,7 +35,7 @@ def compute_bch_matrix(resp, assignment='modal'):
     return D, D_inv
 
 
-def compute_log_emission_pm(resp, assignment='modal'):
+def compute_log_emission_pm(resp, assignment="modal"):
     """(Log) probabilities of the predicted class given the true latent classes.
 
     Used for ML correction.
@@ -54,6 +55,6 @@ def compute_log_emission_pm(resp, assignment='modal'):
     # compute log emission probabilities
     D, _ = compute_bch_matrix(resp, assignment)
     log_D = np.log(np.clip(D, 1e-15, 1 - 1e-15))  # avoid probabilities 0 or 1
-    resp_pred = utils.modal(resp) if (assignment == 'modal') else resp
+    resp_pred = utils.modal(resp) if (assignment == "modal") else resp
     log_eps = resp_pred @ log_D.T
     return log_eps

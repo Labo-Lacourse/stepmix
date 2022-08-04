@@ -28,7 +28,7 @@ class TestStepAPI:
         X, Y = data
 
         # API-level 2-step
-        model_1 = StepMix(n_steps=2, assignment='soft', **kwargs)
+        model_1 = StepMix(n_steps=2, assignment="soft", **kwargs)
         model_1.fit(X, Y)
         ll_1 = model_1.score(X, Y)  # Average log-likelihood
 
@@ -53,7 +53,7 @@ class TestStepAPI:
         model_2 = StepMix(**kwargs)
         model_2.em(X)  # Step 1
         probs = model_2.predict_proba(X)  # Step 2
-        if assignment == 'modal':
+        if assignment == "modal":
             probs = modal(probs, clip=True)  # Hard assignment
         model_2.m_step_structural(probs, Y)  # Step 3
         ll_2 = model_2.score(X, Y)
@@ -99,32 +99,28 @@ def test_1_step_sym(data, kwargs):
     X, Y = data
 
     # For this test, ignore the measurement and structural keys in kwargs
-    kwargs.pop('measurement')
-    kwargs.pop('structural')
+    kwargs.pop("measurement")
+    kwargs.pop("structural")
 
     # Common arguments
-    kwargs = dict(n_steps=1, n_components=3, abs_tol=1e-5, n_init=2, max_iter=200, random_state=42)
+    kwargs = dict(
+        n_steps=1, n_components=3, abs_tol=1e-5, n_init=2, max_iter=200, random_state=42
+    )
 
     # Binary measurements, gaussian structural
-    model_1 = StepMix(measurement='bernoulli', structural='gaussian_unit', **kwargs)
+    model_1 = StepMix(measurement="bernoulli", structural="gaussian_unit", **kwargs)
     model_1.fit(X, Y)
     ll_1 = model_1.score(X, Y)
 
     # Gaussian measurement, binary structural
-    model_2 = StepMix(measurement='gaussian_unit', structural='bernoulli', **kwargs)
+    model_2 = StepMix(measurement="gaussian_unit", structural="bernoulli", **kwargs)
     model_2.fit(Y, X)
     ll_2 = model_2.score(Y, X)
 
     # Binary + Gaussian measurement
     descriptor = {
-        'model_1': {
-            'model': 'bernoulli',
-            'n_features': 6
-        },
-        'model_2': {
-            'model': 'gaussian_unit',
-            'n_features': 1
-        }
+        "model_1": {"model": "bernoulli", "n_features": 6},
+        "model_2": {"model": "gaussian_unit", "n_features": 1},
     }
 
     # Merge data in single matrix

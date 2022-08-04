@@ -1,7 +1,10 @@
 import numpy as np
 from scipy.stats import multivariate_normal
 from sklearn.mixture import GaussianMixture
-from sklearn.mixture._gaussian_mixture import _estimate_gaussian_parameters, _compute_precision_cholesky
+from sklearn.mixture._gaussian_mixture import (
+    _estimate_gaussian_parameters,
+    _compute_precision_cholesky,
+)
 
 from stepmix.emission.emission import Emission
 from stepmix.utils import check_in, check_nonneg, print_parameters
@@ -14,28 +17,40 @@ class GaussianUnit(Emission):
     """
 
     def m_step(self, X, resp):
-        self.parameters['means'] = (resp[..., np.newaxis] * X[:, np.newaxis, :]).sum(axis=0) / resp.sum(axis=0,
-                                                                                                        keepdims=True).T
+        self.parameters["means"] = (resp[..., np.newaxis] * X[:, np.newaxis, :]).sum(
+            axis=0
+        ) / resp.sum(axis=0, keepdims=True).T
 
     def log_likelihood(self, X):
         n, D = X.shape
         log_eps = np.zeros((n, self.n_components))
         for c in range(self.n_components):
-            log_eps[:, c] = multivariate_normal.logpdf(x=X, mean=self.parameters['means'][c], cov=1)
+            log_eps[:, c] = multivariate_normal.logpdf(
+                x=X, mean=self.parameters["means"][c], cov=1
+            )
         return log_eps
 
     def sample(self, class_no, n_samples):
-        D = self.parameters['means'].shape[1]
-        X = self.random_state.normal(loc=self.parameters['means'][class_no], scale=np.ones(D), size=(n_samples, D))
+        D = self.parameters["means"].shape[1]
+        X = self.random_state.normal(
+            loc=self.parameters["means"][class_no],
+            scale=np.ones(D),
+            size=(n_samples, D),
+        )
         return X
 
     def print_parameters(self, indent=1):
-        print_parameters(self.parameters['means'], 'Gaussian (unit variance)', np_precision=2, indent=indent,
-                         print_mean=True)
+        print_parameters(
+            self.parameters["means"],
+            "Gaussian (unit variance)",
+            np_precision=2,
+            indent=indent,
+            print_mean=True,
+        )
 
     @property
     def n_parameters(self):
-        return self.parameters['means'].shape[0] * self.parameters['means'].shape[1]
+        return self.parameters["means"].shape[0] * self.parameters["means"].shape[1]
 
 
 class Gaussian(Emission):
@@ -43,8 +58,14 @@ class Gaussian(Emission):
 
     This class spoofs the scikit-learn Gaussian Mixture class by reusing the same attributes and calls its methods."""
 
-    def __init__(self, n_components=2, covariance_type="spherical", init_params="random", reg_covar=1e-6,
-                 random_state=None):
+    def __init__(
+        self,
+        n_components=2,
+        covariance_type="spherical",
+        init_params="random",
+        reg_covar=1e-6,
+        random_state=None,
+    ):
         super().__init__(n_components=n_components, random_state=random_state)
         self.covariance_type = covariance_type
         self.init_params = init_params
@@ -67,7 +88,9 @@ class Gaussian(Emission):
 
     def check_parameters(self):
         super().check_parameters()
-        check_in(["spherical", "tied", "diag", "full"], covariance_type=self.covariance_type)
+        check_in(
+            ["spherical", "tied", "diag", "full"], covariance_type=self.covariance_type
+        )
         check_in(["random"], init_params=self.init_params)
         check_nonneg(reg_covar=self.reg_covar)
 
@@ -107,32 +130,56 @@ class Gaussian(Emission):
 
     def sample(self, class_no, n_samples):
         if self.covariance_type == "full":
-            X = self.random_state.multivariate_normal(self.means_[class_no], self.covariances_[class_no], n_samples)
+            X = self.random_state.multivariate_normal(
+                self.means_[class_no], self.covariances_[class_no], n_samples
+            )
         elif self.covariance_type == "tied":
-            X = self.random_state.multivariate_normal(self.means_[class_no], self.covariances_, n_samples)
+            X = self.random_state.multivariate_normal(
+                self.means_[class_no], self.covariances_, n_samples
+            )
         else:
             n_features = self.means_.shape[1]
-            X = self.means_[class_no] + self.random_state.standard_normal(size=(n_samples, n_features)) * np.sqrt(
-                self.covariances_[class_no])
+            X = self.means_[class_no] + self.random_state.standard_normal(
+                size=(n_samples, n_features)
+            ) * np.sqrt(self.covariances_[class_no])
         return X
 
     def get_parameters(self):
-        return dict(means=self.means_.copy(), covariances=self.covariances_.copy(),
-                    precisions_cholesky=self.precisions_cholesky_.copy())
+        return dict(
+            means=self.means_.copy(),
+            covariances=self.covariances_.copy(),
+            precisions_cholesky=self.precisions_cholesky_.copy(),
+        )
 
     def set_parameters(self, params):
         # We spoof the sklearn GaussianMixture class
         # This is not needed for typical children of the Emission class. We do this only to be compatible
         # with the sklearn GaussianMixture machinery.
         # This will update self.means_, self.covariances_ and self.precisions_cholesky_
-        if 'precisions_cholesky' not in params:
-            params['precisions_cholesky'] = _compute_precision_cholesky(params['covariances'], self.covariance_type)
-        GaussianMixture._set_parameters(self,
-                                        (None, params['means'], params['covariances'], params['precisions_cholesky']))
+        if "precisions_cholesky" not in params:
+            params["precisions_cholesky"] = _compute_precision_cholesky(
+                params["covariances"], self.covariance_type
+            )
+        GaussianMixture._set_parameters(
+            self,
+            (
+                None,
+                params["means"],
+                params["covariances"],
+                params["precisions_cholesky"],
+            ),
+        )
 
     def print_parameters(self, indent=1):
-        print_parameters(self.means_, f'Gaussian ({self.covariance_type} covariance)', np_precision=2, indent=indent,
-                         print_mean=True, covariances=self.covariances_, tied=self.covariance_type == 'tied')
+        print_parameters(
+            self.means_,
+            f"Gaussian ({self.covariance_type} covariance)",
+            np_precision=2,
+            indent=indent,
+            print_mean=True,
+            covariances=self.covariances_,
+            tied=self.covariance_type == "tied",
+        )
 
     @property
     def n_parameters(self):
@@ -143,29 +190,29 @@ class Gaussian(Emission):
 class GaussianFull(Gaussian):
     def __init__(self, **kwargs):
         # Make sure no other covariance_type is specified
-        kwargs.pop('covariance_type', None)
-        super().__init__(covariance_type='full', **kwargs)
+        kwargs.pop("covariance_type", None)
+        super().__init__(covariance_type="full", **kwargs)
 
 
 class GaussianSpherical(Gaussian):
     def __init__(self, **kwargs):
         # Make sure no other covariance_type is specified
-        kwargs.pop('covariance_type', None)
-        super().__init__(covariance_type='spherical', **kwargs)
+        kwargs.pop("covariance_type", None)
+        super().__init__(covariance_type="spherical", **kwargs)
 
 
 class GaussianDiag(Gaussian):
     def __init__(self, **kwargs):
         # Make sure no other covariance_type is specified
-        kwargs.pop('covariance_type', None)
-        super().__init__(covariance_type='diag', **kwargs)
+        kwargs.pop("covariance_type", None)
+        super().__init__(covariance_type="diag", **kwargs)
 
 
 class GaussianTied(Gaussian):
     def __init__(self, **kwargs):
         # Make sure no other covariance_type is specified
-        kwargs.pop('covariance_type', None)
-        super().__init__(covariance_type='tied', **kwargs)
+        kwargs.pop("covariance_type", None)
+        super().__init__(covariance_type="tied", **kwargs)
 
 
 class GaussianNan(Emission):
@@ -190,8 +237,8 @@ class GaussianNan(Emission):
             resp_i = resp[is_observed[:, i]]
             resp_sums.append(resp_i.sum(axis=0))
 
-        self.parameters['means'] = self._compute_means(X, resp, resp_sums)
-        self.parameters['covariances'] = self._compute_cov(X, resp, resp_sums)
+        self.parameters["means"] = self._compute_means(X, resp, resp_sums)
+        self.parameters["covariances"] = self._compute_cov(X, resp, resp_sums)
 
     def _compute_means(self, X, resp, resp_sums):
         X = np.nan_to_num(X)
@@ -204,7 +251,7 @@ class GaussianNan(Emission):
         return means
 
     def _compute_cov(self, X, resp, resp_sums):
-        raise NotImplementedError('No covariance estimator is implemented.')
+        raise NotImplementedError("No covariance estimator is implemented.")
 
     def log_likelihood(self, X):
         if not self.debug_likelihood:
@@ -220,24 +267,24 @@ class GaussianNan(Emission):
         log_eps = np.zeros((n, self.n_components))
 
         for c in range(self.n_components):
-            diff = X - self.parameters['means'][c].reshape(1, -1)
+            diff = X - self.parameters["means"][c].reshape(1, -1)
 
             # Zero out the nans
             diff = np.nan_to_num(diff)
 
             # First compute the likelihood from the term (x-\mu)^T \Sigma^-1 (x-\mu)
-            precision_c = 1 / self.parameters['covariances'][c]
-            ll_diff = ((diff ** 2) * precision_c.reshape(1, -1)).sum(axis=1)
+            precision_c = 1 / self.parameters["covariances"][c]
+            ll_diff = ((diff**2) * precision_c.reshape(1, -1)).sum(axis=1)
 
             # Then compute the likelihood from the term log det(2*\pi*\Sigma)
-            pi_cov_c = 2 * np.pi * np.tile(self.parameters['covariances'][c], (n, 1))
+            pi_cov_c = 2 * np.pi * np.tile(self.parameters["covariances"][c], (n, 1))
 
             # Replace nan dimensions with 1 since this won't affect the product of the diagonal (determinant)
             pi_cov_c = np.where(is_observed, pi_cov_c, 1)
 
             log_dets = np.log(pi_cov_c).sum(axis=1)
 
-            log_eps[:, c] = -.5 * (log_dets + ll_diff)
+            log_eps[:, c] = -0.5 * (log_dets + ll_diff)
 
         return log_eps
 
@@ -254,10 +301,12 @@ class GaussianNan(Emission):
             if mask.any():
                 for c in range(self.n_components):
                     x_i = X[i, mask]
-                    mean_c = self.parameters['means'][c, mask]
-                    cov_c = self.parameters['covariances'][c, mask]
+                    mean_c = self.parameters["means"][c, mask]
+                    cov_c = self.parameters["covariances"][c, mask]
 
-                    log_eps[i, c] = multivariate_normal.logpdf(x=x_i, mean=mean_c, cov=cov_c)
+                    log_eps[i, c] = multivariate_normal.logpdf(
+                        x=x_i, mean=mean_c, cov=cov_c
+                    )
             else:
                 # Undefined log likelihood
                 # We use 0, as it won't affect the overall likelihood when summing over independent models
@@ -265,9 +314,12 @@ class GaussianNan(Emission):
         return log_eps
 
     def sample(self, class_no, n_samples):
-        D = self.parameters['means'].shape[1]
-        X = self.random_state.normal(loc=self.parameters['means'][class_no],
-                                     scale=self.parameters['covariances'][class_no], size=(n_samples, D))
+        D = self.parameters["means"].shape[1]
+        X = self.random_state.normal(
+            loc=self.parameters["means"][class_no],
+            scale=self.parameters["covariances"][class_no],
+            size=(n_samples, D),
+        )
         return X
 
 
@@ -277,15 +329,20 @@ class GaussianUnitNan(GaussianNan):
 
     def _compute_cov(self, X, resp, resp_sums):
         """No estimate. Simply return diagonal covariance 1 for all features."""
-        return np.ones_like(self.parameters['means'])
+        return np.ones_like(self.parameters["means"])
 
     def print_parameters(self, indent=1):
-        print_parameters(self.parameters['means'], f'Gaussian (unit covariance)', np_precision=2, indent=indent,
-                         print_mean=True)
+        print_parameters(
+            self.parameters["means"],
+            f"Gaussian (unit covariance)",
+            np_precision=2,
+            indent=indent,
+            print_mean=True,
+        )
 
     @property
     def n_parameters(self):
-        return self.parameters['means'].shape[0] * self.parameters['means'].shape[1]
+        return self.parameters["means"].shape[0] * self.parameters["means"].shape[1]
 
 
 class GaussianSphericalNan(GaussianNan):
@@ -299,30 +356,38 @@ class GaussianSphericalNan(GaussianNan):
         is_observed_row = is_observed.sum(axis=1)
 
         for c in range(self.n_components):
-            diff = X - self.parameters['means'][c].reshape(1, -1)
+            diff = X - self.parameters["means"][c].reshape(1, -1)
             diff = np.nan_to_num(diff)  # Zero out the nans
-            cov_c = resp[:, c][..., np.newaxis] * (diff ** 2)
+            cov_c = resp[:, c][..., np.newaxis] * (diff**2)
             z = resp[:, c] @ is_observed_row
             covs.append(cov_c.sum() / z)
 
         covs = np.array(covs)
 
         # Keep a diagonal format for compatibility with parent class
-        result = np.ones_like(self.parameters['means']) * covs.reshape((-1, 1))
+        result = np.ones_like(self.parameters["means"]) * covs.reshape((-1, 1))
 
         return result
 
     def print_parameters(self, indent=1):
         # Only print first column, since covariance is shared across dimensions
-        print_parameters(self.parameters['means'], f'Gaussian (spherical covariance)', np_precision=2, indent=indent,
-                         print_mean=True, covariances=self.parameters['covariances'][:, 0])
+        print_parameters(
+            self.parameters["means"],
+            f"Gaussian (spherical covariance)",
+            np_precision=2,
+            indent=indent,
+            print_mean=True,
+            covariances=self.parameters["covariances"][:, 0],
+        )
 
     @property
     def n_parameters(self):
-        mean_params = self.parameters['means'].shape[0] * self.parameters['means'].shape[1]
+        mean_params = (
+            self.parameters["means"].shape[0] * self.parameters["means"].shape[1]
+        )
 
         # Covariance are n latent class x n features, but we only have one degree of freedom per class
-        cov_params = self.parameters['covariances'].shape[0]
+        cov_params = self.parameters["covariances"].shape[0]
 
         return mean_params + cov_params
 
@@ -335,9 +400,9 @@ class GaussianDiagNan(GaussianNan):
         """One covariance parameter per column."""
         covs = list()
         for c in range(self.n_components):
-            diff = X - self.parameters['means'][c].reshape(1, -1)
+            diff = X - self.parameters["means"][c].reshape(1, -1)
             diff = np.nan_to_num(diff)  # Zero out the nans
-            cov_c = resp[:, c][..., np.newaxis] * (diff ** 2)
+            cov_c = resp[:, c][..., np.newaxis] * (diff**2)
             covs.append(cov_c.sum(axis=0))
 
         covs = np.vstack(covs)
@@ -349,12 +414,23 @@ class GaussianDiagNan(GaussianNan):
         return covs
 
     def print_parameters(self, indent=1):
-        print_parameters(self.parameters['means'], f'Gaussian (diag covariance)', np_precision=2, indent=indent,
-                         print_mean=True, covariances=self.parameters['covariances'])
+        print_parameters(
+            self.parameters["means"],
+            f"Gaussian (diag covariance)",
+            np_precision=2,
+            indent=indent,
+            print_mean=True,
+            covariances=self.parameters["covariances"],
+        )
 
     @property
     def n_parameters(self):
-        mean_params = self.parameters['means'].shape[0] * self.parameters['means'].shape[1]
-        cov_params = self.parameters['covariances'].shape[0] * self.parameters['covariances'].shape[1]
+        mean_params = (
+            self.parameters["means"].shape[0] * self.parameters["means"].shape[1]
+        )
+        cov_params = (
+            self.parameters["covariances"].shape[0]
+            * self.parameters["covariances"].shape[1]
+        )
 
         return mean_params + cov_params

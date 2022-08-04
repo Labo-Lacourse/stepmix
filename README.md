@@ -1,5 +1,7 @@
 StepMix
 ==============================
+<a href="https://github.com/psf/black"><img alt="Code style: black" src="https://img.shields.io/badge/code%20style-black-000000.svg"></a>
+
 *This project is currently in development and a stable release is expected sometime during summer 2022.*
 
 A Python package for multi-step estimation of latent class models with measurement and structural components. 

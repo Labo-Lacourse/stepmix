@@ -6,7 +6,9 @@ import pytest
 from stepmix.stepmix import StepMix
 
 
-@pytest.mark.parametrize("cov_1,cov_2", [('unit', 'spherical'), ('spherical', 'diag'), ('diag', 'full')])
+@pytest.mark.parametrize(
+    "cov_1,cov_2", [("unit", "spherical"), ("spherical", "diag"), ("diag", "full")]
+)
 def test_gaussians(data_gaussian, kwargs_gaussian, cov_1, cov_2):
     """Test gaussian models on data with non isotropic clusters.
 
@@ -14,20 +16,22 @@ def test_gaussians(data_gaussian, kwargs_gaussian, cov_1, cov_2):
     X, Y = data_gaussian
 
     # Ignore structural key for this test
-    kwargs_gaussian.pop('structural')
+    kwargs_gaussian.pop("structural")
 
-    model_1 = StepMix(n_steps=1, structural='gaussian_' + cov_1, **kwargs_gaussian)
+    model_1 = StepMix(n_steps=1, structural="gaussian_" + cov_1, **kwargs_gaussian)
     model_1.fit(X, Y)
     ll_1 = model_1.score(X, Y)
 
-    model_2 = StepMix(n_steps=1, structural='gaussian_' + cov_2, **kwargs_gaussian)
+    model_2 = StepMix(n_steps=1, structural="gaussian_" + cov_2, **kwargs_gaussian)
     model_2.fit(X, Y)
     ll_2 = model_2.score(X, Y)
 
     assert ll_1 < ll_2
 
 
-@pytest.mark.parametrize("cov_1,cov_2", [('unit_nan', 'spherical_nan'), ('spherical_nan', 'diag_nan')])
+@pytest.mark.parametrize(
+    "cov_1,cov_2", [("unit_nan", "spherical_nan"), ("spherical_nan", "diag_nan")]
+)
 def test_gaussians_nan(data_gaussian_nan, kwargs_gaussian_nan, cov_1, cov_2):
     """Test gaussian models on data with non spherical clusters.
 
@@ -36,13 +40,13 @@ def test_gaussians_nan(data_gaussian_nan, kwargs_gaussian_nan, cov_1, cov_2):
     X, Y = data_gaussian_nan
 
     # Ignore structural key for this test
-    kwargs_gaussian_nan.pop('structural')
+    kwargs_gaussian_nan.pop("structural")
 
-    model_1 = StepMix(n_steps=1, structural='gaussian_' + cov_1, **kwargs_gaussian_nan)
+    model_1 = StepMix(n_steps=1, structural="gaussian_" + cov_1, **kwargs_gaussian_nan)
     model_1.fit(X, Y)
     ll_1 = model_1.score(X, Y)
 
-    model_2 = StepMix(n_steps=1, structural='gaussian_' + cov_2, **kwargs_gaussian_nan)
+    model_2 = StepMix(n_steps=1, structural="gaussian_" + cov_2, **kwargs_gaussian_nan)
     model_2.fit(X, Y)
     ll_2 = model_2.score(X, Y)
 
@@ -67,7 +71,7 @@ def test_steps_ll(data_large, kwargs_large, n_steps_1, n_steps_2):
     assert ll_1 < ll_2
 
 
-@pytest.mark.parametrize("corr_1,corr_2", [(None, 'BCH'), (None, 'ML')])
+@pytest.mark.parametrize("corr_1,corr_2", [(None, "BCH"), (None, "ML")])
 def test_corrections_ll(data_large, kwargs_large, corr_1, corr_2):
     """Test binary measurements + gaussian unit structural on Bakk data with 3-step model and different corrections.
 

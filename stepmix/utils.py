@@ -91,9 +91,7 @@ def check_type(type, **params):
     for p in params:
         if not isinstance(params[p], type):
             raise ValueError(
-                "{} value {} not recognized. Choose from {}".format(
-                    p, params[p], p
-                )
+                "{} value {} not recognized. Choose from {}".format(p, params[p], p)
             )
 
 
@@ -139,17 +137,21 @@ def check_descriptor(descriptor, keys):
     elif isinstance(descriptor, dict):
         for key, item in descriptor.items():
             if isinstance(item, dict):
-                if 'model' not in item or 'n_features' not in item:
-                    raise ValueError(f'Nested dict descriptors should include at least a model key and an n_features '
-                                     f'key.')
+                if "model" not in item or "n_features" not in item:
+                    raise ValueError(
+                        f"Nested dict descriptors should include at least a model key and an n_features "
+                        f"key."
+                    )
 
                 # Check that n_features is a positive int
-                check_in(keys, emission=item['model'])
+                check_in(keys, emission=item["model"])
             else:
-                raise ValueError(f'Items in a nested model description should be dicts.')
+                raise ValueError(
+                    f"Items in a nested model description should be dicts."
+                )
 
     else:
-        raise ValueError(f'Emission descriptor should be either a string or a dict.')
+        raise ValueError(f"Emission descriptor should be either a string or a dict.")
 
 
 def check_descriptor_nan(descriptor):
@@ -166,11 +168,11 @@ def check_descriptor_nan(descriptor):
     """
     if isinstance(descriptor, str):
         # Models supporting missing values end with nan
-        return descriptor.endswith('nan')
+        return descriptor.endswith("nan")
     elif isinstance(descriptor, dict):
-        return any([k.endswith('nan') for k in descriptor.keys()])
+        return any([k.endswith("nan") for k in descriptor.keys()])
     else:
-        raise ValueError(f'Emission descriptor should be either a string or a dict.')
+        raise ValueError(f"Emission descriptor should be either a string or a dict.")
 
 
 def identify_coef(coef):
@@ -199,7 +201,7 @@ def modal(resp, clip=False):
 
     Will return a one-hot encoding. The clip argument can also be used to clip the results to the (1e-15, 1-1e-15)
     range.
-    
+
     Parameters
     ----------
     resp : array-like of shape (n_samples, n_components)
@@ -253,7 +255,7 @@ def print_report(model, X, Y=None):
     print("    " + "=" * 76)
     model._mm.print_parameters(indent=2)
 
-    if hasattr(model, '_sm'):
+    if hasattr(model, "_sm"):
         print("    " + "=" * 76)
         print(f"    Structural model parameters")
         print("    " + "=" * 76)
@@ -280,8 +282,17 @@ def print_report(model, X, Y=None):
     print(f"    BIC                           : {bic:.2f}")
 
 
-def print_parameters(params, model_name, indent=1, np_precision=2, n_outcomes=1, intercept=False, print_mean=False,
-                     covariances=None, tied=False):
+def print_parameters(
+    params,
+    model_name,
+    indent=1,
+    np_precision=2,
+    n_outcomes=1,
+    intercept=False,
+    print_mean=False,
+    covariances=None,
+    tied=False,
+):
     """Print model parameters with nice formatting.
 
     Parameters
@@ -312,22 +323,34 @@ def print_parameters(params, model_name, indent=1, np_precision=2, n_outcomes=1,
     if intercept:
         n_features -= 1
 
-    if (n_outcomes >= 2):
+    if n_outcomes >= 2:
         n_features = int(n_features / n_outcomes)
 
     # Title
-    print(indent_str + '-' * (80 - indent * 4))
-    print(indent_str + f"{model_name} model with {n_features} feature" + ("s" if n_features > 1 else "") +
-          (f", each with {n_outcomes} possible outcomes" if n_outcomes >= 2 else "") +
-          (" and intercept" if intercept else "")
-          )
-    print(indent_str + '-' * (80 - indent * 4))
+    print(indent_str + "-" * (80 - indent * 4))
+    print(
+        indent_str
+        + f"{model_name} model with {n_features} feature"
+        + ("s" if n_features > 1 else "")
+        + (f", each with {n_outcomes} possible outcomes" if n_outcomes >= 2 else "")
+        + (" and intercept" if intercept else "")
+    )
+    print(indent_str + "-" * (80 - indent * 4))
 
     # Clarification message for multinoulli model
-    if (n_outcomes >= 2 and n_features >= 2):
-        print(indent_str + "Columns 1 to", n_outcomes, "are associated with the first feature,")
-        print(indent_str + "columns", n_outcomes + 1, "to", 2 * n_outcomes,
-              "are associated with the second feature, etc.\n")
+    if n_outcomes >= 2 and n_features >= 2:
+        print(
+            indent_str + "Columns 1 to",
+            n_outcomes,
+            "are associated with the first feature,",
+        )
+        print(
+            indent_str + "columns",
+            n_outcomes + 1,
+            "to",
+            2 * n_outcomes,
+            "are associated with the second feature, etc.\n",
+        )
 
     # Clarification message for covariate model
     if intercept:

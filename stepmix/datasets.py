@@ -28,8 +28,8 @@ def bakk_measurements(n_classes, n_mm, sep_level):
     """
     pis = np.zeros((n_mm, n_classes))
     pis[:, 0] = sep_level
-    pis[:int(n_mm / 2), 1] = sep_level
-    pis[int(n_mm / 2):, 1] = 1 - sep_level
+    pis[: int(n_mm / 2), 1] = sep_level
+    pis[int(n_mm / 2) :, 1] = 1 - sep_level
     pis[:, 2] = 1 - sep_level
 
     return pis
@@ -72,11 +72,7 @@ def data_bakk_response(n_samples, sep_level, n_classes=3, n_mm=6, random_state=N
     pis = bakk_measurements(n_classes, n_mm, sep_level)
 
     # Structural means
-    means = [
-        [-1],
-        [0],
-        [1]
-    ]
+    means = [[-1], [0], [1]]
 
     # Model parameters
     params = dict(
@@ -88,8 +84,12 @@ def data_bakk_response(n_samples, sep_level, n_classes=3, n_mm=6, random_state=N
     )
 
     # Sample data
-    generator = StepMix(n_components=n_classes, measurement='bernoulli', structural='gaussian_unit',
-                    random_state=random_state)
+    generator = StepMix(
+        n_components=n_classes,
+        measurement="bernoulli",
+        structural="gaussian_unit",
+        random_state=random_state,
+    )
     generator.set_parameters(params)
     X, Y, labels = generator.sample(n_samples)
 
@@ -144,7 +144,9 @@ def data_bakk_covariate(n_samples, sep_level, n_mm=6, random_state=None):
 
     # Latent class (Ground truth class membership)
     # probabilistic assignment ( realizations from the distribution of the r.v label_i|Y_i )
-    probas = softmax(logits, axis=1)  # probas[n,c] = probability for unit n to be assigned to class c
+    probas = softmax(
+        logits, axis=1
+    )  # probas[n,c] = probability for unit n to be assigned to class c
     cumul_probas = np.cumsum(probas, axis=1)
     bool_tab = (cumul_probas - np.tile(rng.rand(n_samples), (n_classes, 1)).T) >= 0
     labels = -np.sum(bool_tab, axis=1) + n_classes
@@ -160,7 +162,9 @@ def data_bakk_covariate(n_samples, sep_level, n_mm=6, random_state=None):
     )
 
     # Sample data
-    generator = StepMix(n_components=n_classes, measurement='bernoulli', random_state=random_state)
+    generator = StepMix(
+        n_components=n_classes, measurement="bernoulli", random_state=random_state
+    )
     generator.set_parameters(params)
     X, _, labels_new = generator.sample(n_samples, labels=labels)
 
@@ -201,16 +205,19 @@ def data_generation_gaussian(n_samples, sep_level, n_mm=6, random_state=None):
 
     # mus[k] = E[Z0|X=c]
     # mus[k] = E[Z0|X=c]
-    mus = np.array([[-2.0344, 4.1726],
-                    [3.9779, 3.7735],
-                    [3.8007, -3.7972],
-                    [-3.0620, -3.5345]])
+    mus = np.array(
+        [[-2.0344, 4.1726], [3.9779, 3.7735], [3.8007, -3.7972], [-3.0620, -3.5345]]
+    )
 
     # sigmas[k] = V[Z0|X=c]
-    sigmas = np.array([[[2.9044, 0.2066], [0.2066, 2.7562]],
-                       [[0.2104, 0.2904], [0.2904, 12.2392]],
-                       [[0.9213, 0.0574], [0.0574, 1.8660]],
-                       [[6.2414, 6.0502], [6.0502, 6.1825]]])
+    sigmas = np.array(
+        [
+            [[2.9044, 0.2066], [0.2066, 2.7562]],
+            [[0.2104, 0.2904], [0.2904, 12.2392]],
+            [[0.9213, 0.0574], [0.0574, 1.8660]],
+            [[6.2414, 6.0502], [6.0502, 6.1825]],
+        ]
+    )
 
     # pis[k,c] = p(Yk=1|X=c)
     # sep_level = 0.9 #0.9->high, 0.8->medium, 0.7->low
@@ -226,8 +233,12 @@ def data_generation_gaussian(n_samples, sep_level, n_mm=6, random_state=None):
     )
 
     # Sample data
-    generator = StepMix(n_components=n_classes, measurement='bernoulli', structural='gaussian_full',
-                    random_state=random_state)
+    generator = StepMix(
+        n_components=n_classes,
+        measurement="bernoulli",
+        structural="gaussian_full",
+        random_state=random_state,
+    )
     generator.set_parameters(params)
     X, Y, labels = generator.sample(n_samples)
 
@@ -271,14 +282,12 @@ def data_gaussian_diag(n_samples, sep_level, n_mm=6, random_state=None, nan_rati
 
     # mus[k] = E[Z0|X=c]
     # mus[k] = E[Z0|X=c]
-    mus = np.array([[0.0, 0.0],
-                    [5.0, 5.0],
-                    [-5.0, -5.0]])
+    mus = np.array([[0.0, 0.0], [5.0, 5.0], [-5.0, -5.0]])
 
     # sigmas[k] = V[Z0|X=c]
-    sigmas = np.array([[[1.0, 0.0], [0.0, 1.0]],
-                       [[2.0, 0.0], [0.0, 2.0]],
-                       [[1.0, 0.0], [0.0, 3.0]]])
+    sigmas = np.array(
+        [[[1.0, 0.0], [0.0, 1.0]], [[2.0, 0.0], [0.0, 2.0]], [[1.0, 0.0], [0.0, 3.0]]]
+    )
 
     # pis[k,c] = p(Yk=1|X=c)
     # sep_level = 0.9 #0.9->high, 0.8->medium, 0.7->low
@@ -294,8 +303,12 @@ def data_gaussian_diag(n_samples, sep_level, n_mm=6, random_state=None, nan_rati
     )
 
     # Sample data
-    generator = StepMix(n_components=n_classes, measurement='bernoulli', structural='gaussian_full',
-                    random_state=random_state)
+    generator = StepMix(
+        n_components=n_classes,
+        measurement="bernoulli",
+        structural="gaussian_full",
+        random_state=random_state,
+    )
     generator.set_parameters(params)
     X, Y, labels = generator.sample(n_samples)
 
@@ -306,8 +319,10 @@ def data_gaussian_diag(n_samples, sep_level, n_mm=6, random_state=None, nan_rati
         observed_mask = rng.random((n_samples, n_mm + n_sm)) > nan_ratio
 
         if not observed_mask.sum(axis=1).all():
-            warnings.warn('Some samples are completely unobserved. This will likely result in downstream errors. Reduce the nan_ratio or try another'
-                          'seed.')
+            warnings.warn(
+                "Some samples are completely unobserved. This will likely result in downstream errors. Reduce the nan_ratio or try another"
+                "seed."
+            )
 
         mm_mask, sm_mask = observed_mask[:, :n_mm], observed_mask[:, n_mm:]
 

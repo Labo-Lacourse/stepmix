@@ -1,26 +1,35 @@
 from .categorical import Bernoulli, BernoulliNan, Multinoulli
-from .gaussian import GaussianUnit, GaussianSpherical, GaussianDiag, GaussianTied, GaussianFull, GaussianUnitNan, GaussianDiagNan, GaussianSphericalNan
+from .gaussian import (
+    GaussianUnit,
+    GaussianSpherical,
+    GaussianDiag,
+    GaussianTied,
+    GaussianFull,
+    GaussianUnitNan,
+    GaussianDiagNan,
+    GaussianSphericalNan,
+)
 from .covariate import Covariate
 from .nested import Nested
 
 EMISSION_DICT = {
-    'gaussian': GaussianUnit,
-    'gaussian_unit': GaussianUnit,
-    'gaussian_full': GaussianFull,
-    'gaussian_spherical': GaussianSpherical,
-    'gaussian_diag': GaussianDiag,
-    'gaussian_tied': GaussianTied,
-    'bernoulli': Bernoulli,
-    'binary': Bernoulli,
-    'multinoulli': Multinoulli,
-    'categorical': Multinoulli,
-    'covariate': Covariate,
-    'gaussian_nan': GaussianUnitNan,
-    'gaussian_unit_nan': GaussianUnitNan,
-    'gaussian_spherical_nan': GaussianSphericalNan,
-    'gaussian_diag_nan': GaussianDiagNan,
-    'bernoulli_nan': BernoulliNan,
-    'binary_nan': BernoulliNan,
+    "gaussian": GaussianUnit,
+    "gaussian_unit": GaussianUnit,
+    "gaussian_full": GaussianFull,
+    "gaussian_spherical": GaussianSpherical,
+    "gaussian_diag": GaussianDiag,
+    "gaussian_tied": GaussianTied,
+    "bernoulli": Bernoulli,
+    "binary": Bernoulli,
+    "multinoulli": Multinoulli,
+    "categorical": Multinoulli,
+    "covariate": Covariate,
+    "gaussian_nan": GaussianUnitNan,
+    "gaussian_unit_nan": GaussianUnitNan,
+    "gaussian_spherical_nan": GaussianSphericalNan,
+    "gaussian_diag_nan": GaussianDiagNan,
+    "bernoulli_nan": BernoulliNan,
+    "binary_nan": BernoulliNan,
 }
 
 

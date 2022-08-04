@@ -14,7 +14,11 @@ import numpy as np
 from scipy.special import logsumexp
 from sklearn.mixture._base import BaseEstimator
 from sklearn.exceptions import ConvergenceWarning
-from sklearn.utils.validation import check_random_state, check_is_fitted, _check_sample_weight
+from sklearn.utils.validation import (
+    check_random_state,
+    check_is_fitted,
+    _check_sample_weight,
+)
 from sklearn.cluster import KMeans
 
 from . import utils
@@ -163,24 +167,24 @@ class StepMix(BaseEstimator):
     """
 
     def __init__(
-            self,
-            n_components=2,
-            *,
-            n_steps=1,
-            measurement="bernoulli",
-            structural="gaussian_unit",
-            assignment="modal",
-            correction=None,
-            abs_tol=1e-3,
-            rel_tol=1e-10,
-            max_iter=100,
-            n_init=1,
-            init_params="random",
-            random_state=None,
-            verbose=0,
-            verbose_interval=10,
-            measurement_params=dict(),
-            structural_params=dict(),
+        self,
+        n_components=2,
+        *,
+        n_steps=1,
+        measurement="bernoulli",
+        structural="gaussian_unit",
+        assignment="modal",
+        correction=None,
+        abs_tol=1e-3,
+        rel_tol=1e-10,
+        max_iter=100,
+        n_init=1,
+        init_params="random",
+        random_state=None,
+        verbose=0,
+        verbose_interval=10,
+        measurement_params=dict(),
+        structural_params=dict(),
     ):
         # Attributes of the base StepMix class
         self.n_components = n_components
@@ -206,8 +210,12 @@ class StepMix(BaseEstimator):
 
         # Check if models support missing values
         # This is passed to sklearn.utils.check_array
-        self.force_all_finite_mm = 'allow-nan' if utils.check_descriptor_nan(measurement) else True
-        self.force_all_finite_sm = 'allow-nan' if utils.check_descriptor_nan(structural) else True
+        self.force_all_finite_mm = (
+            "allow-nan" if utils.check_descriptor_nan(measurement) else True
+        )
+        self.force_all_finite_sm = (
+            "allow-nan" if utils.check_descriptor_nan(structural) else True
+        )
 
         # Buffer to save the likelihoods of different inits for debugging
         self.lower_bound_buffer_ = list()
@@ -227,10 +235,20 @@ class StepMix(BaseEstimator):
         ValueError : unacceptable choice of parameters
 
         """
-        utils.check_type(int, n_components=self.n_components, max_iter=self.max_iter, n_init=self.n_init,
-                         verbose=self.verbose, verbose_interval=self.verbose_interval)
-        utils.check_positive(n_components=self.n_components, max_iter=self.max_iter, n_init=self.n_init,
-                             verbose_interval=self.verbose_interval)
+        utils.check_type(
+            int,
+            n_components=self.n_components,
+            max_iter=self.max_iter,
+            n_init=self.n_init,
+            verbose=self.verbose,
+            verbose_interval=self.verbose_interval,
+        )
+        utils.check_positive(
+            n_components=self.n_components,
+            max_iter=self.max_iter,
+            n_init=self.n_init,
+            verbose_interval=self.verbose_interval,
+        )
         utils.check_nonneg(abs_tol=self.abs_tol, verbose=self.verbose)
         utils.check_nonneg(rel_tol=self.rel_tol, verbose=self.verbose)
         utils.check_in([1, 2, 3], n_steps=self.n_steps)
@@ -239,8 +257,11 @@ class StepMix(BaseEstimator):
         utils.check_in([None, "BCH", "ML"], init_params=self.correction)
         utils.check_descriptor(self.measurement, keys=EMISSION_DICT.keys())
         utils.check_descriptor(self.structural, keys=EMISSION_DICT.keys())
-        utils.check_type(dict, measurement_params=self.measurement_params, structural_params=self.structural_params)
-
+        utils.check_type(
+            dict,
+            measurement_params=self.measurement_params,
+            structural_params=self.structural_params,
+        )
 
     def _initialize_parameters(self, X, random_state):
         """Initialize the weights and measurement model parameters.
@@ -275,9 +296,7 @@ class StepMix(BaseEstimator):
             resp = random_state.uniform(size=(n_samples, self.n_components))
             resp /= resp.sum(axis=1)[:, np.newaxis]
         else:
-            raise ValueError(
-                f"Unimplemented initialization method {self.init_params}."
-            )
+            raise ValueError(f"Unimplemented initialization method {self.init_params}.")
 
         # Save log responsibilities
         self.log_resp_ = np.log(np.clip(resp, 1e-15, 1 - 1e-15))
@@ -288,8 +307,9 @@ class StepMix(BaseEstimator):
         # Initialize measurement model
         self._initialize_parameters_measurement(X, random_state)
 
-
-    def _initialize_parameters_measurement(self, X, random_state=None, init_emission=True):
+    def _initialize_parameters_measurement(
+        self, X, random_state=None, init_emission=True
+    ):
         """Initialize parameters of measurement model.
 
         Parameters
@@ -298,16 +318,20 @@ class StepMix(BaseEstimator):
             Measurement data.
         """
         # Initialize measurement model
-        if not hasattr(self, '_mm'):
-            self._mm = build_emission(self.measurement,
-                                      n_components=self.n_components,
-                                      random_state=self.random_state,
-                                      **self.measurement_params)
+        if not hasattr(self, "_mm"):
+            self._mm = build_emission(
+                self.measurement,
+                n_components=self.n_components,
+                random_state=self.random_state,
+                **self.measurement_params,
+            )
         if init_emission:
             # Use the provided random_state instead of self.random_state to ensure we have a different init every run
             self._mm.initialize(X, np.exp(self.log_resp_), random_state)
 
-    def _initialize_parameters_structural(self, Y, random_state=None, init_emission=True):
+    def _initialize_parameters_structural(
+        self, Y, random_state=None, init_emission=True
+    ):
         """Initialize parameters of structural model.
 
         Parameters
@@ -316,11 +340,13 @@ class StepMix(BaseEstimator):
             Structural data.
         """
         # Initialize structural model
-        if not hasattr(self, '_sm'):
-            self._sm = build_emission(self.structural,
-                                      n_components=self.n_components,
-                                      random_state=self.random_state,
-                                      **self.structural_params)
+        if not hasattr(self, "_sm"):
+            self._sm = build_emission(
+                self.structural,
+                n_components=self.n_components,
+                random_state=self.random_state,
+                **self.structural_params,
+            )
         if init_emission:
             # Use the provided random_state instead of self.random_state to ensure we have a different init every run
             self._sm.initialize(Y, np.exp(self.log_resp_), random_state)
@@ -330,7 +356,7 @@ class StepMix(BaseEstimator):
         """Get number of parameters."""
         check_is_fitted(self)
         n = self.n_components - 1 + self._mm.n_parameters
-        if hasattr(self, '_sm'):
+        if hasattr(self, "_sm"):
             n += self._sm.n_parameters
         return n
 
@@ -361,9 +387,19 @@ class StepMix(BaseEstimator):
         """
         # We use reset True since we take care of dimensions in this class (and not in the parent)
         if X is not None:
-            X = self._validate_data(X, dtype=[np.float64, np.float32], reset=True, force_all_finite=self.force_all_finite_mm)
+            X = self._validate_data(
+                X,
+                dtype=[np.float64, np.float32],
+                reset=True,
+                force_all_finite=self.force_all_finite_mm,
+            )
         if Y is not None:
-            Y = self._validate_data(Y, dtype=[np.float64, np.float32], reset=True, force_all_finite=self.force_all_finite_sm)
+            Y = self._validate_data(
+                Y,
+                dtype=[np.float64, np.float32],
+                reset=True,
+                force_all_finite=self.force_all_finite_sm,
+            )
 
         if reset:
             if X is not None:
@@ -372,12 +408,20 @@ class StepMix(BaseEstimator):
                 self.structural_in_ = Y.shape[1]
         else:
             if X is not None and X.shape[1] != self.measurement_in_:
-                raise ValueError(f"X has {X.shape[1]} features, but StepMix is expecting {self.measurement_in_} measurement"
-                                 f" features as input.")
+                raise ValueError(
+                    f"X has {X.shape[1]} features, but StepMix is expecting {self.measurement_in_} measurement"
+                    f" features as input."
+                )
 
-            if Y is not None and hasattr(self, 'structural_in_') and Y.shape[1] != self.structural_in_:
-                raise ValueError(f"Y has {Y.shape[1]} features, but StepMix is expecting {self.structural_in_} structural "
-                                 f"features as input.")
+            if (
+                Y is not None
+                and hasattr(self, "structural_in_")
+                and Y.shape[1] != self.structural_in_
+            ):
+                raise ValueError(
+                    f"Y has {Y.shape[1]} features, but StepMix is expecting {self.structural_in_} structural "
+                    f"features as input."
+                )
 
         return X, Y
 
@@ -395,11 +439,14 @@ class StepMix(BaseEstimator):
                          }.
         """
         check_is_fitted(self)
-        params = dict(weights=self.weights_, measurement=self._mm.get_parameters(),
-                      measurement_in=self.measurement_in_)
-        if hasattr(self, '_sm'):
-            params['structural'] = self._sm.get_parameters()
-            params['structural_in'] = self.structural_in_
+        params = dict(
+            weights=self.weights_,
+            measurement=self._mm.get_parameters(),
+            measurement_in=self.measurement_in_,
+        )
+        if hasattr(self, "_sm"):
+            params["structural"] = self._sm.get_parameters()
+            params["structural_in"] = self.structural_in_
         return params
 
     def set_parameters(self, params):
@@ -411,20 +458,24 @@ class StepMix(BaseEstimator):
             Same format as self.get_parameters().
 
         """
-        self.weights_ = params['weights']
+        self.weights_ = params["weights"]
 
-        if not hasattr(self, '_mm'):
+        if not hasattr(self, "_mm"):
             # Init model without random initializations (we will provide one)
-            self._initialize_parameters_measurement(None, random_state=self.random_state, init_emission=False)
-        self._mm.set_parameters(params['measurement'])
-        self.measurement_in_ = params['measurement_in']
+            self._initialize_parameters_measurement(
+                None, random_state=self.random_state, init_emission=False
+            )
+        self._mm.set_parameters(params["measurement"])
+        self.measurement_in_ = params["measurement_in"]
 
-        if 'structural' in params.keys():
-            if not hasattr(self, '_sm'):
+        if "structural" in params.keys():
+            if not hasattr(self, "_sm"):
                 # Init model without random initializations (we will provide one)
-                self._initialize_parameters_structural(None, random_state=self.random_state, init_emission=False)
-            self._sm.set_parameters(params['structural'])
-            self.structural_in_ = params['structural_in']
+                self._initialize_parameters_structural(
+                    None, random_state=self.random_state, init_emission=False
+                )
+            self._sm.set_parameters(params["structural"])
+            self.structural_in_ = params["structural_in"]
 
     #######################################################################################################################
     # ESTIMATION AND EM METHODS
@@ -472,12 +523,16 @@ class StepMix(BaseEstimator):
 
             # Modal assignment (clipped for numerical reasons)
             # Else we simply keep the assignment as is (soft)
-            resp = utils.modal(soft_resp, clip=True) if self.assignment == 'modal' else soft_resp
+            resp = (
+                utils.modal(soft_resp, clip=True)
+                if self.assignment == "modal"
+                else soft_resp
+            )
 
             # 3) M-step on the structural model
             self.m_step_structural(resp, Y)
 
-        elif self.n_steps == 3 and self.correction == 'BCH':
+        elif self.n_steps == 3 and self.correction == "BCH":
             # Three-step estimation with BCH correction
             # 1) Fit the measurement model
             self.em(X)
@@ -489,13 +544,17 @@ class StepMix(BaseEstimator):
             _, D_inv = compute_bch_matrix(soft_resp, self.assignment)
 
             # Modal assignment (clipped for numerical reasons) or assignment as is (soft)
-            resp = utils.modal(soft_resp, clip=True) if self.assignment == 'modal' else soft_resp
+            resp = (
+                utils.modal(soft_resp, clip=True)
+                if self.assignment == "modal"
+                else soft_resp
+            )
             resp = resp @ D_inv
 
             # 3) M-step on the structural model
             self.m_step_structural(resp, Y)
 
-        elif self.n_steps == 3 and self.correction == 'ML':
+        elif self.n_steps == 3 and self.correction == "ML":
             # Three-step estimation with ML correction
             # 1) Fit the measurement model
             self.em(X)
@@ -528,7 +587,14 @@ class StepMix(BaseEstimator):
         """
         utils.print_report(self, X, Y)
 
-    def em(self, X, Y=None, sample_weight=None, freeze_measurement=False, log_emission_pm=None):
+    def em(
+        self,
+        X,
+        Y=None,
+        sample_weight=None,
+        freeze_measurement=False,
+        log_emission_pm=None,
+    ):
         """EM algorithm to fit the weights, measurement parameters and structural parameters.
 
         Adapted from the fit_predict method of the sklearn BaseMixture class to include (optional) structural model
@@ -584,7 +650,9 @@ class StepMix(BaseEstimator):
                 self._initialize_parameters(X, random_state)  # Measurement model
 
             if Y is not None:
-                self._initialize_parameters_structural(Y, random_state)  # Structural Model
+                self._initialize_parameters_structural(
+                    Y, random_state
+                )  # Structural Model
 
             lower_bound = -np.inf
 
@@ -593,16 +661,23 @@ class StepMix(BaseEstimator):
                 prev_lower_bound = lower_bound
 
                 # E-step
-                log_prob_norm, log_resp = self._e_step(X, Y=Y, sample_weight=sample_weight,
-                                                       log_emission_pm=log_emission_pm)
+                log_prob_norm, log_resp = self._e_step(
+                    X, Y=Y, sample_weight=sample_weight, log_emission_pm=log_emission_pm
+                )
 
                 # M-step
-                self._m_step(X, np.exp(log_resp), Y, sample_weight=sample_weight, freeze_measurement=freeze_measurement)
+                self._m_step(
+                    X,
+                    np.exp(log_resp),
+                    Y,
+                    sample_weight=sample_weight,
+                    freeze_measurement=freeze_measurement,
+                )
 
                 # Likelihood & stopping criterion
                 lower_bound = log_prob_norm
                 change = lower_bound - prev_lower_bound
-                rel_change = change/lower_bound
+                rel_change = change / lower_bound
 
                 # Save lower bound
                 self.lower_bound_buffer_.append(lower_bound)
@@ -613,7 +688,11 @@ class StepMix(BaseEstimator):
                     self.converged_ = True
                     break
 
-            if lower_bound > max_lower_bound or max_lower_bound == -np.inf or np.isnan(max_lower_bound):
+            if (
+                lower_bound > max_lower_bound
+                or max_lower_bound == -np.inf
+                or np.isnan(max_lower_bound)
+            ):
                 max_lower_bound = lower_bound
                 best_params = self.get_parameters()
                 best_n_iter = n_iter
@@ -712,7 +791,9 @@ class StepMix(BaseEstimator):
 
         if not freeze_measurement:
             # Update measurement model parameters
-            self.weights_ = np.clip(np.average(resp, weights=sample_weight, axis=0), 1e-15, 1 - 1e-15)
+            self.weights_ = np.clip(
+                np.average(resp, weights=sample_weight, axis=0), 1e-15, 1 - 1e-15
+            )
             self._mm.m_step(X, resp * sample_weight[:, np.newaxis])
 
         if Y is not None:
@@ -742,7 +823,7 @@ class StepMix(BaseEstimator):
         _, Y = self._check_x_y(None, Y, reset=True)
 
         # For the third step of the 3-step approach
-        if not hasattr(self, '_sm'):
+        if not hasattr(self, "_sm"):
             self._initialize_parameters_structural(Y)
         self._sm.m_step(Y, resp * sample_weight[:, np.newaxis])
 
@@ -782,7 +863,7 @@ class StepMix(BaseEstimator):
         data Y.
 
         Adapted from https://github.com/scikit-learn/scikit-learn/blob/baf0ea25d6dd034403370fea552b21a6776bef18/sklearn/mixture/_base.py
-        
+
         Parameters
         ----------
         X : array-like of shape (n_samples, n_features)
@@ -805,7 +886,7 @@ class StepMix(BaseEstimator):
         data Y.
 
         Adapted from https://github.com/scikit-learn/scikit-learn/blob/baf0ea25d6dd034403370fea552b21a6776bef18/sklearn/mixture/_base.py
-        
+
         Parameters
         ----------
         X : array-like of shape (n_samples, n_features)
@@ -897,8 +978,10 @@ class StepMix(BaseEstimator):
 
         # Covariate sampling is not supported
         # You need to first sample input data, then apply the covariate model to infer weights
-        if self.structural == 'covariate':
-            raise NotImplementedError("Sampling for the covariate model is not implemented.")
+        if self.structural == "covariate":
+            raise NotImplementedError(
+                "Sampling for the covariate model is not implemented."
+            )
 
         # Sample
         rng = check_random_state(self.random_state)
@@ -911,9 +994,12 @@ class StepMix(BaseEstimator):
             [self._mm.sample(c, int(sample)) for c, sample in enumerate(n_samples_comp)]
         )
 
-        if hasattr(self, '_sm'):
+        if hasattr(self, "_sm"):
             Y = np.vstack(
-                [self._sm.sample(c, int(sample)) for c, sample in enumerate(n_samples_comp)]
+                [
+                    self._sm.sample(c, int(sample))
+                    for c, sample in enumerate(n_samples_comp)
+                ]
             )
         else:
             Y = None
@@ -949,6 +1035,10 @@ class StepMix(BaseEstimator):
         else:
             # Shuffle everything
             shuffle_mask = rng.permutation(X.shape[0])
-            X, Y, labels_ret = X[shuffle_mask], Y[shuffle_mask], labels_ret[shuffle_mask]
+            X, Y, labels_ret = (
+                X[shuffle_mask],
+                Y[shuffle_mask],
+                labels_ret[shuffle_mask],
+            )
 
         return X, Y, labels_ret
