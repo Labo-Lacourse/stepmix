@@ -72,7 +72,7 @@ class BernoulliNan(Bernoulli):
 
 
 class Multinoulli(Emission):
-    """Multinoulli (categorical) emission model."""
+    """Multinoulli (categorical) emission model (uses one-hot encoded features)"""
 
     def __init__(self, n_components=2, random_state=None, n_outcomes=2):
         super().__init__(n_components=n_components, random_state=random_state)

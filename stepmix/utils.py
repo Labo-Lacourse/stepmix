@@ -137,13 +137,13 @@ def check_descriptor(descriptor, keys):
     elif isinstance(descriptor, dict):
         for key, item in descriptor.items():
             if isinstance(item, dict):
-                if "model" not in item or "n_features" not in item:
+                if "model" not in item or "n_columns" not in item:
                     raise ValueError(
-                        f"Nested dict descriptors should include at least a model key and an n_features "
+                        f"Nested dict descriptors should include at least a model key and an n_columns "
                         f"key."
                     )
 
-                # Check that n_features is a positive int
+                # Check that n_columns is a positive int
                 check_in(keys, emission=item["model"])
             else:
                 raise ValueError(

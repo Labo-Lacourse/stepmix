@@ -8,27 +8,29 @@ class Nested(Emission):
 
     The descriptor must be a dict of dicts, where the nested dicts hold arguments for nested models. Each nested dict
     is expected to have a model key referring to a valid emission model as well as
-    an n_features key describing the number of features associated with that model.
-    For example, a model where the first 3 features are gaussian with unit variance, the next 2 are binary and
-    the last 4 are covariates would be described likeso :
+    an n_columns key describing the number of columns (i.e. features for univariate variables or
+    features*n_outcomes for one-hot encoded variables) associated with that model.
+    For example, a model where the first 3 features are gaussian with unit variance, the next 3 are multinoulli
+    with 5 possible outcomes (for a total of 3*5=15 columns) and the last 4 are covariates would be described likeso :
     >>> descriptor = {
     >>>    'model_1': {
     >>>            'model': 'gaussian_unit',
-    >>>            'n_features':3
+    >>>            'n_columns':3
     >>>     },
     >>>    'model_2': {
-    >>>            'model': 'binary',
-    >>>            'n_features': 2
+    >>>            'model': 'multinoulli',
+    >>>            'n_columns': 15,
+    >>>            'n_outcomes': 5
     >>>     },
     >>>    'model_3': {
     >>>            'model': 'covariate',
-    >>>            'n_features': 4,
+    >>>            'n_columns': 4,
     >>>            'method': "newton-raphson",
     >>>            'lr': 1e-3,
     >>>     }
     >>> }
 
-    The above model would then expect an n_samples x 9 matrix as input (9 = 3 + 2 + 4) where columns follow the same
+    The above model would then expect an n_samples x 22 matrix as input (3 + 15 + 4 = 22) where columns follow the same
     order of declaration (i.e., the columns of model_1 are first, columns of model_2 come after etc.).
 
     As demonstrated by the covariate argument, additional arguments can be specified and are passed to the
@@ -38,7 +40,7 @@ class Nested(Emission):
     def __init__(self, descriptor, emission_dict, n_components, random_state, **kwargs):
         super(Nested, self).__init__(n_components, random_state)
         self.models = dict()
-        self.features_per_model = list()
+        self.columns_per_model = list()
         self.n_components = n_components
         self.random_state = random_state
 
@@ -46,7 +48,7 @@ class Nested(Emission):
         for key, item in descriptor.items():
             # Read in model type and the number of features. Other keys are used as arguments
             model = item.pop("model")
-            n_features = item.pop("n_features")
+            n_columns = item.pop("n_columns")
 
             # Build model
             m = emission_dict[model](
@@ -55,11 +57,11 @@ class Nested(Emission):
 
             # Save model and features
             self.models[key] = m
-            self.features_per_model.append(n_features)
+            self.columns_per_model.append(n_columns)
 
     def m_step(self, X, resp):
         i = 0
-        for m, range_ in zip(self.models.values(), self.features_per_model):
+        for m, range_ in zip(self.models.values(), self.columns_per_model):
             # Slice columns to call the m-step only on the appropriate features
             m.m_step(X[:, i : i + range_], resp)
             i += range_
@@ -67,7 +69,7 @@ class Nested(Emission):
     def log_likelihood(self, X):
         i = 0
         log_eps = np.zeros((X.shape[0], self.n_components))
-        for m, range_ in zip(self.models.values(), self.features_per_model):
+        for m, range_ in zip(self.models.values(), self.columns_per_model):
             # Slice columns to compute the log-likelihood only on the appropriate columns
             log_eps += m.log_likelihood(X[:, i : i + range_])
             i += range_
