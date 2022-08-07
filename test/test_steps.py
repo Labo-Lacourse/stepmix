@@ -119,8 +119,8 @@ def test_1_step_sym(data, kwargs):
 
     # Binary + Gaussian measurement
     descriptor = {
-        "model_1": {"model": "bernoulli", "n_features": 6},
-        "model_2": {"model": "gaussian_unit", "n_features": 1},
+        "model_1": {"model": "bernoulli", "n_columns": 6},
+        "model_2": {"model": "gaussian_unit", "n_columns": 1},
     }
 
     # Merge data in single matrix

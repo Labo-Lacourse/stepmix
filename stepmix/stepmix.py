@@ -227,7 +227,7 @@ class StepMix(BaseEstimator):
 
         Parameters
         ----------
-        X : ndarray of shape  (n_samples, n_features)
+        X : ndarray of shape  (n_samples, n_columns)
             Measurement data.
 
         Raises
@@ -270,7 +270,7 @@ class StepMix(BaseEstimator):
 
         Parameters
         ----------
-        X : ndarray of shape  (n_samples, n_features)
+        X : ndarray of shape  (n_samples, n_columns)
             Measurement data.
         random_state : RandomState
             A random number generator instance that controls the random seed
@@ -314,7 +314,7 @@ class StepMix(BaseEstimator):
 
         Parameters
         ----------
-        X : ndarray of shape  (n_samples, n_features)
+        X : ndarray of shape  (n_samples, n_columns)
             Measurement data.
         """
         # Initialize measurement model
@@ -336,7 +336,7 @@ class StepMix(BaseEstimator):
 
         Parameters
         ----------
-        Y : array-like of shape  (n_samples, n_structural)
+        Y : array-like of shape  (n_samples, n_columns_structural)
             Structural data.
         """
         # Initialize structural model
@@ -367,21 +367,27 @@ class StepMix(BaseEstimator):
 
         Parameters
         ----------
-        X : array-like of shape (n_samples, n_features)
-            List of n_features-dimensional data points. Each row
-            corresponds to a single data point of the measurement model.
-        Y : array-like of shape (n_samples, n_features), default=None
-            List of n_features-dimensional data points. Each row
-            corresponds to a single data point of the structural model.
+        X : array-like of shape (n_samples, n_columns)
+            List of n_features-dimensional data points, where each column corresponds
+            to a feature for univariate variables (n_features=n_columns) and each group
+            of L columns corresponds to a feature for one-hot encoded variables with L
+            possible outcomes (n_features=n_columns/L). Each row corresponds to a single
+            data point of the measurement model.
+        Y : array-like of shape (n_samples, n_columns_structural), default=None
+            List of n_features-dimensional data points, where each column corresponds
+            to a feature for univariate variables (n_features=n_columns_structural)
+            and each group of L columns corresponds to a feature for one-hot encoded
+            variables with L possible outcomes (n_features=n_columns_structural/L).
+            Each row corresponds to a  single data point of the structural model.
         reset : bool, default=False
             Reset input sizes for future validation.
 
         Returns
         -------
-        X : ndarray of shape (n_samples, n_features) or None
+        X : ndarray of shape (n_samples, n_columns) or None
             Validated measurement data or None if not provided.
 
-        Y : ndarray of shape (n_samples, n_structural) or None
+        Y : ndarray of shape (n_samples, n_columns_structural) or None
             Validated structural data or None if not provided.
 
         """
@@ -487,12 +493,18 @@ class StepMix(BaseEstimator):
 
         Parameters
         ----------
-        X : array-like of shape (n_samples, n_features)
-            List of n_features-dimensional data points. Each row
-            corresponds to a single data point of the measurement model.
-        Y : array-like of shape (n_samples, n_structural), default = None
-            List of n_structural-dimensional data points. Each row
-            corresponds to a single data point of the structural model.
+        X : array-like of shape (n_samples, n_columns)
+            List of n_features-dimensional data points, where each column corresponds
+            to a feature for univariate variables (n_features=n_columns) and each group
+            of L columns corresponds to a feature for one-hot encoded variables with L
+            possible outcomes (n_features=n_columns/L). Each row corresponds to a single
+            data point of the measurement model.
+        Y : array-like of shape (n_samples, n_columns_structural), default=None
+            List of n_features-dimensional data points, where each column corresponds
+            to a feature for univariate variables (n_features=n_columns_structural)
+            and each group of L columns corresponds to a feature for one-hot encoded
+            variables with L possible outcomes (n_features=n_columns_structural/L).
+            Each row corresponds to a  single data point of the structural model.
         sample_weight : array-like of shape(n_samples,), default=None
             Array of weights that are assigned to individual samples.
             If not provided, then each sample is given unit weight.
@@ -578,12 +590,18 @@ class StepMix(BaseEstimator):
 
         Parameters
         ----------
-        X : array-like of shape (n_samples, n_features)
-            List of n_features-dimensional data points. Each row
-            corresponds to a single data point of the measurement model.
-        Y : array-like of shape (n_samples, n_structural), default = None
-            List of n_structural-dimensional data points. Each row
-            corresponds to a single data point of the structural model.
+        X : array-like of shape (n_samples, n_columns)
+            List of n_features-dimensional data points, where each column corresponds
+            to a feature for univariate variables (n_features=n_columns) and each group
+            of L columns corresponds to a feature for one-hot encoded variables with L
+            possible outcomes (n_features=n_columns/L). Each row corresponds to a single
+            data point of the measurement model.
+        Y : array-like of shape (n_samples, n_columns_structural), default=None
+            List of n_features-dimensional data points, where each column corresponds
+            to a feature for univariate variables (n_features=n_columns_structural)
+            and each group of L columns corresponds to a feature for one-hot encoded
+            variables with L possible outcomes (n_features=n_columns_structural/L).
+            Each row corresponds to a  single data point of the structural model.
         """
         utils.print_report(self, X, Y)
 
@@ -605,12 +623,18 @@ class StepMix(BaseEstimator):
 
         Parameters
         ----------
-        X : array-like of shape (n_samples, n_features)
-            List of n_features-dimensional data points. Each row
-            corresponds to a single data point of the measurement model.
-        Y : array-like of shape (n_samples, n_structural), default = None
-            List of n_structural-dimensional data points. Each row
-            corresponds to a single data point of the structural model.
+        X : array-like of shape (n_samples, n_columns)
+            List of n_features-dimensional data points, where each column corresponds
+            to a feature for univariate variables (n_features=n_columns) and each group
+            of L columns corresponds to a feature for one-hot encoded variables with L
+            possible outcomes (n_features=n_columns/L). Each row corresponds to a single
+            data point of the measurement model.
+        Y : array-like of shape (n_samples, n_columns_structural), default=None
+            List of n_features-dimensional data points, where each column corresponds
+            to a feature for univariate variables (n_features=n_columns_structural)
+            and each group of L columns corresponds to a feature for one-hot encoded
+            variables with L possible outcomes (n_features=n_columns_structural/L).
+            Each row corresponds to a  single data point of the structural model.
         sample_weight : array-like of shape(n_samples,), default=None
             Array of weights that are assigned to individual samples.
             If not provided, then each sample is given unit weight.
@@ -717,15 +741,21 @@ class StepMix(BaseEstimator):
 
         Parameters
         ----------
-        X : ndarray of shape (n_samples, n_features)
-            List of n_features-dimensional data points. Each row
-            corresponds to a single data point of the measurement model.
+        X : array-like of shape (n_samples, n_columns)
+            List of n_features-dimensional data points, where each column corresponds
+            to a feature for univariate variables (n_features=n_columns) and each group
+            of L columns corresponds to a feature for one-hot encoded variables with L
+            possible outcomes (n_features=n_columns/L). Each row corresponds to a single
+            data point of the measurement model.
+        Y : array-like of shape (n_samples, n_columns_structural), default=None
+            List of n_features-dimensional data points, where each column corresponds
+            to a feature for univariate variables (n_features=n_columns_structural)
+            and each group of L columns corresponds to a feature for one-hot encoded
+            variables with L possible outcomes (n_features=n_columns_structural/L).
+            Each row corresponds to a  single data point of the structural model.
         sample_weight : array-like of shape(n_samples,), default=None
             Array of weights that are assigned to individual samples.
             If not provided, then each sample is given unit weight.
-        Y : ndarray of shape (n_samples, n_structural), default = None
-            List of n_structural-dimensional data points. Each row
-            corresponds to a single data point of the structural model.
         log_emission_pm : ndarray of shape (n, n_components), default=None
             Log probabilities of the predicted class given the true latent class for ML correction. If provided, the
             measurement model likelihood is ignored and this is used instead.
@@ -772,14 +802,20 @@ class StepMix(BaseEstimator):
 
         Parameters
         ----------
-        X : ndarray of shape (n_samples, n_features)
-            List of n_features-dimensional data points. Each row
-            corresponds to a single data point of the measurement model.
+        X : array-like of shape (n_samples, n_columns)
+            List of n_features-dimensional data points, where each column corresponds
+            to a feature for univariate variables (n_features=n_columns) and each group
+            of L columns corresponds to a feature for one-hot encoded variables with L
+            possible outcomes (n_features=n_columns/L). Each row corresponds to a single
+            data point of the measurement model.
         resp : ndarray of shape (n_samples, n_components)
             Responsibilities, i.e., posterior probabilities over the latent classes.
-        Y : ndarray of shape (n_samples, n_structural), default = None
-            List of n_structural-dimensional data points. Each row
-            corresponds to a single data point of the structural model.
+        Y : array-like of shape (n_samples, n_columns_structural), default=None
+            List of n_features-dimensional data points, where each column corresponds
+            to a feature for univariate variables (n_features=n_columns_structural)
+            and each group of L columns corresponds to a feature for one-hot encoded
+            variables with L possible outcomes (n_features=n_columns_structural/L).
+            Each row corresponds to a  single data point of the structural model.
         sample_weight : array-like of shape(n_samples,), default=None
             Array of weights that are assigned to individual samples.
             If not provided, then each sample is given unit weight.
@@ -809,9 +845,12 @@ class StepMix(BaseEstimator):
         ----------
         resp : ndarray of shape (n_samples, n_components)
             Responsibilities, i.e., posterior probabilities over the latent classes of each point in Y.
-        Y : ndarray of shape (n_samples, n_structural)
-            List of n_structural-dimensional data points. Each row
-            corresponds to a single data point of the structural model.
+        Y : array-like of shape (n_samples, n_columns_structural)
+            List of n_features-dimensional data points, where each column corresponds
+            to a feature for univariate variables (n_features=n_columns_structural)
+            and each group of L columns corresponds to a feature for one-hot encoded
+            variables with L possible outcomes (n_features=n_columns_structural/L).
+            Each row corresponds to a  single data point of the structural model.
         sample_weight : array-like of shape(n_samples,), default=None
             Array of weights that are assigned to individual samples.
             If not provided, then each sample is given unit weight.
@@ -836,12 +875,18 @@ class StepMix(BaseEstimator):
 
         Parameters
         ----------
-        X : array-like of shape (n_samples, n_features)
-            List of n_features-dimensional data points. Each row
-            corresponds to a single data point of the measurement model.
-        Y : array-like of shape (n_samples, n_structural), default = None
-            List of n_structural-dimensional data points. Each row
-            corresponds to a single data point of the structural model.
+        X : array-like of shape (n_samples, n_columns)
+            List of n_features-dimensional data points, where each column corresponds
+            to a feature for univariate variables (n_features=n_columns) and each group
+            of L columns corresponds to a feature for one-hot encoded variables with L
+            possible outcomes (n_features=n_columns/L). Each row corresponds to a single
+            data point of the measurement model.
+        Y : array-like of shape (n_samples, n_columns_structural), default=None
+            List of n_features-dimensional data points, where each column corresponds
+            to a feature for univariate variables (n_features=n_columns_structural)
+            and each group of L columns corresponds to a feature for one-hot encoded
+            variables with L possible outcomes (n_features=n_columns_structural/L).
+            Each row corresponds to a  single data point of the structural model.
         sample_weight : array-like of shape(n_samples,), default=None
             Array of weights that are assigned to individual samples.
             If not provided, then each sample is given unit weight.
@@ -866,12 +911,18 @@ class StepMix(BaseEstimator):
 
         Parameters
         ----------
-        X : array-like of shape (n_samples, n_features)
-            List of n_features-dimensional data points. Each row
-            corresponds to a single data point of the measurement model.
-        Y : array-like of shape (n_samples, n_structural), default = None
-            List of n_structural-dimensional data points. Each row
-            corresponds to a single data point of the structural model.
+        X : array-like of shape (n_samples, n_columns)
+            List of n_features-dimensional data points, where each column corresponds
+            to a feature for univariate variables (n_features=n_columns) and each group
+            of L columns corresponds to a feature for one-hot encoded variables with L
+            possible outcomes (n_features=n_columns/L). Each row corresponds to a single
+            data point of the measurement model.
+        Y : array-like of shape (n_samples, n_columns_structural), default=None
+            List of n_features-dimensional data points, where each column corresponds
+            to a feature for univariate variables (n_features=n_columns_structural)
+            and each group of L columns corresponds to a feature for one-hot encoded
+            variables with L possible outcomes (n_features=n_columns_structural/L).
+            Each row corresponds to a  single data point of the structural model.
         Returns
         -------
         bic : float
@@ -889,12 +940,18 @@ class StepMix(BaseEstimator):
 
         Parameters
         ----------
-        X : array-like of shape (n_samples, n_features)
-            List of n_features-dimensional data points. Each row
-            corresponds to a single data point of the measurement model.
-        Y : array-like of shape (n_samples, n_structural), default = None
-            List of n_structural-dimensional data points. Each row
-            corresponds to a single data point of the structural model.
+        X : array-like of shape (n_samples, n_columns)
+            List of n_features-dimensional data points, where each column corresponds
+            to a feature for univariate variables (n_features=n_columns) and each group
+            of L columns corresponds to a feature for one-hot encoded variables with L
+            possible outcomes (n_features=n_columns/L). Each row corresponds to a single
+            data point of the measurement model.
+        Y : array-like of shape (n_samples, n_columns_structural), default=None
+            List of n_features-dimensional data points, where each column corresponds
+            to a feature for univariate variables (n_features=n_columns_structural)
+            and each group of L columns corresponds to a feature for one-hot encoded
+            variables with L possible outcomes (n_features=n_columns_structural/L).
+            Each row corresponds to a  single data point of the structural model.
         Returns
         -------
         aic : float
@@ -910,12 +967,18 @@ class StepMix(BaseEstimator):
 
         Parameters
         ----------
-        X : array-like of shape (n_samples, n_features)
-            List of n_features-dimensional data points. Each row
-            corresponds to a single data point of the measurement model.
-        Y : array-like of shape (n_samples, n_features), default=None
-            List of n_features-dimensional data points. Each row
-            corresponds to a single data point of the structural model.
+        X : array-like of shape (n_samples, n_columns)
+            List of n_features-dimensional data points, where each column corresponds
+            to a feature for univariate variables (n_features=n_columns) and each group
+            of L columns corresponds to a feature for one-hot encoded variables with L
+            possible outcomes (n_features=n_columns/L). Each row corresponds to a single
+            data point of the measurement model.
+        Y : array-like of shape (n_samples, n_columns_structural), default=None
+            List of n_features-dimensional data points, where each column corresponds
+            to a feature for univariate variables (n_features=n_columns_structural)
+            and each group of L columns corresponds to a feature for one-hot encoded
+            variables with L possible outcomes (n_features=n_columns_structural/L).
+            Each row corresponds to a  single data point of the structural model.
         Returns
         -------
         labels : array, shape (n_samples,)
@@ -928,12 +991,18 @@ class StepMix(BaseEstimator):
 
         Parameters
         ----------
-        X : array-like of shape (n_samples, n_features)
-            List of n_features-dimensional data points. Each row
-            corresponds to a single data point of the measurement model.
-        Y : array-like of shape (n_samples, n_features), default=None
-            List of n_features-dimensional data points. Each row
-            corresponds to a single data point of the structural model.
+        X : array-like of shape (n_samples, n_columns)
+            List of n_features-dimensional data points, where each column corresponds
+            to a feature for univariate variables (n_features=n_columns) and each group
+            of L columns corresponds to a feature for one-hot encoded variables with L
+            possible outcomes (n_features=n_columns/L). Each row corresponds to a single
+            data point of the measurement model.
+        Y : array-like of shape (n_samples, n_columns_structural), default=None
+            List of n_features-dimensional data points, where each column corresponds
+            to a feature for univariate variables (n_features=n_columns_structural)
+            and each group of L columns corresponds to a feature for one-hot encoded
+            variables with L possible outcomes (n_features=n_columns_structural/L).
+            Each row corresponds to a  single data point of the structural model.
         Returns
         -------
         resp : array, shape (n_samples, n_components)
@@ -959,9 +1028,9 @@ class StepMix(BaseEstimator):
 
         Returns
         -------
-        X : ndarray of shape (n_samples, n_features)
+        X : array-like of shape (n_samples, n_columns)
             Measurement samples.
-        Y : ndarray of shape (n_samples, n_features)
+        Y : array-like of shape (n_samples, n_columns_structural)
             Structural samples.
         labels : ndarray of shape (n_samples,)
             Ground truth class membership.

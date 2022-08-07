@@ -77,7 +77,7 @@ class Emission(ABC):
 
         Parameters
         ----------
-        X : ndarray of shape (n_samples, n_features)
+        X : ndarray of shape (n_samples, n_columns)
             Input data for this emission model.
         resp : ndarray of shape (n_samples, n_components)
             Responsibilities, i.e., posterior probabilities over the latent classes.
@@ -120,7 +120,7 @@ class Emission(ABC):
 
         Parameters
         ----------
-        X : ndarray of shape (n_samples, n_features)
+        X : ndarray of shape (n_samples, n_columns)
             Input data for this emission model.
         resp : ndarray of shape (n_samples, n_components)
             Responsibilities, i.e., posterior probabilities over the latent classes of each point in X.
@@ -133,7 +133,7 @@ class Emission(ABC):
 
         Parameters
         ----------
-        X : ndarray of shape (n_samples, n_features)
+        X : ndarray of shape (n_samples, n_columns)
             Input data for this emission model.
 
         Returns
@@ -157,7 +157,7 @@ class Emission(ABC):
 
         Returns
         -------
-        samples : ndarray of shape (n_samples, n_features)
+        samples : ndarray of shape (n_samples, n_columns)
             Samples
 
         """

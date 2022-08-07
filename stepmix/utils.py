@@ -232,12 +232,18 @@ def print_report(model, X, Y=None):
     ----------
     model: stepmix.StepMix
         Fitted StepMix instance.
-    X : array-like of shape (n_samples, n_features)
-        List of n_features-dimensional data points. Each row
-        corresponds to a single data point of the measurement model.
-    Y : array-like of shape (n_samples, n_structural), default = None
-        List of n_structural-dimensional data points. Each row
-        corresponds to a single data point of the structural model.
+    X : array-like of shape (n_samples, n_columns)
+            List of n_features-dimensional data points, where each column corresponds
+            to a feature for univariate variables (n_features=n_columns) and each group
+            of L columns corresponds to a feature for one-hot encoded variables with L
+            possible outcomes (n_features=n_columns/L). Each row corresponds to a single
+            data point of the measurement model.
+    Y : array-like of shape (n_samples, n_columns_structural), default=None
+        List of n_features-dimensional data points, where each column corresponds
+        to a feature for univariate variables (n_features=n_columns_structural)
+        and each group of L columns corresponds to a feature for one-hot encoded
+        variables with L possible outcomes (n_features=n_columns_structural/L).
+        Each row corresponds to a  single data point of the structural model.
     """
     check_is_fitted(model)
     n_classes = model.n_components
@@ -323,6 +329,7 @@ def print_parameters(
     if intercept:
         n_features -= 1
 
+    #For one-hot encoded variables, each group of n_outcomes columns corresponds to a feature
     if n_outcomes >= 2:
         n_features = int(n_features / n_outcomes)
 
