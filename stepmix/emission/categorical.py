@@ -46,7 +46,7 @@ class BernoulliNan(Bernoulli):
         is_observed = ~np.isnan(X)
 
         # Replace all nans with 0
-        X = np.nan_to_num(X)
+        X = np.nan_to_num(X, nan=0)
         pis = X.T @ resp
 
         # Compute normalization factor over observed values for each feature
@@ -60,7 +60,7 @@ class BernoulliNan(Bernoulli):
         is_observed = ~np.isnan(X)
 
         # Replace all nans with 0
-        X = np.nan_to_num(X)
+        X = np.nan_to_num(X, nan=0)
 
         # compute log emission probabilities
         pis = np.clip(
@@ -72,20 +72,24 @@ class BernoulliNan(Bernoulli):
 
 
 class Multinoulli(Emission):
-    """Multinoulli (categorical) emission model (uses one-hot encoded features)"""
+    """Multinoulli (categorical) emission model
+
+        Uses one-hot encoded features. Expected data formatting:
+        X[n,k*L+l]=1 if l is the observed outcome for the kth attribute of data point n,
+        where n is the number of observations, K=n_features, L=n_outcomes for each multinoulli
+
+        Parameters:
+        pis[k*L+l,c]=P[ X[n,k*L+l]=1 | n belongs to class c]
+    """
 
     def __init__(self, n_components=2, random_state=None, n_outcomes=2):
         super().__init__(n_components=n_components, random_state=random_state)
         self.n_outcomes = n_outcomes
 
-    def get_KL(self):
-        # K features
-        # L=n_outcomes (number of possible outcomes for each multinoulli. (L=2 in the case of bernoulli))
-        pis = self.parameters["pis"]
-        KL, C = pis.shape
-        L = self.n_outcomes
-        K = int(KL / L)
-        return K, L
+    def get_n_features(self):
+        n_features_x_n_outcomes = self.parameters["pis"].shape[0]
+        n_features = int(n_features_x_n_outcomes / self.n_outcomes)
+        return n_features
 
     def m_step(self, X, resp):
         pis = X.T @ resp
@@ -95,34 +99,28 @@ class Multinoulli(Emission):
 
     def log_likelihood(self, X):
         # compute log emission probabilities
-        #
-        # n individuals, K features, L possible outcomes for each multinoulli. X[n,KL], pis[KL,C]
-        # X[n,k*L+l]=1 if l is the observed outcome for the kth attribute of individual n
-        # pis[k*L+l,c]=P[ X[n,k*L+l]=1 | n belongs to class c]
-        #
         pis = np.clip(self.parameters["pis"], 1e-15, 1 - 1e-15)
         log_eps = X @ np.log(pis)
         return log_eps
 
     def sample(self, class_no, n_samples):
         pis = self.parameters["pis"]
-        K, L = self.get_KL()
-        feature_weights = pis[:, class_no].reshape(K, L)
+        n_features = self.get_n_features()
+        feature_weights = pis[:, class_no].reshape(n_features, self.n_outcomes)
         X = np.array(
             [
                 self.random_state.multinomial(1, feature_weights[k], size=n_samples)
-                for k in range(K)
+                for k in range(n_features)
             ]
         )
-        X = np.reshape(np.swapaxes(X, 0, 1), (n_samples, K * L))
+        X = np.reshape(np.swapaxes(X, 0, 1), (n_samples, n_features * self.n_outcomes))
         return X
 
     def print_parameters(self, indent=1):
-        K, L = self.get_KL()
         print_parameters(
             self.parameters["pis"].T,
             "Multinoulli",
-            n_outcomes=L,
+            n_outcomes=self.n_outcomes,
             indent=indent,
             np_precision=4,
         )
@@ -131,3 +129,31 @@ class Multinoulli(Emission):
     def n_parameters(self):
         n_params = self.parameters["pis"].shape[0] * self.parameters["pis"].shape[1]
         return n_params
+
+class MultinoulliNan(Multinoulli):
+    """Multinoulli (categorical) emission model supporting missing values (Full Information Maximum Likelihood)."""
+
+    def m_step(self, X, resp):
+        is_observed = ~np.isnan(X)
+
+        # Replace all nans with 0
+        X = np.nan_to_num(X, nan=0)
+        pis = X.T @ resp
+
+        # Compute normalization factor over observed values for each feature
+        for i in range(pis.shape[0]):
+            resp_i = resp[is_observed[:, i]]
+            pis[i] /= resp_i.sum(axis=0)
+
+        self.parameters["pis"] = pis
+
+    def log_likelihood(self, X):
+        is_observed = ~np.isnan(X)
+
+        # Replace all nans with 0
+        X = np.nan_to_num(X, nan=0)
+
+        # compute log emission probabilities
+        pis = np.clip(self.parameters["pis"], 1e-15, 1 - 1e-15)
+        log_eps = X @ np.log(pis)
+        return log_eps

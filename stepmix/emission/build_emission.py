@@ -1,4 +1,4 @@
-from .categorical import Bernoulli, BernoulliNan, Multinoulli
+from .categorical import Bernoulli, BernoulliNan, Multinoulli, MultinoulliNan
 from .gaussian import (
     GaussianUnit,
     GaussianSpherical,
@@ -30,6 +30,8 @@ EMISSION_DICT = {
     "gaussian_diag_nan": GaussianDiagNan,
     "bernoulli_nan": BernoulliNan,
     "binary_nan": BernoulliNan,
+    "multinoulli_nan": MultinoulliNan,
+    "categorical_nan": MultinoulliNan,
 }
 
 
