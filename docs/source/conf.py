@@ -1,6 +1,9 @@
 # Configuration file for the Sphinx documentation builder.
 
 # -- Project information
+import os
+import sys
+sys.path.insert(0, os.path.abspath('../..'))
 
 project = 'stepmix'
 copyright = '2022, Labo-Lacourse'
@@ -12,6 +15,8 @@ version = '0.0.0'
 # -- General configuration
 
 extensions = [
+    'sphinx.ext.napoleon',
+    # 'numpydoc',
     'sphinx.ext.duration',
     'sphinx.ext.doctest',
     'sphinx.ext.autodoc',
@@ -33,3 +38,5 @@ html_theme = 'sphinx_rtd_theme'
 
 # -- Options for EPUB output
 epub_show_urls = 'footnote'
+# numpydoc_show_class_members = False
+# numpydoc_class_members_toctree = False
