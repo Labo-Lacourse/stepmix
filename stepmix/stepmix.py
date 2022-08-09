@@ -45,16 +45,14 @@ class StepMix(BaseEstimator):
     n_components : int, default=2
         The number of latent classes.
     n_steps : {1, 2, 3}, default=1
-        Number of steps in the estimation.
-        Must be one of :
+        Number of steps in the estimation. Must be one of :
         - 1: run EM on both the measurement and structural models.
         - 2: first run EM on the measurement model, then on the complete model, but keep the measurement parameters
         fixed for the second step. See *Bakk, 2018*.
         - 3: first run EM on the measurement model, assign class probabilities, then fit the structural model via
         maximum likelihood. See the correction parameter for bias correction.
     measurement : {'bernoulli', 'binary', 'multinoulli', 'categorical', 'covariate, 'gaussian', 'gaussian_unit', 'gaussian_spherical', 'gaussian_tied', 'gaussian_full', 'gaussian_diag', dict}, default='bernoulli'
-        String describing the measurement model.
-        Must be one of:
+        String describing the measurement model. Must be one of:
         - 'bernoulli': the observed data consists of n_features bernoulli (binary) random variables.
         - 'binary': alias for bernoulli.
         - 'multinoulli': the observed data consists of n_features multinoulli (categorical) random variables.
@@ -74,11 +72,13 @@ class StepMix(BaseEstimator):
     assignment : {'soft', 'modal'}, default='modal'
         Class assignments for 3-step estimation.
         Must be one of:
+
             - 'soft': keep class responsibilities (posterior probabilities) as is.
             - 'modal': assign 1 to the class with max probability, 0 otherwise (one-hot encoding).
     correction : {None, 'BCH', 'ML'}, default=None
         Bias correction for 3-step estimation.
         Must be one of:
+
             - None : No correction. Run Naive 3-step.
             - 'BCH' : Apply the empirical BCH correction from *Vermunt, 2004*.
             - 'ML' : Apply the ML correction from *Vermunt, 2010; Bakk et al., 2013*.
@@ -95,7 +95,8 @@ class StepMix(BaseEstimator):
     init_params : {'kmeans', 'random'}, default='kmeans'
         The method used to initialize the weights, the means and the
         precisions.
-        Must be one of::
+        Must be one of:
+
             'kmeans' : responsibilities are initialized using kmeans.
             'random' : responsibilities are initialized randomly.
     random_state : int, RandomState instance or None, default=None
@@ -114,8 +115,6 @@ class StepMix(BaseEstimator):
         Measurement model, including parameters and estimation methods.
     _sm : stepmix.emission.Emission
         Structural model, including parameters and estimation methods.
-    n_parameters: int
-        Number of free parameters in the model.
     log_resp_ : ndarray of shape (n_samples, n_components)
         Initial log responsibilities.
     measurement_in_: int
@@ -351,7 +350,6 @@ class StepMix(BaseEstimator):
             # Use the provided random_state instead of self.random_state to ensure we have a different init every run
             self._sm.initialize(Y, np.exp(self.log_resp_), random_state)
 
-    @property
     def n_parameters(self):
         """Get number of parameters."""
         check_is_fitted(self)
@@ -437,7 +435,7 @@ class StepMix(BaseEstimator):
         Returns
         -------
         params: dict,
-            Nested dict {'weights': self.weights_,
+            Nested dict {'weights': Current class weights,
                          'measurement': dict of measurement params,
                          'structural': dict of structural params,
                          'measurement_in': number of measurements,
@@ -1024,7 +1022,7 @@ class StepMix(BaseEstimator):
         n_samples : int
             Number of samples.
         labels : ndarray of shape (n_samples,)
-            Predetermined class labels. Will ignore self.weights_ if provided.
+            Predetermined class labels. Will ignore class weights if provided.
 
         Returns
         -------
