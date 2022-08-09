@@ -4,4 +4,7 @@ API
 .. autosummary::
    :toctree: generated
 
-   lumache
+   stepmix
+
+.. automodule:: stepmix.stepmix
+   :members:
