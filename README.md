@@ -1,5 +1,6 @@
 StepMix
 ==============================
+[![Documentation Status](https://readthedocs.org/projects/stepmix/badge/?version=latest)](https://stepmix.readthedocs.io/en/latest/?badge=latest)
 <a href="https://github.com/psf/black"><img alt="Code style: black" src="https://img.shields.io/badge/code%20style-black-000000.svg"></a>
 
 *This project is currently in development and a stable release is expected sometime during summer 2022.*
