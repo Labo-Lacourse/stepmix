@@ -16,7 +16,7 @@ version = '0.0.0'
 
 extensions = [
     'sphinx.ext.napoleon',
-    'numpydoc',
+    # 'numpydoc',
     'sphinx.ext.duration',
     'sphinx.ext.doctest',
     'sphinx.ext.autodoc',
@@ -39,4 +39,4 @@ html_theme = 'sphinx_rtd_theme'
 # -- Options for EPUB output
 epub_show_urls = 'footnote'
 # numpydoc_show_class_members = False
-numpydoc_class_members_toctree = False
+# numpydoc_class_members_toctree = False
