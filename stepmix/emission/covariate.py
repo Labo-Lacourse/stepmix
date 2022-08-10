@@ -1,3 +1,4 @@
+"""Covariate emission model."""
 import numpy as np
 from scipy.special import softmax
 
@@ -6,7 +7,22 @@ from stepmix.utils import check_in, print_parameters
 
 
 class Covariate(Emission):
-    """Covariate model with simple gradient update."""
+    """Covariate model with descent update.
+
+
+    Parameters
+    ----------
+    tol : float, default=1e-4
+        Absolute tolerance applied to each component of the gradient.
+    max_iter : int, default=100
+        The maximum number of steps to take per M-step.
+    lr : float, default=1e-3
+        Learning rate.
+    intercept : bool, default=True
+        If an intercept parameter should be fitted.
+    method: {"gradient", "newton-raphson"}, default="gradient"
+        Optimization method.
+    """
 
     def __init__(
         self, tol=1e-4, max_iter=1, lr=1e-3, intercept=True, method="gradient", **kwargs

@@ -1,19 +1,16 @@
-StepMix
-===================================
-
-`I am a link <https://world.openfoodfacts.org/>`_.
-
-Check out the :doc:`usage` section for further information, including
-how to :ref:`installation` the project.
+StepMix - A package for multi-step estimation of mixture models
+===============================================================
 
 .. note::
 
    This project is under active development.
+
 
 Contents
 --------
 
 .. toctree::
 
-   usage
+   installation
+   tutorials
    api

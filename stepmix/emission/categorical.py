@@ -1,3 +1,4 @@
+"""Categorical emission models."""
 import numpy as np
 
 from stepmix.emission.emission import Emission
@@ -74,12 +75,12 @@ class BernoulliNan(Bernoulli):
 class Multinoulli(Emission):
     """Multinoulli (categorical) emission model
 
-        Uses one-hot encoded features. Expected data formatting:
-        X[n,k*L+l]=1 if l is the observed outcome for the kth attribute of data point n,
-        where n is the number of observations, K=n_features, L=n_outcomes for each multinoulli
+    Uses one-hot encoded features. Expected data formatting:
+    X[n,k*L+l]=1 if l is the observed outcome for the kth attribute of data point n,
+    where n is the number of observations, K=n_features, L=n_outcomes for each multinoulli
 
-        Parameters:
-        pis[k*L+l,c]=P[ X[n,k*L+l]=1 | n belongs to class c]
+    Parameters:
+    pis[k*L+l,c]=P[ X[n,k*L+l]=1 | n belongs to class c]
     """
 
     def __init__(self, n_components=2, random_state=None, n_outcomes=2):
@@ -129,6 +130,7 @@ class Multinoulli(Emission):
     def n_parameters(self):
         n_params = self.parameters["pis"].shape[0] * self.parameters["pis"].shape[1]
         return n_params
+
 
 class MultinoulliNan(Multinoulli):
     """Multinoulli (categorical) emission model supporting missing values (Full Information Maximum Likelihood)."""

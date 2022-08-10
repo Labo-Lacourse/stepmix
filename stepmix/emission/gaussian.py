@@ -1,3 +1,4 @@
+"""Gaussian emission models."""
 import numpy as np
 from scipy.stats import multivariate_normal
 from sklearn.mixture import GaussianMixture

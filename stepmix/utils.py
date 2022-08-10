@@ -330,7 +330,7 @@ def print_parameters(
     if intercept:
         n_features -= 1
 
-    #For one-hot encoded variables, each group of n_outcomes columns corresponds to a feature
+    # For one-hot encoded variables, each group of n_outcomes columns corresponds to a feature
     if n_outcomes >= 2:
         n_features = int(n_features / n_outcomes)
 

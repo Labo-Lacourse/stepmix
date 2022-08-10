@@ -46,28 +46,48 @@ class StepMix(BaseEstimator):
         The number of latent classes.
     n_steps : {1, 2, 3}, default=1
         Number of steps in the estimation. Must be one of :
+
         - 1: run EM on both the measurement and structural models.
-        - 2: first run EM on the measurement model, then on the complete model, but keep the measurement parameters
+        - 2: first run EM on the measurement model, then on the complete model, but keep the measurement parameters\
         fixed for the second step. See *Bakk, 2018*.
-        - 3: first run EM on the measurement model, assign class probabilities, then fit the structural model via
+        - 3: first run EM on the measurement model, assign class probabilities, then fit the structural model via\
         maximum likelihood. See the correction parameter for bias correction.
-    measurement : {'bernoulli', 'binary', 'multinoulli', 'categorical', 'covariate, 'gaussian', 'gaussian_unit', 'gaussian_spherical', 'gaussian_tied', 'gaussian_full', 'gaussian_diag', dict}, default='bernoulli'
+
+    measurement : {'bernoulli', 'bernoulli_nan', 'binary', 'binary_nan', 'categorical', 'categorical_nan', 'covariate',\
+    'gaussian', 'gaussian_nan', 'gaussian_unit', 'gaussian_unit_nan', 'gaussian_spherical', 'gaussian_spherical_nan',\
+    'gaussian_tied', 'gaussian_diag', 'gaussian_diag_nan', 'gaussian_full', 'multinoulli', 'multinoulli_nan', dict},\
+    default='bernoulli'
         String describing the measurement model. Must be one of:
+
         - 'bernoulli': the observed data consists of n_features bernoulli (binary) random variables.
+        - 'bernoulli_nan': the observed data consists of n_features bernoulli (binary) random variables. Supports missing values.
         - 'binary': alias for bernoulli.
-        - 'multinoulli': the observed data consists of n_features multinoulli (categorical) random variables.
+        - 'binary_nan': alias for bernoulli_nan.
         - 'categorical': alias for multinoulli.
-        - 'gaussian_unit': each gaussian component has unit variance. Only fit the mean.
+        - 'categorical_nan': alias for multinoulli_nan.
+        - 'covariate': covariate model where class probabilities are a multinomial logistic model of the features.
         - 'gaussian': alias for gaussian_unit.
+        - 'gaussian_nan': alias for gaussian_unit. Supports missing values.
+        - 'gaussian_unit': each gaussian component has unit variance. Only fit the mean.
+        - 'gaussian_unit_nan': each gaussian component has unit variance. Only fit the mean. Supports missing values.
         - 'gaussian_spherical': each gaussian component has its own single variance.
+        - 'gaussian_spherical_nan': each gaussian component has its own single variance. Supports missing values.
         - 'gaussian_tied': all gaussian components share the same general covariance matrix.
-        - 'gaussian_full': each gaussian component has its own general covariance matrix.
         - 'gaussian_diag': each gaussian component has its own diagonal covariance matrix.
+        - 'gaussian_diag_nan': each gaussian component has its own diagonal covariance matrix. Supports missing values.
+        - 'gaussian_full': each gaussian component has its own general covariance matrix.
+        - 'multinoulli': the observed data consists of n_features multinoulli (categorical) random variables.
+        - 'multinoulli_nan': the observed data consists of n_features multinoulli (categorical) random variables. Supports missing values.
+
+        Models suffixed with ``_nan`` support missing values, but may be slower than their fully observed counterpart.
 
         Alternatively accepts a dict to define a nested model, e.g., 3 gaussian features and 2 binary features. Please
-        refer to stepmix.emission.nested.Nested for details
+        refer to :class:`stepmix.emission.nested.Nested` for details
 
-    structural : {'bernoulli', 'binary', 'multinoulli', 'categorical', 'covariate, 'gaussian', 'gaussian_unit', 'gaussian_spherical', 'gaussian_tied', 'gaussian_full', 'gaussian_diag', dict} or dict, default='gaussian_unit'
+    structural : {'bernoulli', 'bernoulli_nan', 'binary', 'binary_nan', 'categorical', 'categorical_nan', 'covariate',\
+    'gaussian', 'gaussian_nan', 'gaussian_unit', 'gaussian_unit_nan', 'gaussian_spherical', 'gaussian_spherical_nan',\
+    'gaussian_tied', 'gaussian_diag', 'gaussian_diag_nan', 'gaussian_full', 'multinoulli', 'multinoulli_nan', dict},\
+    default='bernoulli'
         String describing the structural model. Same options as those for the measurement model.
     assignment : {'soft', 'modal'}, default='modal'
         Class assignments for 3-step estimation.
@@ -75,6 +95,7 @@ class StepMix(BaseEstimator):
 
             - 'soft': keep class responsibilities (posterior probabilities) as is.
             - 'modal': assign 1 to the class with max probability, 0 otherwise (one-hot encoding).
+
     correction : {None, 'BCH', 'ML'}, default=None
         Bias correction for 3-step estimation.
         Must be one of:
@@ -82,6 +103,7 @@ class StepMix(BaseEstimator):
             - None : No correction. Run Naive 3-step.
             - 'BCH' : Apply the empirical BCH correction from *Vermunt, 2004*.
             - 'ML' : Apply the ML correction from *Vermunt, 2010; Bakk et al., 2013*.
+
     abs_tol : float, default=1e-3
         The convergence threshold. EM iterations will stop when the
         lower bound average gain is below this threshold.
@@ -97,8 +119,9 @@ class StepMix(BaseEstimator):
         precisions.
         Must be one of:
 
-            'kmeans' : responsibilities are initialized using kmeans.
-            'random' : responsibilities are initialized randomly.
+            - 'kmeans' : responsibilities are initialized using kmeans.
+            - 'random' : responsibilities are initialized randomly.
+
     random_state : int, RandomState instance or None, default=None
         Controls the random seed given to the method chosen to initialize the
         parameters. Pass an int for reproducible output across multiple function calls.
@@ -106,6 +129,14 @@ class StepMix(BaseEstimator):
         Enable verbose output. If 1, will print detailed report of the model and the performance metrics after fitting.
     verbose_interval : int, default=10
         Number of iteration done before the next print. TODO: Not currently implemented.
+    measurement_params: dict, default=dict()
+        Additional params passed to the measurement model class.  Particularly useful to specify optimization parameters
+        for :class:`stepmix.emission.covariate.Covariate`. Ignored if the measurement descriptor is a nested object
+        (see :class:`stepmix.emission.nested.Nested`).
+    structural_params: dict, default=dict()
+        Additional params passed to the structural model class.  Particularly useful to specify optimization parameters
+        for :class:`stepmix.emission.covariate.Covariate`. Ignored if the structural descriptor is a nested object
+        (see :class:`stepmix.emission.nested.Nested`).
 
     Attributes
     ----------
@@ -134,6 +165,7 @@ class StepMix(BaseEstimator):
 
     References
     ----------
+
     Bolck, A., Croon, M., and Hagenaars, J. Estimating latent structure models with categorical variables: One-step
     versus three-step estimators. Political analysis, 12(1): 3–27, 2004.
 
@@ -148,21 +180,22 @@ class StepMix(BaseEstimator):
 
     Examples
     --------
-    >>> from stepmix.datasets import data_bakk_response
-    >>> from stepmix.stepmix import StepMix
-    >>> # Soft 3-step
-    >>> X, Y, _ = data_bakk_response(n_samples=1000, sep_level=.7, random_state=42)
-    >>> model = StepMix(n_components=3, n_steps=3, measurement='bernoulli', structural='gaussian_unit', random_state=42, assignment='soft')
-    >>> model.fit(X, Y)
-    >>> model.score(X, Y)  # Average log-likelihood
-    -5.936162775486148
-    >>> # Equivalently, each step can be performed individually. See the code of the fit method for details.
-    >>> model = StepMix(n_components=3, measurement='bernoulli', structural='gaussian_unit', random_state=42)
-    >>> model.em(X) # Step 1
-    >>> probs = model.predict_proba(X) # Step 2
-    >>> model.m_step_structural(probs, Y) # Step 3
-    >>> model.score(X, Y)  # Average log-likelihood
-    -5.936162775486148
+    .. code-block:: python
+
+        from stepmix.datasets import data_bakk_response
+        from stepmix.stepmix import StepMix
+        # Soft 3-step
+        X, Y, _ = data_bakk_response(n_samples=1000, sep_level=.7, random_state=42)
+        model = StepMix(n_components=3, n_steps=3, measurement='bernoulli', structural='gaussian_unit', random_state=42, assignment='soft')
+        model.fit(X, Y)
+        model.score(X, Y)  # Average log-likelihood
+
+        # Equivalently, each step can be performed individually. See the code of the fit method for details.
+        model = StepMix(n_components=3, measurement='bernoulli', structural='gaussian_unit', random_state=42)
+        model.em(X) # Step 1
+        probs = model.predict_proba(X) # Step 2
+        model.m_step_structural(probs, Y) # Step 3
+        model.score(X, Y)  # Average log-likelihood
     """
 
     def __init__(
@@ -435,11 +468,11 @@ class StepMix(BaseEstimator):
         Returns
         -------
         params: dict,
-            Nested dict {'weights': Current class weights,
-                         'measurement': dict of measurement params,
-                         'structural': dict of structural params,
-                         'measurement_in': number of measurements,
-                         'structural_in': number of structural features,
+            Nested dict {'weights': Current class weights,\
+                         'measurement': dict of measurement params,\
+                         'structural': dict of structural params,\
+                         'measurement_in': number of measurements,\
+                         'structural_in': number of structural features,\
                          }.
         """
         check_is_fitted(self)

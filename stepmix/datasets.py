@@ -53,10 +53,10 @@ def data_bakk_response(n_samples, sep_level, n_classes=3, n_mm=6, random_state=N
 
     Returns
     -------
-    X : ndarray of shape (n_samples, n_features)
-        Measurement samples.
-    Y : ndarray of shape (n_samples, n_features)
-        Structural samples.
+    X : ndarray of shape (n_samples, n_mm)
+        Binary measurement samples.
+    Y : ndarray of shape (n_samples, 1)
+        Response structural samples.
     labels : ndarray of shape (n_samples,)
         Ground truth class membership.
 
@@ -112,10 +112,10 @@ def data_bakk_covariate(n_samples, sep_level, n_mm=6, random_state=None):
 
     Returns
     -------
-    X : ndarray of shape (n_samples, n_features)
-        Measurement samples.
-    Y : ndarray of shape (n_samples, n_features)
-        Structural samples.
+    X : ndarray of shape (n_samples, n_mm)
+        Binary measurement samples.
+    Y : ndarray of shape (n_samples, 1)
+        Covariate structural samples.
     labels : ndarray of shape (n_samples,)
         Ground truth class membership.
 
@@ -188,10 +188,10 @@ def data_generation_gaussian(n_samples, sep_level, n_mm=6, random_state=None):
 
     Returns
     -------
-    X : ndarray of shape (n_samples, n_features)
-        Measurement samples.
-    Y : ndarray of shape (n_samples, n_features)
-        Structural samples.
+    X : ndarray of shape (n_samples, n_mm)
+        Binary Measurement samples.
+    Y : ndarray of shape (n_samples, 2)
+        Gaussian Structural samples.
     labels : ndarray of shape (n_samples,)
         Ground truth class membership.
 
@@ -265,10 +265,10 @@ def data_gaussian_diag(n_samples, sep_level, n_mm=6, random_state=None, nan_rati
 
     Returns
     -------
-    X : ndarray of shape (n_samples, n_features)
-        Measurement samples.
-    Y : ndarray of shape (n_samples, n_features)
-        Structural samples.
+    X : ndarray of shape (n_samples, n_mm)
+        Binary ,easurement samples.
+    Y : ndarray of shape (n_samples, 2)
+        Gaussian structural samples.
     labels : ndarray of shape (n_samples,)
         Ground truth class membership.
 
