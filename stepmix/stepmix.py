@@ -240,18 +240,6 @@ class StepMix(BaseEstimator):
         self.structural = structural
         self.structural_params = structural_params
 
-        # Check if models support missing values
-        # This is passed to sklearn.utils.check_array
-        self.force_all_finite_mm = (
-            "allow-nan" if utils.check_descriptor_nan(measurement) else True
-        )
-        self.force_all_finite_sm = (
-            "allow-nan" if utils.check_descriptor_nan(structural) else True
-        )
-
-        # Buffer to save the likelihoods of different inits for debugging
-        self.lower_bound_buffer_ = list()
-
     ########################################################################################################################
     # INPUT VALIDATION, INITIALIZATIONS AND PARAMETER MANAGEMENT
     def _check_initial_parameters(self, X):
@@ -294,6 +282,18 @@ class StepMix(BaseEstimator):
             measurement_params=self.measurement_params,
             structural_params=self.structural_params,
         )
+
+        # Check if models support missing values
+        # This is passed to sklearn.utils.check_array
+        self.force_all_finite_mm_ = (
+            "allow-nan" if utils.check_descriptor_nan(self.measurement) else True
+        )
+        self.force_all_finite_sm_ = (
+            "allow-nan" if utils.check_descriptor_nan(self.structural) else True
+        )
+
+        # Buffer to save the likelihoods of different inits for debugging
+        self.lower_bound_buffer_ = list()
 
     def _initialize_parameters(self, X, random_state):
         """Initialize the weights and measurement model parameters.
@@ -383,7 +383,6 @@ class StepMix(BaseEstimator):
             # Use the provided random_state instead of self.random_state to ensure we have a different init every run
             self._sm.initialize(Y, np.exp(self.log_resp_), random_state)
 
-
     @property
     def n_parameters(self):
         """Get number of parameters."""
@@ -430,19 +429,22 @@ class StepMix(BaseEstimator):
                 X,
                 dtype=[np.float64, np.float32],
                 reset=True,
-                force_all_finite=self.force_all_finite_mm,
+                force_all_finite=self.force_all_finite_mm_,
             )
         if Y is not None:
+            if isinstance(Y, np.ndarray) and Y.ndim == 1:
+                Y = Y.reshape((-1, 1))
             Y = self._validate_data(
                 Y,
                 dtype=[np.float64, np.float32],
                 reset=True,
-                force_all_finite=self.force_all_finite_sm,
+                force_all_finite=self.force_all_finite_sm_,
             )
 
         if reset:
             if X is not None:
                 self.measurement_in_ = X.shape[1]
+                self.n_features_in_ = self.measurement_in_  # Keep sklearn happy
             if Y is not None:
                 self.structural_in_ = Y.shape[1]
         else:
@@ -617,6 +619,8 @@ class StepMix(BaseEstimator):
         if self.verbose == 1:
             self.report(X, Y)
 
+        return self
+
     def report(self, X, Y=None):
         """Print detailed report of the model and performance metrics.
 
@@ -677,6 +681,8 @@ class StepMix(BaseEstimator):
         log_emission_pm : ndarray of shape (n, n_components), default=None
             Log probabilities of the predicted class given the true latent class for ML correction.
         """
+        self._check_initial_parameters(X)
+
         # First validate the input and the class attributes
         n_samples = X.shape[0]
         X, Y = self._check_x_y(X, Y, reset=True)
@@ -692,7 +698,6 @@ class StepMix(BaseEstimator):
                 f"but got n_components = {self.n_components}, "
                 f"n_samples = {X.shape[0]}"
             )
-        self._check_initial_parameters(X)
 
         # Set up useful values for optimization
         random_state = check_random_state(self.random_state)
