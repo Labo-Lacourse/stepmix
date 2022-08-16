@@ -383,6 +383,8 @@ class StepMix(BaseEstimator):
             # Use the provided random_state instead of self.random_state to ensure we have a different init every run
             self._sm.initialize(Y, np.exp(self.log_resp_), random_state)
 
+
+    @property
     def n_parameters(self):
         """Get number of parameters."""
         check_is_fitted(self)
