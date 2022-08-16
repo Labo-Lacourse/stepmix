@@ -43,6 +43,7 @@ class Emission(ABC):
 
     def __init__(self, n_components, random_state):
         self.n_components = n_components
+        self.random_state_og = random_state
         self.random_state = self.check_random_state(random_state)
 
         # Dict including all parameters for estimation
@@ -54,7 +55,7 @@ class Emission(ABC):
         check_positive(n_components=self.n_components)
 
     def check_random_state(self, random_state=None):
-        """Use a provided random state, otherwise use self.random_state.
+        """Use a provided random state, otherwise use the object's own original random_state generator.
 
         Parameters
         ----------
@@ -64,7 +65,7 @@ class Emission(ABC):
         """
         if random_state is None:
             # If no random state is provided, use mine
-            random_state = check_random_state(self.random_state)
+            random_state = check_random_state(self.random_state_og)
         else:
             # Use the provided random_state
             random_state = check_random_state(random_state)

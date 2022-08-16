@@ -520,7 +520,7 @@ class StepMix(BaseEstimator):
 
     #######################################################################################################################
     # ESTIMATION AND EM METHODS
-    def fit(self, X, Y=None, sample_weight=None):
+    def fit(self, X, Y=None, sample_weight=None, y=None):
         """Fit StepMix measurement model and optionally the structural model.
 
         Setting Y=None will fit the measurement model only. Providing both X and Y will fit the full model following
@@ -540,11 +540,16 @@ class StepMix(BaseEstimator):
             and each group of L columns corresponds to a feature for one-hot encoded
             variables with L possible outcomes (n_features=n_columns_structural/L).
             Each row corresponds to a  single data point of the structural model.
+        y: array-like of shape (n_samples, n_columns_structural), default=None
+            Alias for Y. Ignored if Y is provided.
         sample_weight : array-like of shape(n_samples,), default=None
             Array of weights that are assigned to individual samples.
             If not provided, then each sample is given unit weight.
 
         """
+        if y is not None and Y is None:
+            Y = y
+
         if Y is None:
             # No structural data. Simply fit the measurement data
             self.em(X, sample_weight=sample_weight)
