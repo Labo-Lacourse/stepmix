@@ -9,8 +9,10 @@ Please note the class weights rho are now referred to as 'weights' and the assig
 # License:
 
 import warnings
-import numpy as np
 import copy
+
+import pandas as pd
+import numpy as np
 
 from scipy.special import logsumexp
 from sklearn.mixture._base import BaseEstimator
@@ -442,14 +444,18 @@ class StepMix(BaseEstimator):
                 force_all_finite=self.force_all_finite_mm_,
             )
         if Y is not None:
-            if isinstance(Y, np.ndarray) and Y.ndim == 1:
-                Y = Y.reshape((-1, 1))
+            # Handle 1D Y array
             Y = self._validate_data(
                 Y,
                 dtype=[np.float64, np.float32],
                 reset=True,
+                ensure_2d=False,
                 force_all_finite=self.force_all_finite_sm_,
             )
+
+            # Force a matrix format
+            if Y.ndim == 1:
+                Y = Y.reshape((-1, 1))
 
         if reset:
             if X is not None:
@@ -699,8 +705,8 @@ class StepMix(BaseEstimator):
         self._check_initial_parameters(X)
 
         # First validate the input and the class attributes
-        n_samples = X.shape[0]
         X, Y = self._check_x_y(X, Y, reset=True)
+        n_samples = X.shape[0]
 
         # If sample weights exist, convert them to array (support for lists)
         # and check length
