@@ -2,6 +2,8 @@
 import numpy as np
 from scipy.special import softmax
 
+from sklearn.utils.validation import check_random_state
+
 from stepmix.emission.emission import Emission
 from stepmix.utils import check_in, print_parameters
 
@@ -43,17 +45,19 @@ class Covariate(Emission):
         return softmax(X_full @ self.parameters["beta"], axis=1)
 
     def initialize(self, X, resp, random_state=None):
+        self.check_parameters()
+        self.random_state = check_random_state(random_state)
+
         n, D = X.shape
         D += self.intercept
         _, K = resp.shape
 
-        self.check_parameters()
-        random_state = self.check_random_state(random_state)
 
         # Parameter initialization
         # if self.intercept: beta[0,:]=intercept and beta[1:,:] = coefficients
         # Note: initial coefficients must be close to 0 for NR to be relatively stable
-        self.parameters["beta"] = random_state.normal(0, 1e-3, size=(D, K))
+        self.parameters["beta"] = self.random_state.normal(0, 1e-3, size=(D, K))
+        # print(self.parameters["beta"])
 
     def get_full_matrix(self, X):
         n, _ = X.shape

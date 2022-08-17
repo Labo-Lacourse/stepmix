@@ -97,8 +97,6 @@ class Gaussian(Emission):
 
     def initialize(self, X, resp, random_state=None):
         self.check_parameters()
-        # Currently unused, for future random initializations
-        random_state = self.check_random_state(random_state)
 
         # Required to get the initial means, covariances and precisions right
         # Already performs the M-step

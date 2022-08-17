@@ -38,6 +38,23 @@ def kwargs():
 
 
 @pytest.fixture
+def kwargs_covariate():
+    # Default estimator arguments
+    kwargs_covariate = dict(
+        n_components=3,
+        measurement="bernoulli",
+        structural="covariate",
+        random_state=42,
+        abs_tol=1e-5,
+        n_init=2,
+        max_iter=200,
+        verbose=1,
+        structural_params=dict(method='newton-raphson')
+    )
+    return kwargs_covariate
+
+
+@pytest.fixture
 def data_large():
     X, Y, _ = data_bakk_response(n_samples=3000, sep_level=0.7, random_state=42)
     return X, Y

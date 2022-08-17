@@ -43,8 +43,7 @@ class Emission(ABC):
 
     def __init__(self, n_components, random_state):
         self.n_components = n_components
-        self.random_state_og = random_state
-        self.random_state = self.check_random_state(random_state)
+        self.random_state = check_random_state(random_state)
 
         # Dict including all parameters for estimation
         self.parameters = dict()
@@ -53,23 +52,6 @@ class Emission(ABC):
         """Validate class attributes."""
         check_int(n_components=self.n_components)
         check_positive(n_components=self.n_components)
-
-    def check_random_state(self, random_state=None):
-        """Use a provided random state, otherwise use the object's own original random_state generator.
-
-        Parameters
-        ----------
-        random_state : int, RandomState instance or None, default=None
-            Controls the random seed given to the method chosen to initialize the parameters.
-            Pass an int for reproducible output across multiple function calls.
-        """
-        if random_state is None:
-            # If no random state is provided, use mine
-            random_state = check_random_state(self.random_state_og)
-        else:
-            # Use the provided random_state
-            random_state = check_random_state(random_state)
-        return random_state
 
     def initialize(self, X, resp, random_state=None):
         """Initialize parameters.
@@ -85,10 +67,9 @@ class Emission(ABC):
         random_state : int, RandomState instance or None, default=None
             Controls the random seed given to the method chosen to initialize the parameters.
             Pass an int for reproducible output across multiple function calls.
-
         """
         self.check_parameters()
-        self.random_state = self.check_random_state(random_state)
+        self.random_state = check_random_state(random_state)
 
         # Measurement and structural models are initialized by running their M-step on the initial log responsibilities
         # obtained via kmeans or sampled uniformly (See StepMix._initialize_parameters)

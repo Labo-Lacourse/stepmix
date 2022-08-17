@@ -363,11 +363,10 @@ class StepMix(BaseEstimator):
             self._mm = build_emission(
                 self.measurement,
                 n_components=self.n_components,
-                random_state=self.random_state,
+                random_state=random_state,
                 **mm_params,
             )
         if init_emission:
-            # Use the provided random_state instead of self.random_state to ensure we have a different init every run
             self._mm.initialize(X, np.exp(self.log_resp_), random_state)
 
     def _initialize_parameters_structural(
@@ -381,18 +380,17 @@ class StepMix(BaseEstimator):
             Structural data.
         """
         # Initialize structural model
-        sm_params = (
-            self.structural_params if self.structural_params is not None else dict()
-        )
         if not hasattr(self, "_sm"):
+            sm_params = (
+                self.structural_params if self.structural_params is not None else dict()
+            )
             self._sm = build_emission(
                 self.structural,
                 n_components=self.n_components,
-                random_state=self.random_state,
+                random_state=random_state,
                 **sm_params,
             )
         if init_emission:
-            # Use the provided random_state instead of self.random_state to ensure we have a different init every run
             self._sm.initialize(Y, np.exp(self.log_resp_), random_state)
 
     @property
@@ -633,7 +631,7 @@ class StepMix(BaseEstimator):
             # Compute log_emission_pm
             log_emission_pm = compute_log_emission_pm(soft_resp, self.assignment)
 
-            # 3) Fit the the structural model by keeping the parameters of the measurement model fixed
+            # 3) Fit the structural model by keeping the parameters of the measurement model fixed
             self.em(X, Y, freeze_measurement=True, log_emission_pm=log_emission_pm)
 
         # Print report if required
@@ -921,8 +919,8 @@ class StepMix(BaseEstimator):
         _, Y = self._check_x_y(None, Y, reset=True)
 
         # For the third step of the 3-step approach
-        if not hasattr(self, "_sm"):
-            self._initialize_parameters_structural(Y)
+        random_state = check_random_state(self.random_state)
+        self._initialize_parameters_structural(Y, random_state=random_state)
         self._sm.m_step(Y, resp * sample_weight[:, np.newaxis])
 
     ########################################################################################################################
