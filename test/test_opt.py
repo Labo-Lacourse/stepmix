@@ -24,7 +24,7 @@ def test_random_state(data, kwargs, n_steps):
 
 
 def test_random_state_none(data, kwargs):
-    """Make sure random_state=None does ot raise error (yes, this happened)."""
+    """Make sure random_state=None does not raise error (yes, this happened)."""
     X, Y = data
 
     kwargs.pop("random_state")

@@ -10,6 +10,7 @@ Please note the class weights rho are now referred to as 'weights' and the assig
 
 import warnings
 import numpy as np
+import copy
 
 from scipy.special import logsumexp
 from sklearn.mixture._base import BaseEstimator
@@ -129,11 +130,11 @@ class StepMix(BaseEstimator):
         Enable verbose output. If 1, will print detailed report of the model and the performance metrics after fitting.
     verbose_interval : int, default=10
         Number of iteration done before the next print. TODO: Not currently implemented.
-    measurement_params: dict, default=dict()
+    measurement_params: {dict, None}, default=None
         Additional params passed to the measurement model class.  Particularly useful to specify optimization parameters
         for :class:`stepmix.emission.covariate.Covariate`. Ignored if the measurement descriptor is a nested object
         (see :class:`stepmix.emission.nested.Nested`).
-    structural_params: dict, default=dict()
+    structural_params: {dict, None}, default=None
         Additional params passed to the structural model class.  Particularly useful to specify optimization parameters
         for :class:`stepmix.emission.covariate.Covariate`. Ignored if the structural descriptor is a nested object
         (see :class:`stepmix.emission.nested.Nested`).
@@ -215,8 +216,8 @@ class StepMix(BaseEstimator):
         random_state=None,
         verbose=0,
         verbose_interval=10,
-        measurement_params=dict(),
-        structural_params=dict(),
+        measurement_params=None,
+        structural_params=None,
     ):
         # Attributes of the base StepMix class
         self.n_components = n_components
@@ -235,10 +236,11 @@ class StepMix(BaseEstimator):
         self.correction = correction
 
         # Additional attributes to specify the measurement and structural models
-        self.measurement = measurement
-        self.measurement_params = measurement_params
-        self.structural = structural
-        self.structural_params = structural_params
+        # Deep copy the parameters since they are potentially dictionaries
+        self.measurement = copy.deepcopy(measurement)
+        self.measurement_params = copy.deepcopy(measurement_params)
+        self.structural = copy.deepcopy(structural)
+        self.structural_params = copy.deepcopy(structural_params)
 
     ########################################################################################################################
     # INPUT VALIDATION, INITIALIZATIONS AND PARAMETER MANAGEMENT
@@ -278,7 +280,7 @@ class StepMix(BaseEstimator):
         utils.check_descriptor(self.measurement, keys=EMISSION_DICT.keys())
         utils.check_descriptor(self.structural, keys=EMISSION_DICT.keys())
         utils.check_type(
-            dict,
+            (dict, type(None)),
             measurement_params=self.measurement_params,
             structural_params=self.structural_params,
         )
@@ -351,11 +353,16 @@ class StepMix(BaseEstimator):
         """
         # Initialize measurement model
         if not hasattr(self, "_mm"):
+            mm_params = (
+                self.measurement_params
+                if self.measurement_params is not None
+                else dict()
+            )
             self._mm = build_emission(
                 self.measurement,
                 n_components=self.n_components,
                 random_state=self.random_state,
-                **self.measurement_params,
+                **mm_params,
             )
         if init_emission:
             # Use the provided random_state instead of self.random_state to ensure we have a different init every run
@@ -372,12 +379,15 @@ class StepMix(BaseEstimator):
             Structural data.
         """
         # Initialize structural model
+        sm_params = (
+            self.structural_params if self.structural_params is not None else dict()
+        )
         if not hasattr(self, "_sm"):
             self._sm = build_emission(
                 self.structural,
                 n_components=self.n_components,
                 random_state=self.random_state,
-                **self.structural_params,
+                **sm_params,
             )
         if init_emission:
             # Use the provided random_state instead of self.random_state to ensure we have a different init every run

@@ -82,7 +82,7 @@ def check_type(type, **params):
     """Checks parameters are of a given type.
     Parameters
     ----------
-    choices : array-like, accepted values
+    type : Accepted type or typle of accepted types.
     params : object
         Named arguments, parameters to be checked
     Raises
