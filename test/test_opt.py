@@ -23,6 +23,18 @@ def test_random_state(data, kwargs, n_steps):
     assert ll_1 == ll_2
 
 
+def test_random_state_none(data, kwargs):
+    """Make sure random_state=None does ot raise error (yes, this happened)."""
+    X, Y = data
+
+    kwargs.pop("random_state")
+
+    # Instance 1
+    model_1 = StepMix(n_steps=1, random_state=None, **kwargs)
+    model_1.fit(X, Y)
+    ll_1 = model_1.score(X, Y)  # Average log-likelihood
+
+
 @pytest.mark.parametrize("n_init_1,n_init_2", [(1, 2), (1, 10), (1, 100)])
 def test_inits(data, kwargs, n_init_1, n_init_2):
     """Check that log likelihood is >= when increasing n_inits."""
