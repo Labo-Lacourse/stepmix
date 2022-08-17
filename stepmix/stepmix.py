@@ -117,7 +117,7 @@ class StepMix(BaseEstimator):
         The number of EM iterations to perform.
     n_init : int, default=1
         The number of initializations to perform. The best results are kept.
-    init_params : {'kmeans', 'random'}, default='kmeans'
+    init_params : {'kmeans', 'random'}, default='random'
         The method used to initialize the weights, the means and the
         precisions.
         Must be one of:
