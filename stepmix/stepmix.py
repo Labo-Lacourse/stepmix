@@ -239,10 +239,10 @@ class StepMix(BaseEstimator):
 
         # Additional attributes to specify the measurement and structural models
         # Deep copy the parameters since they are potentially dictionaries
-        self.measurement = copy.deepcopy(measurement)
-        self.measurement_params = copy.deepcopy(measurement_params)
-        self.structural = copy.deepcopy(structural)
-        self.structural_params = copy.deepcopy(structural_params)
+        self.measurement = measurement
+        self.measurement_params = measurement_params
+        self.structural = structural
+        self.structural_params = structural_params
 
     ########################################################################################################################
     # INPUT VALIDATION, INITIALIZATIONS AND PARAMETER MANAGEMENT
