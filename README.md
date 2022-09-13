@@ -1,6 +1,7 @@
 StepMix
 ==============================
-[![Documentation Status](https://readthedocs.org/projects/stepmix/badge/?version=latest)](https://stepmix.readthedocs.io/en/latest/?badge=latest)
+[![Build Status](https://app.travis-ci.com/Labo-Lacourse/stepmix.svg?branch=master)](https://stepmix.readthedocs.io/en/latest/index.html)
+[![Documentation Status](https://readthedocs.org/projects/stepmix/badge/?version=latest)](https://stepmix.readthedocs.io/en/latest/index.html)
 <a href="https://github.com/psf/black"><img alt="Code style: black" src="https://img.shields.io/badge/code%20style-black-000000.svg"></a>
 
 *This project is currently in development and a stable release is expected sometime during summer 2022.*
@@ -12,7 +13,7 @@ The package can also be used to fit mixture models with various observed random 
 # Install
 You can install this repo directly with pip, preferably in a virtual environment : 
 ```
-pip install --upgrade git+https://github.com/sachaMorin/lca.git
+pip install --upgrade git+https://github.com/Labo-Lacourse/stepmix.git
 ``` 
 # Usage
 A simple example for 3-step estimation on simulated data :

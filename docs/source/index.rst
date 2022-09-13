@@ -3,6 +3,10 @@ StepMix - A package for multi-step estimation of mixture models
 
 .. raw:: html
 
+    <a href="https://app.travis-ci.com/Labo-Lacourse/stepmix.svg?branch=master"><img alt="Build" src="https://app.travis-ci.com/Labo-Lacourse/stepmix.svg?branch=master"></a>
+
+.. raw:: html
+
     <a href="https://stepmix.readthedocs.io/en/latest/?badge=latest"><img alt="Code style: black" src="https://readthedocs.org/projects/stepmix/badge/?version=latest"></a>
 
 .. raw:: html
