@@ -1,4 +1,3 @@
 black
 pytest
 sphynx
-sphynx-rtd-theme
