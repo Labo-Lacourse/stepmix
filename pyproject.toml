@@ -10,7 +10,11 @@ build-backend = "flit_core.buildapi"
 name = "stepmix"
 description = "A Python package for multi-step estimation of latent class models with measurement and structural components. The package can also be used to fit mixture models with various observed random variables."
 readme = "README.md"
-authors = [{name = "Sacha Morin", email = "sacha.morin@mila.quebec"}, {name = "Robin Legault", email = "robin.legault@umontreal.ca"}]
+authors = [
+    {name = "Sacha Morin", email = "sacha.morin@mila.quebec"},
+    {name = "Robin Legault", email = "robin.legault@umontreal.ca"},
+    {name = "Éric Lacourse", email = "eric.lacourse@umontreal.ca"},
+]
 dynamic = ["version"]
 license = { file = "LICENSE" }
 classifiers = [
