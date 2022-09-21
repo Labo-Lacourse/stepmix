@@ -1,8 +1,37 @@
+# pyproject.toml
+
 [build-system]
 requires = ["flit_core >=3.2,<4"]
 build-backend = "flit_core.buildapi"
+#requires      = ["setuptools>=61.0.0", "wheel"]
+#build-backend = "setuptools.build_meta"
 
 [project]
 name = "stepmix"
+description = "A Python package for multi-step estimation of latent class models with measurement and structural components. The package can also be used to fit mixture models with various observed random variables."
+readme = "README.md"
 authors = [{name = "Sacha Morin", email = "sacha.morin@mila.quebec"}, {name = "Robin Legault", email = "robin.legault@umontreal.ca"}]
-dynamic = ["version", "description"]
+dynamic = ["version"]
+license = { file = "LICENSE" }
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+]
+keywords = ["clustering", "mixtures", "lca", "em"]
+dependencies = [
+    "numpy",
+    "pandas",
+    "scikit_learn",
+    "scipy"
+]
+requires-python = ">=3.8"
+
+[project.optional-dependencies]
+dev = ["black", "bumpver", "flit", "pytest", "sphinx", "sphinx-rtd-theme"]
+
+[project.urls]
+Homepage = "https://stepmix.readthedocs.io/en/latest/"
+
+#[project.scripts]
+#realpython = "reader.__main__:main"
