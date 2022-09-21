@@ -33,5 +33,24 @@ dev = ["black", "bumpver", "flit", "pytest", "sphinx", "sphinx-rtd-theme"]
 [project.urls]
 Homepage = "https://stepmix.readthedocs.io/en/latest/"
 
-#[project.scripts]
-#realpython = "reader.__main__:main"
+[tool.bumpver]
+current_version = "0.0.1"
+version_pattern = "MAJOR.MINOR.PATCH"
+commit_message = "bump version {old_version} -> {new_version}"
+commit = true
+tag = true
+push = true
+
+[tool.bumpver.file_patterns]
+"pyproject.toml" = [
+#    'version = "{version}"',
+    'current_version = "{version}"',
+]
+"stepmix/__init__.py" = [
+    '__version__ = "{version}"',
+]
+
+"docs/source/conf.py" = [
+    'version = "{version}"',
+]
+

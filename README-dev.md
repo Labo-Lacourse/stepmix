@@ -45,7 +45,14 @@ black
 in the project directory to reformat Python files.
 
 # Bump versions
-TODO
+We use ```bumpver``` and the ```MAJOR.MINOR.PATCH``` convention. Use on of
+```
+bumpver update --patch 
+bumpver update --minor 
+bumpver update --major 
+```
+to update all files in the project. Add the ```--dry``` flag to 
+see changes without committing them.
 
 # Publish and update package
 You need to be a maintainer to do this. We use [Flit](https://flit.pypa.io/en/stable/) for publishing the package. Make sure to set up
