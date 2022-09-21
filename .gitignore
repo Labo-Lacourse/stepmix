@@ -1,7 +1,6 @@
 data
 .idea
 __pycache__
-.pypirc
 docs/build
 scratch.py
 venv

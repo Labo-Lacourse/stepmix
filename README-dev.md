@@ -44,6 +44,19 @@ black
 ``` 
 in the project directory to reformat Python files.
 
-# Update version and publish
+# Bump versions
 TODO
+
+# Publish and update package
+You need to be a maintainer to do this. We use [Flit](https://flit.pypa.io/en/stable/) for publishing the package. Make sure to set up
+a ```.pypirc``` file in your ```HOME``` directory as described [here](https://flit.pypa.io/en/latest/upload.html).
+
+You can test using  
+```
+flit publish --repository testpypi
+``` 
+then actually publish with
+```
+flit publish
+``` 
 
