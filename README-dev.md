@@ -13,6 +13,7 @@ python3 -m venv venv
 source venv/bin/activate
 pip install -e .[dev]
 ``` 
+If you run into issues with editable installs, try ```pip install --upgrade pip```.
 
 # Unit Testing
 All tests can now be executed by running the following in the project directory.
