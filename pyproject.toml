@@ -25,7 +25,7 @@ dependencies = [
     "scikit_learn",
     "scipy"
 ]
-requires-python = ">=3.8"
+requires-python = ">=3.7"
 
 [project.optional-dependencies]
 dev = ["black", "bumpver", "flit", "pytest", "sphinx", "sphinx-rtd-theme"]
