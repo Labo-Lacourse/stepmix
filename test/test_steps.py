@@ -131,5 +131,5 @@ def test_1_step_sym(data, kwargs):
     ll_3 = model_3.score(Z)
 
     # Assert
-    assert ll_1 == ll_2
+    assert np.allclose(ll_1, ll_2, atol=1e-12)  # Strict equality fails with Python 3.7
     assert np.allclose(ll_2, ll_3, atol=1e-12)  # Strict equality fails with Python 3.7
