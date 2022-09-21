@@ -132,4 +132,4 @@ def test_1_step_sym(data, kwargs):
 
     # Assert
     assert ll_1 == ll_2
-    assert ll_2 == ll_3
+    assert np.allclose(ll_2, ll_3, atol=1e-12)  # Strict equality fails with Python 3.6
