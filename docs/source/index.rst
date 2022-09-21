@@ -1,5 +1,8 @@
 StepMix - A package for multi-step estimation of mixture models
 ===============================================================
+.. raw:: html
+
+    <a href="https://pypi.org/project/stepmix/"><img src="https://badge.fury.io/py/stepmix.svg" alt="PyPI version"></a>
 
 .. raw:: html
 
