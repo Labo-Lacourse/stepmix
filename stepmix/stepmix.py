@@ -1,4 +1,4 @@
-"""EM for multi-step estimation of latent class models with structural variables.
+"""EM for stepwise estimation of latent class models with structural variables.
 
 Please note the class weights rho are now referred to as 'weights' and the assignments tau are known as
 'responsibilities' or resp to match the sklearn stack terminology.

@@ -13,7 +13,7 @@ def print_results(log_likelihoods, means):
 
 
 ########################################################################################################################
-# Various multi-step methods are available
+# Various stepwise methods are available
 print("Bakk experiment...")
 X, Y, _ = data_bakk_response(n_samples=3000, sep_level=0.7, random_state=42)
 

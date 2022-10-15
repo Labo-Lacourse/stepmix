@@ -8,7 +8,7 @@ build-backend = "flit_core.buildapi"
 
 [project]
 name = "stepmix"
-description = "A Python package for multi-step estimation of latent class models with measurement and structural components. The package can also be used to fit mixture models with various observed random variables."
+description = "A Python package for stepwise estimation of latent class models with measurement and structural components. The package can also be used to fit mixture models with various observed random variables."
 readme = "README.md"
 authors = [
     {name = "Sacha Morin", email = "sacha.morin@mila.quebec"},

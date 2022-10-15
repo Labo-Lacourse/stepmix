@@ -1,4 +1,4 @@
-StepMix - A package for multi-step estimation of mixture models
+StepMix - A package for stepwise estimation of mixture models
 ===============================================================
 .. raw:: html
 
