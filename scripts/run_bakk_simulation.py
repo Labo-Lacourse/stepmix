@@ -21,9 +21,13 @@ def main(n_simulations=10, latex=False, covariate=False):
 
     # Model-specific arguments
     # Specify optimization parameters if we have a covariate model
-    structural_params_12 = dict(method='newton-raphson', lr=0.2, max_iter=1) if covariate else dict()
+    structural_params_12 = (
+        dict(method="newton-raphson", lr=0.2, max_iter=1) if covariate else dict()
+    )
     structural_params_3 = (
-        dict(method='newton-raphson', lr=0.2, max_iter=stepmix_args["max_iter"]) if covariate else dict()
+        dict(method="newton-raphson", lr=0.2, max_iter=stepmix_args["max_iter"])
+        if covariate
+        else dict()
     )
     models = {
         "1-step": dict(n_steps=1, structural_params=structural_params_12),

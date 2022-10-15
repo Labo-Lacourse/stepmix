@@ -87,7 +87,9 @@ def test_diff_inits(data_covariate, kwargs_covariate):
 
     # For this test, ignore default n_inits
     kwargs_covariate.pop("n_init")
-    kwargs_covariate["max_iter"] = 1  # Few iterations to make convergence to same point unlikely
+    kwargs_covariate[
+        "max_iter"
+    ] = 1  # Few iterations to make convergence to same point unlikely
 
     model_1 = StepMix(n_steps=1, n_init=1, **kwargs_covariate)
     model_1.fit(X, Y)

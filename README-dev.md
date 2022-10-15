@@ -41,7 +41,7 @@ and open ```docs/build/html/index.html``` in a browser.
 # Code  Formatting
 StepMix uses the [Black](https://github.com/psf/black) formatting tool. Simply run
 ```
-black
+black .
 ``` 
 in the project directory to reformat Python files.
 

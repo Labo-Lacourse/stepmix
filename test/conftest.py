@@ -49,7 +49,7 @@ def kwargs_covariate():
         n_init=2,
         max_iter=200,
         verbose=1,
-        structural_params=dict(method='newton-raphson')
+        structural_params=dict(method="newton-raphson"),
     )
     return kwargs_covariate
 
