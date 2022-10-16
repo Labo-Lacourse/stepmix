@@ -23,7 +23,7 @@ pytest
 Tests can be edited in the ```test``` directory. Please refer to the [pytest Documentation](https://docs.pytest.org/en/7.1.x/getting-started.html) for more
 information on how to add tests. 
 
-Moreover, the package is installed and tests are run after each commit using [Travis](https://www.travis-ci.com/) as configured by ```.travis.yml```.
+Moreover, the package is installed and tests are run after each commit using [Github Actions](https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python) as configured by ```.github/workflows/pytest.yaml```.
 
 # Documentation
 Documentation is published using [Read the Docs](https://readthedocs.org/) and is available
