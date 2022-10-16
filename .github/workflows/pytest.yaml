@@ -1,4 +1,4 @@
-name: StepMix
+name: Build
 
 on: [push]
 
