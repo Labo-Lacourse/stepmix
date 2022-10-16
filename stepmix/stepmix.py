@@ -56,7 +56,8 @@ class StepMix(BaseEstimator):
         - 3: first run EM on the measurement model, assign class probabilities, then fit the structural model via\
         maximum likelihood. See the correction parameter for bias correction.
 
-    measurement : {'bernoulli', 'bernoulli_nan', 'binary', 'binary_nan', 'categorical', 'categorical_nan', 'covariate',\
+    measurement : {'bernoulli', 'bernoulli_nan', 'binary', 'binary_nan', 'categorical', 'categorical_nan', 'continuous', \
+    'continuous_nan', 'covariate',\
     'gaussian', 'gaussian_nan', 'gaussian_unit', 'gaussian_unit_nan', 'gaussian_spherical', 'gaussian_spherical_nan',\
     'gaussian_tied', 'gaussian_diag', 'gaussian_diag_nan', 'gaussian_full', 'multinoulli', 'multinoulli_nan', dict},\
     default='bernoulli'
@@ -68,6 +69,8 @@ class StepMix(BaseEstimator):
         - 'binary_nan': alias for bernoulli_nan.
         - 'categorical': alias for multinoulli.
         - 'categorical_nan': alias for multinoulli_nan.
+        - 'continuous': alias for gaussian_diag.
+        - 'continuous_nan': alias for gaussian_diag_nan. Supports missing values.
         - 'covariate': covariate model where class probabilities are a multinomial logistic model of the features.
         - 'gaussian': alias for gaussian_unit.
         - 'gaussian_nan': alias for gaussian_unit. Supports missing values.
@@ -87,7 +90,8 @@ class StepMix(BaseEstimator):
         Alternatively accepts a dict to define a nested model, e.g., 3 gaussian features and 2 binary features. Please
         refer to :class:`stepmix.emission.nested.Nested` for details
 
-    structural : {'bernoulli', 'bernoulli_nan', 'binary', 'binary_nan', 'categorical', 'categorical_nan', 'covariate',\
+    structural : {'bernoulli', 'bernoulli_nan', 'binary', 'binary_nan', 'categorical', 'categorical_nan', 'continuous', \
+    'continuous_nan', 'covariate',\
     'gaussian', 'gaussian_nan', 'gaussian_unit', 'gaussian_unit_nan', 'gaussian_spherical', 'gaussian_spherical_nan',\
     'gaussian_tied', 'gaussian_diag', 'gaussian_diag_nan', 'gaussian_full', 'multinoulli', 'multinoulli_nan', dict},\
     default='bernoulli'

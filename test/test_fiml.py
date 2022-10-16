@@ -19,7 +19,7 @@ def test_fiml_fully_observed(data, kwargs, vanilla, fiml):
     kwargs_fiml = copy.deepcopy(kwargs)
 
     # Use gaussians in the structural model, all other models are used on the measurement data
-    if vanilla.startswith("gaussian"):
+    if vanilla.startswith("gaussian") or vanilla.startswith("continuous"):
         kwargs["measurement"] = "binary"
         kwargs["structural"] = vanilla
         kwargs_fiml["measurement"] = "binary"

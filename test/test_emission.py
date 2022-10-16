@@ -21,7 +21,7 @@ def test_emissions(data, kwargs, model):
     X, Y = data
 
     # Use gaussians in the structural model, all other models are tested on the measurement data
-    if model.startswith("gaussian"):
+    if model.startswith("gaussian") or model.startswith("continuous"):
         kwargs["measurement"] = "binary"
         kwargs["structural"] = model
     else:
