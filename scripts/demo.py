@@ -31,6 +31,7 @@ for n_steps in [1, 2, 3]:
         n_init=10,
         random_state=42,
         max_iter=200,
+        verbose=1,
     )
     m.fit(X, Y)
 

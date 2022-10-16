@@ -323,7 +323,8 @@ def print_parameters(
     tied: bool, default=False
         Only print the covariance once and not by class. Used for gaussian model with tied covariance..
     """
-    np.set_printoptions(precision=np_precision)
+    np.set_printoptions(suppress=True,
+                        formatter={'float_kind': '{:0.4f}'.format})
     indent_str = "    " * indent
     n_classes, n_features = params.shape
 
