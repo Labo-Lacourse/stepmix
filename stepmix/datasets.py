@@ -150,6 +150,7 @@ def data_bakk_covariate(n_samples, sep_level, n_mm=6, random_state=None):
     cumul_probas = np.cumsum(probas, axis=1)
     bool_tab = (cumul_probas - np.tile(rng.rand(n_samples), (n_classes, 1)).T) >= 0
     labels = -np.sum(bool_tab, axis=1) + n_classes
+    # labels = probas.argmax(axis=1)  # Old deterministic assignment
 
     # Measurement probabilities
     pis = bakk_measurements(n_classes, n_mm, sep_level)

@@ -8,7 +8,7 @@ build-backend = "flit_core.buildapi"
 
 [project]
 name = "stepmix"
-description = "A Python package for multi-step estimation of latent class models with measurement and structural components. The package can also be used to fit mixture models with various observed random variables."
+description = "A Python package for stepwise estimation of latent class models with measurement and structural components. The package can also be used to fit mixture models with various observed random variables."
 readme = "README.md"
 authors = [
     {name = "Sacha Morin", email = "sacha.morin@mila.quebec"},
@@ -38,7 +38,7 @@ dev = ["black", "bumpver", "flit", "pytest", "sphinx", "sphinx-rtd-theme"]
 Homepage = "https://stepmix.readthedocs.io/en/latest/"
 
 [tool.bumpver]
-current_version = "0.1.0"
+current_version = "0.2.0"
 version_pattern = "MAJOR.MINOR.PATCH"
 commit_message = "bump version {old_version} -> {new_version}"
 commit = true

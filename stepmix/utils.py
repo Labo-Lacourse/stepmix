@@ -323,7 +323,7 @@ def print_parameters(
     tied: bool, default=False
         Only print the covariance once and not by class. Used for gaussian model with tied covariance..
     """
-    np.set_printoptions(precision=np_precision)
+    np.set_printoptions(suppress=True, formatter={"float_kind": "{:0.4f}".format})
     indent_str = "    " * indent
     n_classes, n_features = params.shape
 
@@ -392,3 +392,98 @@ def print_parameters(
                     print(indent_str + f"Class {i + 1} : {p}")
                 else:
                     print(indent_str + f"Class {i + 1} : {p:.2f}")
+
+
+def max_one_hot(array):
+    """Multiple categorical one-hot encoding.
+
+    Takes an n_samples x n_features array of integer-encoded categorical features and returns an
+    n_samples x (n_features x max_n_outcomes) array where max_n_outcomes is the number of outcomes in the
+    categorical feature with the most categories. Categories are one-hot encoded and categories with
+    fewer than max_n_outcomes simply have unused extra columns.
+
+    Examples
+    --------
+    .. code-block:: python
+        arr = np.array(
+            [
+                [0, 3],
+                [1, 0],
+                [2, 1],
+                [2, 2],
+            ]
+        )
+        b, max_n_outcomes = max_one_hot(a)
+        print(b)
+
+        # Should yield
+        # [[1. 0. 0. 0. 0. 0. 0. 1.]
+        #  [0. 1. 0. 0. 1. 0. 0. 0.]
+        #  [0. 0. 1. 0. 0. 1. 0. 0.]
+        #  [0. 0. 1. 0. 0. 0. 1. 0.]]
+
+    Parameters
+    ----------
+    array : ndarray of shape  (n_samples, n_features)
+        Integer-encoded categorical data. Will be float due to sklearn casting. We'll cast back to ints.
+
+    Returns
+    -------
+    one_hot : ndarray of shape (n_samples, n_features * max_n_outcomes)
+        One-hot encoded categories.
+
+    max_n_outcomes : max_n_outcomes
+        Validated structural data or None if not provided.
+
+    """
+    n_samples = array.shape[0]
+    n_features = array.shape[1]
+
+    # First iterate over columns and make sure the categories are 0-indexed
+    for c in range(array.shape[1]):
+        _, array[:, c] = np.unique(array[:, c], return_inverse=True)
+
+    # Get maximal number of outcomes
+    max_n_outcomes = int(array.max() + 1)
+
+    # Create one-hot encoding
+    one_hot = np.zeros((n_samples, array.shape[1] * max_n_outcomes))
+
+    for c in range(n_features):
+        one_hot[np.arange(n_samples), array[:, c].astype(int) + c * max_n_outcomes] = 1
+
+    return one_hot, max_n_outcomes
+
+
+def get_mixed_descriptor(dataframe, **kwargs):
+    """Simpler API to build the mixed model descriptor from a dataframe.
+
+    Mixed models can combine multiple datatypes, such as binary or continuous.
+    Please refer to :class:`stepmix.emission.nested.Nested` for details on the output descriptor.
+
+    Parameters
+    ----------
+    dataframe : pd.DataFrame
+        Dataframe with the input data.
+    kwargs : list of strings
+        Each key represents a model type and the provided list will consist of columns in dataframe.
+
+    Returns
+    -------
+    data : pd.DataFrame
+        Dataframe with selected columns in proper order.
+
+    descriptor : dict
+        Model description. Can be provided to the measurement or structural arguments of stepmix.StepMix.
+
+    """
+    descriptor = dict()
+    columns = list()
+
+    for key, value in kwargs.items():
+        columns += value
+        descriptor[key] = dict(model=key, n_columns=len(value))
+
+    data = dataframe[columns]
+
+    return data, descriptor

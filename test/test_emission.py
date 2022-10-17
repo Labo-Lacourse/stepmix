@@ -1,10 +1,13 @@
 import numpy as np
 import copy
+from collections import OrderedDict
 
+import pandas as pd
 import pytest
 
 from stepmix.stepmix import StepMix
 from stepmix.emission.build_emission import EMISSION_DICT
+from stepmix.utils import max_one_hot, get_mixed_descriptor
 
 
 @pytest.mark.filterwarnings(
@@ -21,7 +24,7 @@ def test_emissions(data, kwargs, model):
     X, Y = data
 
     # Use gaussians in the structural model, all other models are tested on the measurement data
-    if model.startswith("gaussian"):
+    if model.startswith("gaussian") or model.startswith("continuous"):
         kwargs["measurement"] = "binary"
         kwargs["structural"] = model
     else:
@@ -55,7 +58,7 @@ def test_covariate(data_covariate, kwargs, method, intercept):
         structural_params=dict(
             method=method, intercept=intercept, lr=1e-2, max_iter=1000
         ),
-        **kwargs
+        **kwargs,
     )
     model_1.fit(X, Z)
     ll_1 = model_1.score(X, Z)  # Average log-likelihood
@@ -82,7 +85,7 @@ def test_nested(data, kwargs):
     model_3 = StepMix(
         measurement=copy.deepcopy(descriptor),
         structural=copy.deepcopy(descriptor),
-        **kwargs
+        **kwargs,
     )
     model_3.fit(Z, Z)
     ll_3 = model_3.score(Z, Z)
@@ -90,3 +93,99 @@ def test_nested(data, kwargs):
 
     # Test sampling
     model_3.sample(100)
+
+
+def test_get_descriptor(kwargs):
+    """Test get_mixed_descriptor."""
+    target = {
+        "binary": {"model": "binary", "n_columns": 3},
+        "continuous": {"model": "continuous", "n_columns": 1},
+        "categorical": {"model": "categorical", "n_columns": 1},
+    }
+
+    df = pd.DataFrame(
+        np.random.randint(0, 10, size=(100, 10)),
+        columns=[f"col_{i}" for i in range(10)],
+    )
+
+    data, descriptor = get_mixed_descriptor(
+        df,
+        binary=["col_0", "col_1", "col_7"],
+        continuous=["col_4"],
+        categorical=["col_8"],
+    )
+
+    assert np.all(
+        data.columns == np.array(["col_0", "col_1", "col_7", "col_4", "col_8"])
+    )
+    assert descriptor == target
+
+
+def test_max_one_hot(data, kwargs):
+    """Test the max_one_hot method in utils."""
+    a = np.array(
+        [
+            [0, 3],
+            [1, 0],
+            [2, 1],
+            [2, 2],
+        ]
+    )
+
+    target = np.array(
+        [
+            [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0],
+            [0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0],
+            [0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0],
+            [0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0],
+        ]
+    )
+
+    onehot, max_n_outcomes = max_one_hot(a)
+
+    assert max_n_outcomes == 4
+    assert np.all(onehot == target)
+
+
+def test_categorical_encoding(kwargs):
+    # Ignore base measurement and structural for this step
+    kwargs.pop("measurement")
+    kwargs.pop("structural")
+
+    # Declare data
+    data_int = np.array(
+        [
+            [0, 3],
+            [1, 0],
+            [2, 1],
+            [2, 2],
+        ]
+    )
+
+    data_one_hot = np.array(
+        [
+            [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0],
+            [0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0],
+            [0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0],
+            [0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0],
+        ]
+    )
+
+    # Model on integer codes
+    model_1 = StepMix(
+        measurement="categorical", measurement_params=dict(integer_codes=True), **kwargs
+    )
+    model_1.fit(data_int)
+    param_1 = model_1.get_parameters()["measurement"]["pis"]
+
+    # Model on one-hot codes
+    model_2 = StepMix(
+        measurement="categorical",
+        measurement_params=dict(integer_codes=False),
+        **kwargs,
+    )
+    model_2.fit(data_one_hot)
+    param_2 = model_2.get_parameters()["measurement"]["pis"]
+
+    # Check if parameters are the same
+    assert np.all(param_1 == param_2)

@@ -70,7 +70,7 @@ for n_steps in [1, 2, 3]:
         max_iter=10000,
         abs_tol=1e-5,
         structural_params=dict(
-            method="gradient", lr=1e-2, max_iter=1 if n_steps < 3 else 100000
+            method="newton-raphson", lr=0.2, max_iter=1 if n_steps < 3 else 100000
         ),
     )
     m.fit(X, Y)

@@ -5,7 +5,7 @@ Quickstart
 The following shows how to run StepMix on simulated data from Bakk and Kuha, 2018 to identify three latent groups.
 
 ``n_components`` controls
-the number of latent classes while ``n_steps`` sets the multi-step estimation procedure. Homogeneous models (e.g., all binary, all gaussian) can be described with a single string by setting the
+the number of latent classes while ``n_steps`` sets the stepwise estimation procedure. Homogeneous models (e.g., all binary, all gaussian) can be described with a single string by setting the
 ``measurement`` and ``structural`` parameters. Setting ``verbose=1`` ensures we get a detailed print statement::
 
    from stepmix.datasets import data_bakk_response

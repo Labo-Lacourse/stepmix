@@ -1,4 +1,4 @@
-"""EM for multi-step estimation of latent class models with structural variables.
+"""EM for stepwise estimation of latent class models with structural variables.
 
 Please note the class weights rho are now referred to as 'weights' and the assignments tau are known as
 'responsibilities' or resp to match the sklearn stack terminology.
@@ -56,7 +56,8 @@ class StepMix(BaseEstimator):
         - 3: first run EM on the measurement model, assign class probabilities, then fit the structural model via\
         maximum likelihood. See the correction parameter for bias correction.
 
-    measurement : {'bernoulli', 'bernoulli_nan', 'binary', 'binary_nan', 'categorical', 'categorical_nan', 'covariate',\
+    measurement : {'bernoulli', 'bernoulli_nan', 'binary', 'binary_nan', 'categorical', 'categorical_nan', 'continuous', \
+    'continuous_nan', 'covariate',\
     'gaussian', 'gaussian_nan', 'gaussian_unit', 'gaussian_unit_nan', 'gaussian_spherical', 'gaussian_spherical_nan',\
     'gaussian_tied', 'gaussian_diag', 'gaussian_diag_nan', 'gaussian_full', 'multinoulli', 'multinoulli_nan', dict},\
     default='bernoulli'
@@ -68,6 +69,8 @@ class StepMix(BaseEstimator):
         - 'binary_nan': alias for bernoulli_nan.
         - 'categorical': alias for multinoulli.
         - 'categorical_nan': alias for multinoulli_nan.
+        - 'continuous': alias for gaussian_diag.
+        - 'continuous_nan': alias for gaussian_diag_nan. Supports missing values.
         - 'covariate': covariate model where class probabilities are a multinomial logistic model of the features.
         - 'gaussian': alias for gaussian_unit.
         - 'gaussian_nan': alias for gaussian_unit. Supports missing values.
@@ -85,9 +88,10 @@ class StepMix(BaseEstimator):
         Models suffixed with ``_nan`` support missing values, but may be slower than their fully observed counterpart.
 
         Alternatively accepts a dict to define a nested model, e.g., 3 gaussian features and 2 binary features. Please
-        refer to :class:`stepmix.emission.nested.Nested` for details
+        refer to :class:`stepmix.emission.nested.Nested` for details.
 
-    structural : {'bernoulli', 'bernoulli_nan', 'binary', 'binary_nan', 'categorical', 'categorical_nan', 'covariate',\
+    structural : {'bernoulli', 'bernoulli_nan', 'binary', 'binary_nan', 'categorical', 'categorical_nan', 'continuous', \
+    'continuous_nan', 'covariate',\
     'gaussian', 'gaussian_nan', 'gaussian_unit', 'gaussian_unit_nan', 'gaussian_spherical', 'gaussian_spherical_nan',\
     'gaussian_tied', 'gaussian_diag', 'gaussian_diag_nan', 'gaussian_full', 'multinoulli', 'multinoulli_nan', dict},\
     default='bernoulli'
@@ -107,7 +111,7 @@ class StepMix(BaseEstimator):
             - 'BCH' : Apply the empirical BCH correction from *Vermunt, 2004*.
             - 'ML' : Apply the ML correction from *Vermunt, 2010; Bakk et al., 2013*.
 
-    abs_tol : float, default=1e-3
+    abs_tol : float, default=1e-6
         The convergence threshold. EM iterations will stop when the
         lower bound average gain is below this threshold.
     rel_tol : float, default=1e-10
@@ -210,7 +214,7 @@ class StepMix(BaseEstimator):
         structural="gaussian_unit",
         assignment="modal",
         correction=None,
-        abs_tol=1e-3,
+        abs_tol=1e-6,
         rel_tol=1e-10,
         max_iter=100,
         n_init=1,

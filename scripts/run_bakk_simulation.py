@@ -15,16 +15,19 @@ def main(n_simulations=10, latex=False, covariate=False):
         n_components=3,
         measurement="bernoulli",
         structural="covariate" if covariate else "gaussian_unit",
-        rel_tol=1e-5,
         n_init=1,
         max_iter=1000,
     )
 
     # Model-specific arguments
     # Specify optimization parameters if we have a covariate model
-    structural_params_12 = dict(lr=5e-3, iter=1) if covariate else dict()
+    structural_params_12 = (
+        dict(method="newton-raphson", lr=0.2, max_iter=1) if covariate else dict()
+    )
     structural_params_3 = (
-        dict(lr=5e-3, iter=stepmix_args["max_iter"]) if covariate else dict()
+        dict(method="newton-raphson", lr=0.2, max_iter=stepmix_args["max_iter"])
+        if covariate
+        else dict()
     )
     models = {
         "1-step": dict(n_steps=1, structural_params=structural_params_12),
@@ -75,10 +78,7 @@ def main(n_simulations=10, latex=False, covariate=False):
 
                     # Get max mean
                     if covariate:
-                        params = model.get_parameters()["structural"]
-                        coeff = np.vstack(
-                            (params["coef"], params["inter"])
-                        )  # Stack intercepts and coeff
+                        coeff = model.get_parameters()["structural"]["beta"]
 
                         # Model estimates all K coefficients
                         # Recenter the middle coefficient to 0 to "recreate" the reference class

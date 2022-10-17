@@ -52,7 +52,6 @@ class Covariate(Emission):
         D += self.intercept
         _, K = resp.shape
 
-
         # Parameter initialization
         # if self.intercept: beta[0,:]=intercept and beta[1:,:] = coefficients
         # Note: initial coefficients must be close to 0 for NR to be relatively stable

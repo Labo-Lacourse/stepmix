@@ -2,7 +2,7 @@
 import numpy as np
 
 from stepmix.emission.emission import Emission
-from stepmix.utils import print_parameters
+from stepmix.utils import print_parameters, max_one_hot
 
 
 class Bernoulli(Emission):
@@ -79,26 +79,45 @@ class Multinoulli(Emission):
     X[n,k*L+l]=1 if l is the observed outcome for the kth attribute of data point n,
     where n is the number of observations, K=n_features, L=n_outcomes for each multinoulli
 
+    If integer_codes is set to True, the model will expect integer-encoded categories and will one-hot
+    encode the data itself. The result will be cached and reused across iterations. In this case, n_outcomes
+    is ignored and computed by the model.
+
     Parameters:
     pis[k*L+l,c]=P[ X[n,k*L+l]=1 | n belongs to class c]
     """
 
-    def __init__(self, n_components=2, random_state=None, n_outcomes=2):
+    def __init__(
+        self, n_components=2, random_state=None, n_outcomes=2, integer_codes=True
+    ):
         super().__init__(n_components=n_components, random_state=random_state)
         self.n_outcomes = n_outcomes
+        self.integer_codes = integer_codes
+        self._cache = None
 
     def get_n_features(self):
         n_features_x_n_outcomes = self.parameters["pis"].shape[0]
         n_features = int(n_features_x_n_outcomes / self.n_outcomes)
         return n_features
 
+    def encode_features(self, X):
+        if self.integer_codes and self._cache is None:
+            self._cache, self.n_outcomes = max_one_hot(X)
+
+        if self.integer_codes:
+            return self._cache
+        else:
+            return X
+
     def m_step(self, X, resp):
+        X = self.encode_features(X)
         pis = X.T @ resp
         pis /= resp.sum(axis=0, keepdims=True)
         pis = np.clip(pis, 1e-15, 1 - 1e-15)  # avoid probabilities 0 or 1
         self.parameters["pis"] = pis
 
     def log_likelihood(self, X):
+        X = self.encode_features(X)
         # compute log emission probabilities
         pis = np.clip(self.parameters["pis"], 1e-15, 1 - 1e-15)
         log_eps = X @ np.log(pis)
@@ -136,6 +155,7 @@ class MultinoulliNan(Multinoulli):
     """Multinoulli (categorical) emission model supporting missing values (Full Information Maximum Likelihood)."""
 
     def m_step(self, X, resp):
+        X = self.encode_features(X)
         is_observed = ~np.isnan(X)
 
         # Replace all nans with 0
@@ -150,6 +170,7 @@ class MultinoulliNan(Multinoulli):
         self.parameters["pis"] = pis
 
     def log_likelihood(self, X):
+        X = self.encode_features(X)
         is_observed = ~np.isnan(X)
 
         # Replace all nans with 0
