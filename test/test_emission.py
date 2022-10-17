@@ -58,7 +58,7 @@ def test_covariate(data_covariate, kwargs, method, intercept):
         structural_params=dict(
             method=method, intercept=intercept, lr=1e-2, max_iter=1000
         ),
-        **kwargs
+        **kwargs,
     )
     model_1.fit(X, Z)
     ll_1 = model_1.score(X, Z)  # Average log-likelihood
@@ -85,7 +85,7 @@ def test_nested(data, kwargs):
     model_3 = StepMix(
         measurement=copy.deepcopy(descriptor),
         structural=copy.deepcopy(descriptor),
-        **kwargs
+        **kwargs,
     )
     model_3.fit(Z, Z)
     ll_3 = model_3.score(Z, Z)
@@ -103,11 +103,21 @@ def test_get_descriptor(kwargs):
         "categorical": {"model": "categorical", "n_columns": 1},
     }
 
-    df = pd.DataFrame(np.random.randint(0, 10, size=(100, 10)), columns=[f'col_{i}' for i in range(10)])
+    df = pd.DataFrame(
+        np.random.randint(0, 10, size=(100, 10)),
+        columns=[f"col_{i}" for i in range(10)],
+    )
 
-    data, descriptor = get_mixed_descriptor(df, binary=['col_0', 'col_1', 'col_7'], continuous=['col_4'], categorical=['col_8'])
+    data, descriptor = get_mixed_descriptor(
+        df,
+        binary=["col_0", "col_1", "col_7"],
+        continuous=["col_4"],
+        categorical=["col_8"],
+    )
 
-    assert np.all(data.columns == np.array(['col_0', 'col_1', 'col_7', 'col_4', 'col_8']))
+    assert np.all(
+        data.columns == np.array(["col_0", "col_1", "col_7", "col_4", "col_8"])
+    )
     assert descriptor == target
 
 
@@ -172,7 +182,7 @@ def test_categorical_encoding(kwargs):
     model_2 = StepMix(
         measurement="categorical",
         measurement_params=dict(integer_codes=False),
-        **kwargs
+        **kwargs,
     )
     model_2.fit(data_one_hot)
     param_2 = model_2.get_parameters()["measurement"]["pis"]

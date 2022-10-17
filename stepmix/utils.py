@@ -290,15 +290,15 @@ def print_report(model, X, Y=None):
 
 
 def print_parameters(
-        params,
-        model_name,
-        indent=1,
-        np_precision=2,
-        n_outcomes=1,
-        intercept=False,
-        print_mean=False,
-        covariances=None,
-        tied=False,
+    params,
+    model_name,
+    indent=1,
+    np_precision=2,
+    n_outcomes=1,
+    intercept=False,
+    print_mean=False,
+    covariances=None,
+    tied=False,
 ):
     """Print model parameters with nice formatting.
 
@@ -482,12 +482,8 @@ def get_mixed_descriptor(dataframe, **kwargs):
 
     for key, value in kwargs.items():
         columns += value
-        descriptor[key] = dict(
-            model=key,
-            n_columns=len(value)
-        )
+        descriptor[key] = dict(model=key, n_columns=len(value))
 
     data = dataframe[columns]
 
     return data, descriptor
-
