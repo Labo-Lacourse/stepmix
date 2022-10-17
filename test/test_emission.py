@@ -1,11 +1,13 @@
 import numpy as np
 import copy
+from collections import OrderedDict
 
+import pandas as pd
 import pytest
 
 from stepmix.stepmix import StepMix
 from stepmix.emission.build_emission import EMISSION_DICT
-from stepmix.utils import max_one_hot
+from stepmix.utils import max_one_hot, get_mixed_descriptor
 
 
 @pytest.mark.filterwarnings(
@@ -91,6 +93,22 @@ def test_nested(data, kwargs):
 
     # Test sampling
     model_3.sample(100)
+
+
+def test_get_descriptor(kwargs):
+    """Test get_mixed_descriptor."""
+    target = {
+        "binary": {"model": "binary", "n_columns": 3},
+        "continuous": {"model": "continuous", "n_columns": 1},
+        "categorical": {"model": "categorical", "n_columns": 1},
+    }
+
+    df = pd.DataFrame(np.random.randint(0, 10, size=(100, 10)), columns=[f'col_{i}' for i in range(10)])
+
+    data, descriptor = get_mixed_descriptor(df, binary=['col_0', 'col_1', 'col_7'], continuous=['col_4'], categorical=['col_8'])
+
+    assert np.all(data.columns == np.array(['col_0', 'col_1', 'col_7', 'col_4', 'col_8']))
+    assert descriptor == target
 
 
 def test_max_one_hot(data, kwargs):

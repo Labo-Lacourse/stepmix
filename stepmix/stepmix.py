@@ -88,7 +88,7 @@ class StepMix(BaseEstimator):
         Models suffixed with ``_nan`` support missing values, but may be slower than their fully observed counterpart.
 
         Alternatively accepts a dict to define a nested model, e.g., 3 gaussian features and 2 binary features. Please
-        refer to :class:`stepmix.emission.nested.Nested` for details
+        refer to :class:`stepmix.emission.nested.Nested` for details.
 
     structural : {'bernoulli', 'bernoulli_nan', 'binary', 'binary_nan', 'categorical', 'categorical_nan', 'continuous', \
     'continuous_nan', 'covariate',\

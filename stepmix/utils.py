@@ -290,15 +290,15 @@ def print_report(model, X, Y=None):
 
 
 def print_parameters(
-    params,
-    model_name,
-    indent=1,
-    np_precision=2,
-    n_outcomes=1,
-    intercept=False,
-    print_mean=False,
-    covariances=None,
-    tied=False,
+        params,
+        model_name,
+        indent=1,
+        np_precision=2,
+        n_outcomes=1,
+        intercept=False,
+        print_mean=False,
+        covariances=None,
+        tied=False,
 ):
     """Print model parameters with nice formatting.
 
@@ -453,3 +453,41 @@ def max_one_hot(array):
         one_hot[np.arange(n_samples), array[:, c].astype(int) + c * max_n_outcomes] = 1
 
     return one_hot, max_n_outcomes
+
+
+def get_mixed_descriptor(dataframe, **kwargs):
+    """Simpler API to build the mixed model descriptor from a dataframe.
+
+    Mixed models can combine multiple datatypes, such as binary or continuous.
+    Please refer to :class:`stepmix.emission.nested.Nested` for details on the output descriptor.
+
+    Parameters
+    ----------
+    dataframe : pd.DataFrame
+        Dataframe with the input data.
+    kwargs : list of strings
+        Each key represents a model type and the provided list will consist of columns in dataframe.
+
+    Returns
+    -------
+    data : pd.DataFrame
+        Dataframe with selected columns in proper order.
+
+    descriptor : dict
+        Model description. Can be provided to the measurement or structural arguments of stepmix.StepMix.
+
+    """
+    descriptor = dict()
+    columns = list()
+
+    for key, value in kwargs.items():
+        columns += value
+        descriptor[key] = dict(
+            model=key,
+            n_columns=len(value)
+        )
+
+    data = dataframe[columns]
+
+    return data, descriptor
+
