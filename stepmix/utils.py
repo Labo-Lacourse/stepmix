@@ -422,6 +422,11 @@ def max_one_hot(array):
         #  [0. 0. 1. 0. 0. 1. 0. 0.]
         #  [0. 0. 1. 0. 0. 0. 1. 0.]]
 
+    Parameters
+    ----------
+    array : ndarray of shape  (n_samples, n_features)
+        Integer-encoded categorical data. Will be float due to sklearn casting. We'll cast back to ints.
+
     Returns
     -------
     one_hot : ndarray of shape (n_samples, n_features * max_n_outcomes)
@@ -439,12 +444,12 @@ def max_one_hot(array):
         _, array[:, c] = np.unique(array[:, c], return_inverse=True)
 
     # Get maximal number of outcomes
-    max_n_outcomes = array.max() + 1
+    max_n_outcomes = int(array.max() + 1)
 
     # Create one-hot encoding
     one_hot = np.zeros((n_samples, array.shape[1] * max_n_outcomes))
 
     for c in range(n_features):
-        one_hot[np.arange(n_samples), array[:, c] + c * max_n_outcomes] = 1
+        one_hot[np.arange(n_samples), array[:, c].astype(int) + c * max_n_outcomes] = 1
 
     return one_hot, max_n_outcomes

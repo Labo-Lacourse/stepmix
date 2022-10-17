@@ -117,3 +117,47 @@ def test_max_one_hot(data, kwargs):
 
     assert max_n_outcomes == 4
     assert np.all(onehot == target)
+
+
+def test_categorical_encoding(kwargs):
+    # Ignore base measurement and structural for this step
+    kwargs.pop("measurement")
+    kwargs.pop("structural")
+
+    # Declare data
+    data_int = np.array(
+        [
+            [0, 3],
+            [1, 0],
+            [2, 1],
+            [2, 2],
+        ]
+    )
+
+    data_one_hot = np.array(
+        [
+            [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0],
+            [0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0],
+            [0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0],
+            [0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0],
+        ]
+    )
+
+    # Model on integer codes
+    model_1 = StepMix(
+        measurement="categorical", measurement_params=dict(integer_codes=True), **kwargs
+    )
+    model_1.fit(data_int)
+    param_1 = model_1.get_parameters()["measurement"]["pis"]
+
+    # Model on one-hot codes
+    model_2 = StepMix(
+        measurement="categorical",
+        measurement_params=dict(integer_codes=False),
+        **kwargs
+    )
+    model_2.fit(data_one_hot)
+    param_2 = model_2.get_parameters()["measurement"]["pis"]
+
+    # Check if parameters are the same
+    assert np.all(param_1 == param_2)
