@@ -392,3 +392,59 @@ def print_parameters(
                     print(indent_str + f"Class {i + 1} : {p}")
                 else:
                     print(indent_str + f"Class {i + 1} : {p:.2f}")
+
+
+def max_one_hot(array):
+    """Multiple categorical one-hot encoding.
+
+    Takes an n_samples x n_features array of integer-encoded categorical features and returns an
+    n_samples x (n_features x max_n_outcomes) array where max_n_outcomes is the number of outcomes in the
+    categorical feature with the most categories. Categories are one-hot encoded and categories with
+    fewer than max_n_outcomes simply have unused extra columns.
+
+    Examples
+    --------
+    .. code-block:: python
+        arr = np.array(
+            [
+                [0, 3],
+                [1, 0],
+                [2, 1],
+                [2, 2],
+            ]
+        )
+        b, max_n_outcomes = max_one_hot(a)
+        print(b)
+
+        # Should yield
+        # [[1. 0. 0. 0. 0. 0. 0. 1.]
+        #  [0. 1. 0. 0. 1. 0. 0. 0.]
+        #  [0. 0. 1. 0. 0. 1. 0. 0.]
+        #  [0. 0. 1. 0. 0. 0. 1. 0.]]
+
+    Returns
+    -------
+    one_hot : ndarray of shape (n_samples, n_features * max_n_outcomes)
+        One-hot encoded categories.
+
+    max_n_outcomes : max_n_outcomes
+        Validated structural data or None if not provided.
+
+    """
+    n_samples = array.shape[0]
+    n_features = array.shape[1]
+
+    # First iterate over columns and make sure the categories are 0-indexed
+    for c in range(array.shape[1]):
+        _, array[:, c] = np.unique(array[:, c], return_inverse=True)
+
+    # Get maximal number of outcomes
+    max_n_outcomes = array.max() + 1
+
+    # Create one-hot encoding
+    one_hot = np.zeros((n_samples, array.shape[1] * max_n_outcomes))
+
+    for c in range(n_features):
+        one_hot[np.arange(n_samples), array[:, c] + c * max_n_outcomes] = 1
+
+    return one_hot, max_n_outcomes

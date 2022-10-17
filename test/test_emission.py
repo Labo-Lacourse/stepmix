@@ -5,6 +5,7 @@ import pytest
 
 from stepmix.stepmix import StepMix
 from stepmix.emission.build_emission import EMISSION_DICT
+from stepmix.utils import max_one_hot
 
 
 @pytest.mark.filterwarnings(
@@ -90,3 +91,29 @@ def test_nested(data, kwargs):
 
     # Test sampling
     model_3.sample(100)
+
+
+def test_max_one_hot(data, kwargs):
+    """Test the max_one_hot method in utils."""
+    a = np.array(
+        [
+            [0, 3],
+            [1, 0],
+            [2, 1],
+            [2, 2],
+        ]
+    )
+
+    target = np.array(
+        [
+            [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0],
+            [0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0],
+            [0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0],
+            [0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0],
+        ]
+    )
+
+    onehot, max_n_outcomes = max_one_hot(a)
+
+    assert max_n_outcomes == 4
+    assert np.all(onehot == target)
