@@ -30,4 +30,26 @@ StepMix accepts the ``numpy.array`` and ``pandas.DataFrame`` data types. Additio
 
 Advanced Usage
 --------------
-For all available options, please refer to the :doc:`api` documentation. [TODO : Add links to tutorial notebooks].
+For all available options, please refer to the :doc:`api` documentation.
+Detailed tutorials are available in notebooks :
+
+#. `Latent Class Analysis with StepMix <https://colab.research.google.com/drive/1KAxcvxjL_vB2lAG9e47we7hrf_2fR1eK?usp=sharing>`_ : an in-depth look at how latent class models can be defined with StepMix. The tutorial uses the Iris Dataset as an example and covers
+
+    #. Continuous LCA models;
+    #. Binary LCA models;
+    #. Categorical LCA models;
+    #. Mixed LCA models (continuous and categorical data);
+    #. Missing Values.
+
+#. `Stepwise Estimation with StepMix <https://colab.research.google.com/drive/1T_UObkN5Y-iFTKiun0zOkKk7LjtMeV25?usp=sharing>`_ : a tutorial demonstrating how to define measurement and structural models. The tutorial discusses:
+
+    #. LCA models with response variables;
+    #. LCA models with covariates;
+    #. 1-step, 2-step and 3-step estimation;
+    #. Corrections and other options for 3-step estimation.
+
+#. `Model Selection <https://colab.research.google.com/drive/1iyFTD-D2wn88_vd-qxXkovIuWHRtU7V8?usp=sharing>`_ :
+   a short tutorial discussing:
+
+    #. Selecting the number of latent classes (```n_components```);
+    #. Comparing models with AIC and BIC.

@@ -27,7 +27,7 @@ and covers :
 2. [Stepwise Estimation with StepMix](https://colab.research.google.com/drive/1T_UObkN5Y-iFTKiun0zOkKk7LjtMeV25?usp=sharing) :
     a tutorial demonstrating how to define measurement and structural models. The tutorial discusses:
    1. LCA models with response variables;
-   2. LCA models with covariate; 
+   2. LCA models with covariates; 
    3. 1-step, 2-step and 3-step estimation;
    4. Corrections and other options for 3-step estimation.
 3. [Model Selection](https://colab.research.google.com/drive/1iyFTD-D2wn88_vd-qxXkovIuWHRtU7V8?usp=sharing) :
