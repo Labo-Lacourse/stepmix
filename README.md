@@ -5,8 +5,8 @@ StepMix
 [![Documentation Status](https://readthedocs.org/projects/stepmix/badge/?version=latest)](https://stepmix.readthedocs.io/en/latest/index.html)
 <a href="https://github.com/psf/black"><img alt="Code style: black" src="https://img.shields.io/badge/code%20style-black-000000.svg"></a>
 
-A Python package for stepwise estimation of latent class models with measurement and structural components. 
-The package can also be used to fit mixture models with various observed random variables. Largely based on [Bakk & Kuha, 2018](https://pubmed.ncbi.nlm.nih.gov/29150817/).
+A Python package for latent class analysis and clustering of continuous and categorical data, with support for missing values. 
+Various stepwise estimation methods are available for models with measurement and structural components. Largely based on [Bakk & Kuha, 2018](https://pubmed.ncbi.nlm.nih.gov/29150817/).
 
 
 # Install
