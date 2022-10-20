@@ -22,7 +22,7 @@ classifiers = [
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
 ]
-keywords = ["clustering", "mixtures", "lca", "em"]
+keywords = ["clustering", "mixtures", "lca", "em", "latent-class-analysis", "expectation–maximization"]
 dependencies = [
     "numpy",
     "pandas",
