@@ -13,7 +13,7 @@ the number of latent classes while ``n_steps`` sets the stepwise estimation proc
 
    # Soft 3-step
    # X is an array of binary measurements. Y is a single continuous response
-   X, Y, _ = data_bakk_response(n_samples=1000, sep_level=.7, random_state=42)
+   X, Y, _ = data_bakk_response(n_samples=1000, sep_level=.9, random_state=42)
    model = StepMix(n_components=3, n_steps=3, measurement='bernoulli',
                    structural='gaussian_unit', assignment='soft', verbose=1, random_state=42)
    model.fit(X, Y)
