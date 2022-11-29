@@ -27,7 +27,7 @@ class Covariate(Emission):
     """
 
     def __init__(
-        self, tol=1e-4, max_iter=1, lr=1e-3, intercept=True, method="gradient", **kwargs
+            self, tol=1e-4, max_iter=1, lr=1e-3, intercept=True, method="gradient", **kwargs
     ):
         super().__init__(**kwargs)
         self.tol = tol
@@ -131,3 +131,7 @@ class Covariate(Emission):
     @property
     def n_parameters(self):
         return self.parameters["beta"].shape[0] * self.parameters["beta"].shape[1]
+
+    def permute_classes(self, perm, axis=1):
+        # Latent classes are on first axis
+        super().permute_classes(perm, axis)

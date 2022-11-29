@@ -4,6 +4,7 @@ Encapsulate the M-step and log-likelihood computations of different conditional 
 from abc import ABC, abstractmethod, abstractproperty
 import copy
 
+import numpy as np
 from sklearn.utils.validation import check_random_state
 
 from stepmix.utils import check_int, check_positive
@@ -161,3 +162,19 @@ class Emission(ABC):
     def n_parameters(self):
         """Number of free parameters in the model."""
         raise NotImplementedError
+
+    def permute_classes(self, perm, axis=0):
+        """Permute the latent class and associated parameters of this estimator.
+
+        Effectively remaps latent classes.
+
+        Parameters
+        ----------
+        perm : ndarray of shape  (n_classes,)
+            Integer array representing the target permutation. Should be a permutation of np.arange(n_classes).
+        axis: int
+            Axis to use for permuting the parameters.
+
+        """
+        for key, item in self.parameters.items():
+            self.parameters[key] = np.take(item, indices=perm, axis=axis)

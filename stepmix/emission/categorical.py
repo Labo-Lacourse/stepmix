@@ -39,6 +39,10 @@ class Bernoulli(Emission):
     def n_parameters(self):
         return self.parameters["pis"].shape[0] * self.parameters["pis"].shape[1]
 
+    def permute_classes(self, perm, axis=1):
+        # Latent classes are on first axis
+        super().permute_classes(perm, axis)
+
 
 class BernoulliNan(Bernoulli):
     """Bernoulli (binary) emission model supporting missing values (Full Information Maximum Likelihood)."""
@@ -150,6 +154,9 @@ class Multinoulli(Emission):
         n_params = self.parameters["pis"].shape[0] * self.parameters["pis"].shape[1]
         return n_params
 
+    def permute_classes(self, perm, axis=1):
+        # Latent classes are on first axis
+        super().permute_classes(perm, axis)
 
 class MultinoulliNan(Multinoulli):
     """Multinoulli (categorical) emission model supporting missing values (Full Information Maximum Likelihood)."""
