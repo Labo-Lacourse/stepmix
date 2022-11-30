@@ -102,3 +102,4 @@ def test_nested_bootstrap(data_nested, kwargs_nested):
     """Call bootstrap procedure on a nested model and make sure it doesn't raise errors."""
     model_1 = StepMix(**kwargs_nested)
     model, params = bootstrap(model_1, data_nested, data_nested, n_repetitions=3)
+    assert isinstance(params['measurement']['model_1']['pis'][0], np.ndarray)

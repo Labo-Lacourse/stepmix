@@ -52,7 +52,13 @@ def stack_stepmix_parameters(params):
 
     for key_i in base_keys:
         for key_j in params[0][key_i].keys():
-            base[key_i][key_j] = np.stack([p[key_i][key_j] for p in params])
+            is_nested = not isinstance(base[key_i][key_j], np.ndarray)
+            if is_nested:
+                # Nested parameters have another level of dictionnaries
+                for key_k in params[0][key_i][key_j].keys():
+                    base[key_i][key_j][key_k] = np.stack([p[key_i][key_j][key_k] for p in params])
+            else:
+                base[key_i][key_j] = np.stack([p[key_i][key_j] for p in params])
 
     return base
 
@@ -99,7 +105,8 @@ def bootstrap(estimator, X, Y=None, n_repetitions=1000):
         Y_rep = Y[rep_samples] if Y is not None else None
 
         # Fit estimator on resample data
-        estimator_rep = clone(estimator).fit(X_rep, Y_rep)
+        estimator_rep = clone(estimator)
+        estimator_rep.fit(X_rep, Y_rep)
 
         # Class ordering may be different. Reorder based on best permutation of class probabilites
         rep_class_probabilities = estimator_rep.predict_proba(X, Y)  # Inference on original samples
