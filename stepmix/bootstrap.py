@@ -158,22 +158,30 @@ def plot_parameters_CI(bottom, estimate, top, title):
 
     fig.suptitle(title)
     fig.tight_layout()
-    fig.show()
+
+    return fig
 
 
 def percentiles_and_CI(estimate, bootstrapped_params, model_name, param_name, alpha):
+    if estimate.ndim == 1:
+        n_classes = estimate.shape[0]
+        estimate = estimate.reshape((n_classes, 1))
+        bootstrapped_params = bootstrapped_params.reshape((-1, n_classes, 1))
     bottom = np.percentile(bootstrapped_params, q=alpha, axis=0)
     top = np.percentile(bootstrapped_params, q=100 - alpha, axis=0)
-    plot_parameters_CI(bottom, estimate, top, f'{model_name} : {param_name}')
+    return plot_parameters_CI(bottom, estimate, top, f'{model_name} : {param_name}')
 
 
 def plot_all_parameters_CI(estimator_params_dict, bootstrapped_params_dict, alpha=5):
+    figures = list()
+
     # Model class weights
-    percentiles_and_CI(estimator_params_dict['weights'].reshape((-1, 1)),
-                       bootstrapped_params_dict['weights'].reshape((-1, 3, 1)),
-                       "Latent class",
-                       "weights",
-                       alpha=alpha)
+    fig = percentiles_and_CI(estimator_params_dict['weights'],
+                             bootstrapped_params_dict['weights'],
+                             "Latent class",
+                             "weights",
+                             alpha=alpha)
+    figures.append(fig)
 
     # Model parameters
     base_keys = ["measurement"]
@@ -188,8 +196,12 @@ def plot_all_parameters_CI(estimator_params_dict, bootstrapped_params_dict, alph
                 for key_k in estimator_params_dict[key_i][key_j].keys():
                     estimate = estimator_params_dict[key_i][key_j][key_k]
                     params = bootstrapped_params_dict[key_i][key_j][key_k]
-                    percentiles_and_CI(estimate, params, key_i + " : " + key_j, key_k, alpha)
+                    fig = percentiles_and_CI(estimate, params, key_i + " : " + key_j, key_k, alpha)
+                    figures.append(fig)
             else:
                 estimate = estimator_params_dict[key_i][key_j]
                 params = bootstrapped_params_dict[key_i][key_j]
-                percentiles_and_CI(estimate, params, key_i, key_j, alpha)
+                fig = percentiles_and_CI(estimate, params, key_i, key_j, alpha)
+                figures.append(fig)
+
+    return figures

@@ -1,11 +1,10 @@
-import copy
-
 import numpy as np
 import pytest
+import matplotlib.pyplot as plt
 
 from stepmix import StepMix
 from stepmix.emission.build_emission import EMISSION_DICT
-from stepmix.bootstrap import find_best_permutation, bootstrap
+from stepmix.bootstrap import find_best_permutation, bootstrap, plot_all_parameters_CI
 
 
 def test_find_best_permutation():
@@ -95,7 +94,14 @@ def test_bootstrap(data, kwargs, model):
         kwargs["structural"] = "gaussian_unit"
 
     model_1 = StepMix(n_steps=1, **kwargs)
-    model, params = bootstrap(model_1, X, Y, n_repetitions=3)
+    model_1, params = bootstrap(model_1, X, Y, n_repetitions=3)
+
+    # Also test plots
+    if model != "gaussian_full":
+        # Plotting not supported for gaussian_full
+        figures = plot_all_parameters_CI(model_1.get_parameters(), params)
+        for f in figures:
+            plt.close(f)
 
 
 def test_nested_bootstrap(data_nested, kwargs_nested):
@@ -103,3 +109,9 @@ def test_nested_bootstrap(data_nested, kwargs_nested):
     model_1 = StepMix(**kwargs_nested)
     model, params = bootstrap(model_1, data_nested, data_nested, n_repetitions=3)
     assert isinstance(params['measurement']['model_1']['pis'][0], np.ndarray)
+
+    # Also test plots
+    figures = plot_all_parameters_CI(model.get_parameters(), params)
+    for f in figures:
+        plt.close(f)
+

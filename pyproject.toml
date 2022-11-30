@@ -27,7 +27,8 @@ dependencies = [
     "numpy",
     "pandas",
     "scikit_learn",
-    "scipy"
+    "scipy",
+    "matplotlib",
 ]
 requires-python = ">=3.7"
 
