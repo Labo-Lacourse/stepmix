@@ -5,6 +5,19 @@ import pytest
 
 from stepmix import StepMix
 from stepmix.emission.build_emission import EMISSION_DICT
+from stepmix.bootstrap import find_best_permutation
+
+
+def test_find_best_permutation():
+    ref = np.zeros((3, 3))
+    ref[:, 0] = 1
+    target = np.zeros((3, 3))
+    target[:, 1] = 1
+    perm_1 = find_best_permutation(ref, ref)
+    perm_2 = find_best_permutation(ref, target)
+
+    assert np.all(perm_1 == np.arange(3))
+    assert np.all(perm_2 == np.array([1, 0, 2]))
 
 
 def fit_and_test_three_permutations(estimator, X, Y):
