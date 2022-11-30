@@ -177,6 +177,23 @@ def percentiles_and_CI(estimate, bootstrapped_params, model_name, param_name, al
 
 
 def plot_all_parameters_CI(estimator_params_dict, bootstrapped_params_dict, alpha=5):
+    """Plot estimates and confidence intervals.
+
+    Parameters
+    ----------
+    estimator_params_dict : dict
+        Main estimated parameters.
+    bootstrapped_params_dict : dict
+        Bootstrapped parameters as returned by the bootstrap.bootstrap function.
+    alpha : int, default=5
+        Will plot the confidence interval [1-alpha, alpha].
+
+    Returns
+    ----------
+    figures: list
+        List of figures. Can be iterated over to show or save figures.
+
+    """
     figures = list()
 
     # Model class weights
