@@ -42,7 +42,7 @@ class Covariate(Emission):
 
     # the full matrix (with column of 1s if self.intercept=True) is assumed to be given here for rapidity concerns
     def _forward(self, X_full):
-        return softmax(X_full @ self.parameters["beta"], axis=1)
+        return softmax(X_full @ self.parameters["beta"].T, axis=1)
 
     def initialize(self, X, resp, random_state=None):
         self.check_parameters()
@@ -55,7 +55,7 @@ class Covariate(Emission):
         # Parameter initialization
         # if self.intercept: beta[0,:]=intercept and beta[1:,:] = coefficients
         # Note: initial coefficients must be close to 0 for NR to be relatively stable
-        self.parameters["beta"] = self.random_state.normal(0, 1e-3, size=(D, K))
+        self.parameters["beta"] = self.random_state.normal(0, 1e-3, size=(K, D))
         # print(self.parameters["beta"])
 
     def get_full_matrix(self, X):
@@ -71,7 +71,7 @@ class Covariate(Emission):
         X_full = self.get_full_matrix(X)
         n, D = X_full.shape
         _, K = resp.shape
-        beta_shape = self.parameters["beta"].shape
+        beta_shape = self.parameters["beta"].T.shape
 
         for _ in range(self.max_iter):
             logits = self._forward(X_full)
@@ -94,15 +94,17 @@ class Covariate(Emission):
 
             if self.method == "newton-raphson":
                 # Newton's update
-                self.parameters["beta"] = self.parameters["beta"].reshape(-1) - np.dot(
-                    np.linalg.pinv(H), G.reshape(-1)
-                )
+                self.parameters["beta"] = self.parameters["beta"].T.reshape(
+                    -1
+                ) - np.dot(np.linalg.pinv(H), G.reshape(-1))
                 self.parameters["beta"] = np.reshape(
                     self.parameters["beta"], beta_shape
-                )
+                ).T
             elif self.method == "gradient":
                 # follow the gradient with GD
-                self.parameters["beta"] = self.parameters["beta"] - self.lr * G / n
+                self.parameters["beta"] = (
+                    self.parameters["beta"].T - self.lr * G / n
+                ).T
 
     def log_likelihood(self, X):
         X_full = self.get_full_matrix(X)
@@ -121,7 +123,7 @@ class Covariate(Emission):
 
     def print_parameters(self, indent=1):
         print_parameters(
-            self.parameters["beta"].T,
+            self.parameters["beta"],
             "Covariate",
             np_precision=2,
             indent=indent,

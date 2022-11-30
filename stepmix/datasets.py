@@ -77,7 +77,7 @@ def data_bakk_response(n_samples, sep_level, n_classes=3, n_mm=6, random_state=N
     # Model parameters
     params = dict(
         weights=np.ones(n_classes) / n_classes,
-        measurement=dict(pis=pis),
+        measurement=dict(pis=pis.T),
         structural=dict(means=np.array(means)),
         measurement_in=n_mm,
         structural_in=n_sm,
@@ -158,7 +158,7 @@ def data_bakk_covariate(n_samples, sep_level, n_mm=6, random_state=None):
     # Measurement model parameters
     params = dict(
         weights=np.ones(n_classes) / n_classes,  # Spoof. Will be ignored
-        measurement=dict(pis=pis),
+        measurement=dict(pis=pis.T),
         measurement_in=n_mm,
     )
 
@@ -227,7 +227,7 @@ def data_generation_gaussian(n_samples, sep_level, n_mm=6, random_state=None):
     # Model parameters
     params = dict(
         weights=rho,
-        measurement=dict(pis=pis),
+        measurement=dict(pis=pis.T),
         structural=dict(means=mus, covariances=sigmas),
         measurement_in=n_mm,
         structural_in=n_sm,
@@ -297,7 +297,7 @@ def data_gaussian_diag(n_samples, sep_level, n_mm=6, random_state=None, nan_rati
     # Model parameters
     params = dict(
         weights=rho,
-        measurement=dict(pis=pis),
+        measurement=dict(pis=pis.T),
         structural=dict(means=mus, covariances=sigmas),
         measurement_in=n_mm,
         structural_in=n_sm,

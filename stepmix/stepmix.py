@@ -536,6 +536,26 @@ class StepMix(BaseEstimator):
             self._sm.set_parameters(params["structural"])
             self.structural_in_ = params["structural_in"]
 
+    def permute_classes(self, perm):
+        """Permute the latent class and associated parameters of this estimator.
+
+        Effectively remaps latent classes.
+
+        Parameters
+        ----------
+        perm : ndarray of shape  (n_classes,)
+            Integer array representing the target permutation. Should be a permutation of np.arange(n_classes).
+        """
+        check_is_fitted(self)
+        self.weights_ = self.weights_[perm]
+
+        # Permute classes of measurement model
+        self._mm.permute_classes(perm)
+
+        # Permute classes of structural model (if any)
+        if hasattr(self, "_sm"):
+            self._sm.permute_classes(perm)
+
     #######################################################################################################################
     # ESTIMATION AND EM METHODS
     def fit(self, X, Y=None, sample_weight=None, y=None):

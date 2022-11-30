@@ -12,18 +12,18 @@ class Bernoulli(Emission):
         pis = X.T @ resp
         pis /= resp.sum(axis=0, keepdims=True)
         pis = np.clip(pis, 1e-15, 1 - 1e-15)  # avoid probabilities 0 or 1
-        self.parameters["pis"] = pis
+        self.parameters["pis"] = pis.T
 
     def log_likelihood(self, X):
         # compute log emission probabilities
         pis = np.clip(
-            self.parameters["pis"], 1e-15, 1 - 1e-15
+            self.parameters["pis"].T, 1e-15, 1 - 1e-15
         )  # avoid probabilities 0 or 1
         log_eps = X @ np.log(pis) + (1 - X) @ np.log(1 - pis)
         return log_eps
 
     def sample(self, class_no, n_samples):
-        feature_weights = self.parameters["pis"][:, class_no].reshape((1, -1))
+        feature_weights = self.parameters["pis"][class_no, :].reshape((1, -1))
         K = feature_weights.shape[1]  # number of features
         X = (self.random_state.uniform(size=(n_samples, K)) < feature_weights).astype(
             int
@@ -32,7 +32,7 @@ class Bernoulli(Emission):
 
     def print_parameters(self, indent=1):
         print_parameters(
-            self.parameters["pis"].T, "Bernoulli", indent=indent, np_precision=4
+            self.parameters["pis"], "Bernoulli", indent=indent, np_precision=4
         )
 
     @property
@@ -55,7 +55,7 @@ class BernoulliNan(Bernoulli):
             resp_i = resp[is_observed[:, i]]
             pis[i] /= resp_i.sum(axis=0)
 
-        self.parameters["pis"] = pis
+        self.parameters["pis"] = pis.T
 
     def log_likelihood(self, X):
         is_observed = ~np.isnan(X)
@@ -65,7 +65,7 @@ class BernoulliNan(Bernoulli):
 
         # compute log emission probabilities
         pis = np.clip(
-            self.parameters["pis"], 1e-15, 1 - 1e-15
+            self.parameters["pis"].T, 1e-15, 1 - 1e-15
         )  # avoid probabilities 0 or 1
         log_eps = X @ np.log(pis) + ((1 - X) * is_observed) @ np.log(1 - pis)
 
@@ -96,7 +96,7 @@ class Multinoulli(Emission):
         self._cache = None
 
     def get_n_features(self):
-        n_features_x_n_outcomes = self.parameters["pis"].shape[0]
+        n_features_x_n_outcomes = self.parameters["pis"].shape[1]
         n_features = int(n_features_x_n_outcomes / self.n_outcomes)
         return n_features
 
@@ -114,17 +114,17 @@ class Multinoulli(Emission):
         pis = X.T @ resp
         pis /= resp.sum(axis=0, keepdims=True)
         pis = np.clip(pis, 1e-15, 1 - 1e-15)  # avoid probabilities 0 or 1
-        self.parameters["pis"] = pis
+        self.parameters["pis"] = pis.T
 
     def log_likelihood(self, X):
         X = self.encode_features(X)
         # compute log emission probabilities
-        pis = np.clip(self.parameters["pis"], 1e-15, 1 - 1e-15)
+        pis = np.clip(self.parameters["pis"].T, 1e-15, 1 - 1e-15)
         log_eps = X @ np.log(pis)
         return log_eps
 
     def sample(self, class_no, n_samples):
-        pis = self.parameters["pis"]
+        pis = self.parameters["pis"].T
         n_features = self.get_n_features()
         feature_weights = pis[:, class_no].reshape(n_features, self.n_outcomes)
         X = np.array(
@@ -138,7 +138,7 @@ class Multinoulli(Emission):
 
     def print_parameters(self, indent=1):
         print_parameters(
-            self.parameters["pis"].T,
+            self.parameters["pis"],
             "Multinoulli",
             n_outcomes=self.n_outcomes,
             indent=indent,
@@ -167,7 +167,7 @@ class MultinoulliNan(Multinoulli):
             resp_i = resp[is_observed[:, i]]
             pis[i] /= resp_i.sum(axis=0)
 
-        self.parameters["pis"] = pis
+        self.parameters["pis"] = pis.T
 
     def log_likelihood(self, X):
         X = self.encode_features(X)
@@ -177,6 +177,6 @@ class MultinoulliNan(Multinoulli):
         X = np.nan_to_num(X, nan=0)
 
         # compute log emission probabilities
-        pis = np.clip(self.parameters["pis"], 1e-15, 1 - 1e-15)
+        pis = np.clip(self.parameters["pis"].T, 1e-15, 1 - 1e-15)
         log_eps = X @ np.log(pis)
         return log_eps
