@@ -45,7 +45,7 @@ def find_best_permutation(reference, target, criterion=mse):
 def stack_stepmix_parameters(params):
     """Transforms a list of StepMix parameters dict into a single StepMix parameters dict.
 
-     Parameters are aggregated along a new axis."""
+    Parameters are aggregated along a new axis."""
     base = copy.deepcopy(params[0])
 
     base_keys = ["measurement"]
@@ -58,11 +58,13 @@ def stack_stepmix_parameters(params):
             if is_nested:
                 # Nested parameters have another level of dictionaries
                 for key_k in params[0][key_i][key_j].keys():
-                    base[key_i][key_j][key_k] = np.stack([p[key_i][key_j][key_k] for p in params])
+                    base[key_i][key_j][key_k] = np.stack(
+                        [p[key_i][key_j][key_k] for p in params]
+                    )
             else:
                 base[key_i][key_j] = np.stack([p[key_i][key_j] for p in params])
 
-    base['weights'] = np.stack([p['weights'] for p in params])
+    base["weights"] = np.stack([p["weights"] for p in params])
 
     return base
 
@@ -113,7 +115,9 @@ def bootstrap(estimator, X, Y=None, n_repetitions=1000):
         estimator_rep.fit(X_rep, Y_rep)
 
         # Class ordering may be different. Reorder based on best permutation of class probabilites
-        rep_class_probabilities = estimator_rep.predict_proba(X, Y)  # Inference on original samples
+        rep_class_probabilities = estimator_rep.predict_proba(
+            X, Y
+        )  # Inference on original samples
         perm = find_best_permutation(ref_class_probabilities, rep_class_probabilities)
         estimator_rep.permute_classes(perm)
 
@@ -125,8 +129,8 @@ def bootstrap(estimator, X, Y=None, n_repetitions=1000):
 
 def plot_CI(bottom, estimate, top, ax):
     """Adapted from https://stackoverflow.com/questions/59747313/how-can-i-plot-a-confidence-interval-in-python."""
-    horizontal_line_width = .25
-    color = '#2187bb'
+    horizontal_line_width = 0.25
+    color = "#2187bb"
 
     for i, (b, e, t) in enumerate(zip(bottom, estimate, top)):
         left = i - horizontal_line_width / 2
@@ -134,7 +138,7 @@ def plot_CI(bottom, estimate, top, ax):
         ax.plot([i, i], [b, t], color=color)
         ax.plot([left, right], [t, t], color=color)
         ax.plot([left, right], [b, b], color=color)
-        ax.plot(i, e, 'o', color='#f44336', markersize=4)
+        ax.plot(i, e, "o", color="#f44336", markersize=4)
         ax.set_xlabel(f"Class")
         ax.xaxis.get_major_locator().set_params(integer=True)
 
@@ -169,18 +173,20 @@ def percentiles_and_CI(estimate, bootstrapped_params, model_name, param_name, al
         bootstrapped_params = bootstrapped_params.reshape((-1, n_classes, 1))
     bottom = np.percentile(bootstrapped_params, q=alpha, axis=0)
     top = np.percentile(bootstrapped_params, q=100 - alpha, axis=0)
-    return plot_parameters_CI(bottom, estimate, top, f'{model_name} : {param_name}')
+    return plot_parameters_CI(bottom, estimate, top, f"{model_name} : {param_name}")
 
 
 def plot_all_parameters_CI(estimator_params_dict, bootstrapped_params_dict, alpha=5):
     figures = list()
 
     # Model class weights
-    fig = percentiles_and_CI(estimator_params_dict['weights'],
-                             bootstrapped_params_dict['weights'],
-                             "Latent class",
-                             "weights",
-                             alpha=alpha)
+    fig = percentiles_and_CI(
+        estimator_params_dict["weights"],
+        bootstrapped_params_dict["weights"],
+        "Latent class",
+        "weights",
+        alpha=alpha,
+    )
     figures.append(fig)
 
     # Model parameters
@@ -196,7 +202,9 @@ def plot_all_parameters_CI(estimator_params_dict, bootstrapped_params_dict, alph
                 for key_k in estimator_params_dict[key_i][key_j].keys():
                     estimate = estimator_params_dict[key_i][key_j][key_k]
                     params = bootstrapped_params_dict[key_i][key_j][key_k]
-                    fig = percentiles_and_CI(estimate, params, key_i + " : " + key_j, key_k, alpha)
+                    fig = percentiles_and_CI(
+                        estimate, params, key_i + " : " + key_j, key_k, alpha
+                    )
                     figures.append(fig)
             else:
                 estimate = estimator_params_dict[key_i][key_j]

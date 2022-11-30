@@ -27,7 +27,7 @@ class Covariate(Emission):
     """
 
     def __init__(
-            self, tol=1e-4, max_iter=1, lr=1e-3, intercept=True, method="gradient", **kwargs
+        self, tol=1e-4, max_iter=1, lr=1e-3, intercept=True, method="gradient", **kwargs
     ):
         super().__init__(**kwargs)
         self.tol = tol
@@ -94,15 +94,17 @@ class Covariate(Emission):
 
             if self.method == "newton-raphson":
                 # Newton's update
-                self.parameters["beta"] = self.parameters["beta"].T.reshape(-1) - np.dot(
-                    np.linalg.pinv(H), G.reshape(-1)
-                )
+                self.parameters["beta"] = self.parameters["beta"].T.reshape(
+                    -1
+                ) - np.dot(np.linalg.pinv(H), G.reshape(-1))
                 self.parameters["beta"] = np.reshape(
                     self.parameters["beta"], beta_shape
                 ).T
             elif self.method == "gradient":
                 # follow the gradient with GD
-                self.parameters["beta"] = (self.parameters["beta"].T - self.lr * G / n).T
+                self.parameters["beta"] = (
+                    self.parameters["beta"].T - self.lr * G / n
+                ).T
 
     def log_likelihood(self, X):
         X_full = self.get_full_matrix(X)

@@ -35,8 +35,12 @@ def fit_and_test_three_permutations(estimator, X, Y):
     preds_3 = estimator.predict_proba(X, Y)  # Class predictions
 
     assert ll_1 == ll_2 == ll_3  # Likelihoods should be invariant
-    assert not np.all(preds_1 == preds_2)  # Second permutation should have different posterior
-    assert np.all(preds_1 == preds_3)  # Third permutation should be back to original class order
+    assert not np.all(
+        preds_1 == preds_2
+    )  # Second permutation should have different posterior
+    assert np.all(
+        preds_1 == preds_3
+    )  # Third permutation should be back to original class order
 
 
 @pytest.mark.filterwarnings(
@@ -108,10 +112,9 @@ def test_nested_bootstrap(data_nested, kwargs_nested):
     """Call bootstrap procedure on a nested model and make sure it doesn't raise errors."""
     model_1 = StepMix(**kwargs_nested)
     model, params = bootstrap(model_1, data_nested, data_nested, n_repetitions=3)
-    assert isinstance(params['measurement']['model_1']['pis'][0], np.ndarray)
+    assert isinstance(params["measurement"]["model_1"]["pis"][0], np.ndarray)
 
     # Also test plots
     figures = plot_all_parameters_CI(model.get_parameters(), params)
     for f in figures:
         plt.close(f)
-

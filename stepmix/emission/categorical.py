@@ -88,7 +88,7 @@ class Multinoulli(Emission):
     """
 
     def __init__(
-            self, n_components=2, random_state=None, n_outcomes=2, integer_codes=True
+        self, n_components=2, random_state=None, n_outcomes=2, integer_codes=True
     ):
         super().__init__(n_components=n_components, random_state=random_state)
         self.n_outcomes = n_outcomes
