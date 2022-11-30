@@ -12,18 +12,18 @@ class Bernoulli(Emission):
         pis = X.T @ resp
         pis /= resp.sum(axis=0, keepdims=True)
         pis = np.clip(pis, 1e-15, 1 - 1e-15)  # avoid probabilities 0 or 1
-        self.parameters["pis"] = pis
+        self.parameters["pis"] = pis.T
 
     def log_likelihood(self, X):
         # compute log emission probabilities
         pis = np.clip(
-            self.parameters["pis"], 1e-15, 1 - 1e-15
+            self.parameters["pis"].T, 1e-15, 1 - 1e-15
         )  # avoid probabilities 0 or 1
         log_eps = X @ np.log(pis) + (1 - X) @ np.log(1 - pis)
         return log_eps
 
     def sample(self, class_no, n_samples):
-        feature_weights = self.parameters["pis"][:, class_no].reshape((1, -1))
+        feature_weights = self.parameters["pis"][class_no, :].reshape((1, -1))
         K = feature_weights.shape[1]  # number of features
         X = (self.random_state.uniform(size=(n_samples, K)) < feature_weights).astype(
             int
@@ -32,16 +32,12 @@ class Bernoulli(Emission):
 
     def print_parameters(self, indent=1):
         print_parameters(
-            self.parameters["pis"].T, "Bernoulli", indent=indent, np_precision=4
+            self.parameters["pis"], "Bernoulli", indent=indent, np_precision=4
         )
 
     @property
     def n_parameters(self):
         return self.parameters["pis"].shape[0] * self.parameters["pis"].shape[1]
-
-    def permute_classes(self, perm, axis=1):
-        # Latent classes are on first axis
-        super().permute_classes(perm, axis)
 
 
 class BernoulliNan(Bernoulli):
@@ -59,7 +55,7 @@ class BernoulliNan(Bernoulli):
             resp_i = resp[is_observed[:, i]]
             pis[i] /= resp_i.sum(axis=0)
 
-        self.parameters["pis"] = pis
+        self.parameters["pis"] = pis.T
 
     def log_likelihood(self, X):
         is_observed = ~np.isnan(X)
@@ -69,7 +65,7 @@ class BernoulliNan(Bernoulli):
 
         # compute log emission probabilities
         pis = np.clip(
-            self.parameters["pis"], 1e-15, 1 - 1e-15
+            self.parameters["pis"].T, 1e-15, 1 - 1e-15
         )  # avoid probabilities 0 or 1
         log_eps = X @ np.log(pis) + ((1 - X) * is_observed) @ np.log(1 - pis)
 
