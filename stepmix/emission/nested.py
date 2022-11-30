@@ -1,4 +1,6 @@
 """Nested emission model with support for multiple random variables."""
+import copy
+
 import numpy as np
 
 from .emission import Emission
@@ -44,6 +46,7 @@ class Nested(Emission):
 
     def __init__(self, descriptor, emission_dict, n_components, random_state, **kwargs):
         super(Nested, self).__init__(n_components, random_state)
+        descriptor = copy.deepcopy(descriptor)  # Make sure we copy descriptor to avoid affecting original
         self.models = dict()
         self.columns_per_model = list()
         self.n_components = n_components

@@ -78,6 +78,19 @@ def test_nested(data_nested, kwargs_nested):
     model_3.sample(100)
 
 
+def test_nested_twice(data_nested, kwargs_nested):
+    """Test verbose output and sampling of nested model.
+
+    Once ran into a bug where nested parameters would disappear after calling fit."""
+
+    # We use the same measurement and structural models, both nested
+    model_3 = StepMix(**kwargs_nested)
+
+    # Test fit and inference
+    model_3.fit(data_nested, data_nested)
+    model_3.fit(data_nested, data_nested)
+
+
 def test_get_descriptor(kwargs):
     """Test get_mixed_descriptor."""
     target = {
@@ -172,5 +185,3 @@ def test_categorical_encoding(kwargs):
 
     # Check if parameters are the same
     assert np.all(param_1 == param_2)
-
-
