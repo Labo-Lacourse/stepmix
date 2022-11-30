@@ -68,7 +68,7 @@ class Nested(Emission):
         i = 0
         for m, range_ in zip(self.models.values(), self.columns_per_model):
             # Slice columns to call the m-step only on the appropriate features
-            m.m_step(X[:, i : i + range_], resp)
+            m.m_step(X[:, i: i + range_], resp)
             i += range_
 
     def log_likelihood(self, X):
@@ -76,7 +76,7 @@ class Nested(Emission):
         log_eps = np.zeros((X.shape[0], self.n_components))
         for m, range_ in zip(self.models.values(), self.columns_per_model):
             # Slice columns to compute the log-likelihood only on the appropriate columns
-            log_eps += m.log_likelihood(X[:, i : i + range_])
+            log_eps += m.log_likelihood(X[:, i: i + range_])
             i += range_
 
         return log_eps
@@ -108,3 +108,7 @@ class Nested(Emission):
         for m in self.models.values():
             n = m.n_parameters
         return n
+
+    def permute_classes(self, perm, axis=0):
+        for key, item in self.models.items():
+            self.models[key].permute_classes(perm)

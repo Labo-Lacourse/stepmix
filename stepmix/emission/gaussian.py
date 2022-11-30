@@ -185,6 +185,16 @@ class Gaussian(Emission):
         n = GaussianMixture._n_parameters(self)
         return n
 
+    def permute_classes(self, perm, axis=0):
+        # Latent classes are on first axis
+        self.means_ = self.means_[perm]
+
+        # Tied has a single covariance (and precisions) shared among all classes
+        # No need to permute
+        if self.covariance_type != "tied":
+            self.covariances_ = self.covariances_[perm]
+            self.precisions_cholesky_ = self.precisions_cholesky_[perm]
+
 
 class GaussianFull(Gaussian):
     def __init__(self, **kwargs):
