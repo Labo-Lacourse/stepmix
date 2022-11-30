@@ -19,6 +19,9 @@ class Emission(ABC):
     All model parameters should be values of the self.parameters dict attribute. See the Bernoulli and GaussianUnit
     implementations for reference.
 
+    Model parameters should be ndarrays of shape (n_components, ...).
+    In other words, the FIRST AXIS should always correspond to the latent class.
+
     To add an emission model, you must :
         - Inherit from Emission.
         - Implement the m_step, log_likelihood and sample methods.
@@ -163,7 +166,7 @@ class Emission(ABC):
         """Number of free parameters in the model."""
         raise NotImplementedError
 
-    def permute_classes(self, perm, axis=0):
+    def permute_classes(self, perm):
         """Permute the latent class and associated parameters of this estimator.
 
         Effectively remaps latent classes.
@@ -177,4 +180,4 @@ class Emission(ABC):
 
         """
         for key, item in self.parameters.items():
-            self.parameters[key] = np.take(item, indices=perm, axis=axis)
+            self.parameters[key] = item[perm]
