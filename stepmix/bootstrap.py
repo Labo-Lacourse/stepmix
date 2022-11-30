@@ -1,8 +1,10 @@
 """Utility functions for model bootstrapping and confidence intervals."""
 import copy
 import itertools
+import math
 
 import numpy as np
+import matplotlib.pyplot as plt
 
 from sklearn.base import clone
 from sklearn.utils.validation import check_random_state
@@ -54,11 +56,13 @@ def stack_stepmix_parameters(params):
         for key_j in params[0][key_i].keys():
             is_nested = not isinstance(base[key_i][key_j], np.ndarray)
             if is_nested:
-                # Nested parameters have another level of dictionnaries
+                # Nested parameters have another level of dictionaries
                 for key_k in params[0][key_i][key_j].keys():
                     base[key_i][key_j][key_k] = np.stack([p[key_i][key_j][key_k] for p in params])
             else:
                 base[key_i][key_j] = np.stack([p[key_i][key_j] for p in params])
+
+    base['weights'] = np.stack([p['weights'] for p in params])
 
     return base
 
@@ -117,3 +121,75 @@ def bootstrap(estimator, X, Y=None, n_repetitions=1000):
         parameters.append(estimator_rep.get_parameters())
 
     return estimator, stack_stepmix_parameters(parameters)
+
+
+def plot_CI(bottom, estimate, top, ax):
+    """Adapted from https://stackoverflow.com/questions/59747313/how-can-i-plot-a-confidence-interval-in-python."""
+    horizontal_line_width = .25
+    color = '#2187bb'
+
+    for i, (b, e, t) in enumerate(zip(bottom, estimate, top)):
+        left = i - horizontal_line_width / 2
+        right = i + horizontal_line_width / 2
+        ax.plot([i, i], [b, t], color=color)
+        ax.plot([left, right], [t, t], color=color)
+        ax.plot([left, right], [b, b], color=color)
+        ax.plot(i, e, 'o', color='#f44336', markersize=4)
+        ax.set_xlabel(f"Class")
+        ax.xaxis.get_major_locator().set_params(integer=True)
+
+
+def plot_parameters_CI(bottom, estimate, top, title):
+    # We use n_parameter plots, with classes on the x axis and parameter values on the y axis
+    n_parameters = bottom.shape[1]
+    n_cols = min(n_parameters, 3)
+    n_rows = math.ceil(n_parameters / n_cols)
+    fig, axes = plt.subplots(n_rows, n_cols, figsize=(4 * n_cols, 4 * n_rows))
+
+    if n_parameters != 1 and axes.ndim != 1:
+        axes = axes.flatten()
+    else:
+        # Wrap axes for iteration
+        axes = [axes]
+
+    for i, (b, e, t, ax) in enumerate(zip(bottom.T, estimate.T, top.T, axes)):
+        ax.set_title(f"Parameter {i}")
+        plot_CI(b, e, t, ax)
+
+    fig.suptitle(title)
+    fig.tight_layout()
+    fig.show()
+
+
+def percentiles_and_CI(estimate, bootstrapped_params, model_name, param_name, alpha):
+    bottom = np.percentile(bootstrapped_params, q=alpha, axis=0)
+    top = np.percentile(bootstrapped_params, q=100 - alpha, axis=0)
+    plot_parameters_CI(bottom, estimate, top, f'{model_name} : {param_name}')
+
+
+def plot_all_parameters_CI(estimator_params_dict, bootstrapped_params_dict, alpha=5):
+    # Model class weights
+    percentiles_and_CI(estimator_params_dict['weights'].reshape((-1, 1)),
+                       bootstrapped_params_dict['weights'].reshape((-1, 3, 1)),
+                       "Latent class",
+                       "weights",
+                       alpha=alpha)
+
+    # Model parameters
+    base_keys = ["measurement"]
+    if "structural" in estimator_params_dict:
+        base_keys.append("structural")
+
+    for key_i in base_keys:
+        for key_j in estimator_params_dict[key_i].keys():
+            is_nested = not isinstance(estimator_params_dict[key_i][key_j], np.ndarray)
+            if is_nested:
+                # Nested parameters have another level of dictionaries
+                for key_k in estimator_params_dict[key_i][key_j].keys():
+                    estimate = estimator_params_dict[key_i][key_j][key_k]
+                    params = bootstrapped_params_dict[key_i][key_j][key_k]
+                    percentiles_and_CI(estimate, params, key_i + " : " + key_j, key_k, alpha)
+            else:
+                estimate = estimator_params_dict[key_i][key_j]
+                params = bootstrapped_params_dict[key_i][key_j]
+                percentiles_and_CI(estimate, params, key_i, key_j, alpha)
