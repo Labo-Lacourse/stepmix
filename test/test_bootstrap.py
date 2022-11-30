@@ -5,7 +5,7 @@ import pytest
 
 from stepmix import StepMix
 from stepmix.emission.build_emission import EMISSION_DICT
-from stepmix.bootstrap import find_best_permutation
+from stepmix.bootstrap import find_best_permutation, bootstrap
 
 
 def test_find_best_permutation():
@@ -65,28 +65,40 @@ def test_permutation(data, kwargs, model):
     fit_and_test_three_permutations(model_1, X, Y)
 
 
-def test_nested_permutation(data, kwargs):
+def test_nested_permutation(data_nested, kwargs_nested):
     """Test permutation of nested model."""
+    # We use the same measurement and structural models, both nested
+    model_3 = StepMix(n_steps=1, **kwargs_nested)
+
+    fit_and_test_three_permutations(model_3, data_nested, data_nested)
+
+
+@pytest.mark.filterwarnings(
+    "ignore::RuntimeWarning"
+)  # Ignore most numerical errors since we do not run the emission models on appropriate data
+@pytest.mark.filterwarnings(
+    "ignore::sklearn.exceptions.ConvergenceWarning"
+)  # Ignore convergence warnings for same reason
+@pytest.mark.parametrize("model", EMISSION_DICT.keys())
+def test_bootstrap(data, kwargs, model):
+    """Call the boostrap procedure on all models and make sure they don't raise errors.
+
+    The data may not make sense for the model. We therefore do not test a particular output here."""
     X, Y = data
 
-    # For this test, ignore the measurement and structural keys in kwargs
-    kwargs.pop("measurement")
-    kwargs.pop("structural")
+    # Use gaussians in the structural model, all other models are tested on the measurement data
+    if model.startswith("gaussian") or model.startswith("continuous"):
+        kwargs["measurement"] = "binary"
+        kwargs["structural"] = model
+    else:
+        kwargs["measurement"] = model
+        kwargs["structural"] = "gaussian_unit"
 
-    # Binary + Gaussian measurement
-    descriptor = {
-        "model_1": {"model": "bernoulli", "n_columns": 6},
-        "model_2": {"model": "gaussian_unit", "n_columns": 1},
-    }
+    model_1 = StepMix(n_steps=1, **kwargs)
+    model, params = bootstrap(model_1, X, Y, n_repetitions=3)
 
-    # Merge data in single matrix
-    Z = np.hstack((X, Y))
 
-    # We use the same measurement and structural models, both nested
-    model_3 = StepMix(
-        measurement=copy.deepcopy(descriptor),
-        structural=copy.deepcopy(descriptor),
-        **kwargs,
-    )
-
-    fit_and_test_three_permutations(model_3, Z, Z)
+def test_nested_bootstrap(data_nested, kwargs_nested):
+    """Call bootstrap procedure on a nested model and make sure it doesn't raise errors."""
+    model_1 = StepMix(**kwargs_nested)
+    model, params = bootstrap(model_1, data_nested, data_nested, n_repetitions=3)

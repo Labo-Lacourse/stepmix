@@ -63,34 +63,16 @@ def test_covariate(data_covariate, kwargs, method, intercept):
     ll_1 = model_1.score(X, Z)  # Average log-likelihood
 
 
-def test_nested(data, kwargs):
+def test_nested(data_nested, kwargs_nested):
     """Test verbose output and sampling of nested model."""
-    X, Y = data
-
-    # For this test, ignore the measurement and structural keys in kwargs
-    kwargs.pop("measurement")
-    kwargs.pop("structural")
-
-    # Binary + Gaussian measurement
-    descriptor = {
-        "model_1": {"model": "bernoulli", "n_columns": 6},
-        "model_2": {"model": "gaussian_unit", "n_columns": 1},
-    }
-
-    # Merge data in single matrix
-    Z = np.hstack((X, Y))
 
     # We use the same measurement and structural models, both nested
-    model_3 = StepMix(
-        measurement=copy.deepcopy(descriptor),
-        structural=copy.deepcopy(descriptor),
-        **kwargs,
-    )
+    model_3 = StepMix(**kwargs_nested)
 
     # Test fit and inference
-    model_3.fit(Z, Z)
-    ll_3 = model_3.score(Z, Z)
-    pred_3 = model_3.predict(Z, Z)
+    model_3.fit(data_nested, data_nested)
+    ll_3 = model_3.score(data_nested, data_nested)
+    pred_3 = model_3.predict(data_nested, data_nested)
 
     # Test sampling
     model_3.sample(100)

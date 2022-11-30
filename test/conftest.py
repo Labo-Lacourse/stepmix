@@ -1,4 +1,8 @@
+import copy
+
 import pytest
+
+import numpy as np
 
 from stepmix.datasets import (
     data_bakk_response,
@@ -22,12 +26,39 @@ def data_covariate():
 
 
 @pytest.fixture
+def data_nested():
+    X, Y, _ = data_bakk_response(n_samples=100, sep_level=0.9, random_state=42)
+    return np.hstack((X, Y))
+
+
+@pytest.fixture
 def kwargs():
     # Default estimator arguments
     kwargs = dict(
         n_components=3,
         measurement="bernoulli",
         structural="gaussian_unit",
+        random_state=42,
+        abs_tol=1e-5,
+        n_init=2,
+        max_iter=200,
+        verbose=1,
+    )
+    return kwargs
+
+
+@pytest.fixture
+def kwargs_nested():
+    descriptor = {
+        "model_1": {"model": "bernoulli", "n_columns": 6},
+        "model_2": {"model": "gaussian_unit", "n_columns": 1},
+    }
+
+    # Default estimator arguments
+    kwargs = dict(
+        n_components=3,
+        measurement=copy.deepcopy(descriptor),
+        structural=copy.deepcopy(descriptor),
         random_state=42,
         abs_tol=1e-5,
         n_init=2,
