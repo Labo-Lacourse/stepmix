@@ -88,7 +88,7 @@ class Multinoulli(Emission):
     """
 
     def __init__(
-        self, n_components=2, random_state=None, n_outcomes=2, integer_codes=True
+            self, n_components=2, random_state=None, n_outcomes=2, integer_codes=True
     ):
         super().__init__(n_components=n_components, random_state=random_state)
         self.n_outcomes = n_outcomes
@@ -96,7 +96,7 @@ class Multinoulli(Emission):
         self._cache = None
 
     def get_n_features(self):
-        n_features_x_n_outcomes = self.parameters["pis"].shape[0]
+        n_features_x_n_outcomes = self.parameters["pis"].shape[1]
         n_features = int(n_features_x_n_outcomes / self.n_outcomes)
         return n_features
 
@@ -114,17 +114,17 @@ class Multinoulli(Emission):
         pis = X.T @ resp
         pis /= resp.sum(axis=0, keepdims=True)
         pis = np.clip(pis, 1e-15, 1 - 1e-15)  # avoid probabilities 0 or 1
-        self.parameters["pis"] = pis
+        self.parameters["pis"] = pis.T
 
     def log_likelihood(self, X):
         X = self.encode_features(X)
         # compute log emission probabilities
-        pis = np.clip(self.parameters["pis"], 1e-15, 1 - 1e-15)
+        pis = np.clip(self.parameters["pis"].T, 1e-15, 1 - 1e-15)
         log_eps = X @ np.log(pis)
         return log_eps
 
     def sample(self, class_no, n_samples):
-        pis = self.parameters["pis"]
+        pis = self.parameters["pis"].T
         n_features = self.get_n_features()
         feature_weights = pis[:, class_no].reshape(n_features, self.n_outcomes)
         X = np.array(
@@ -138,7 +138,7 @@ class Multinoulli(Emission):
 
     def print_parameters(self, indent=1):
         print_parameters(
-            self.parameters["pis"].T,
+            self.parameters["pis"],
             "Multinoulli",
             n_outcomes=self.n_outcomes,
             indent=indent,
@@ -150,9 +150,6 @@ class Multinoulli(Emission):
         n_params = self.parameters["pis"].shape[0] * self.parameters["pis"].shape[1]
         return n_params
 
-    def permute_classes(self, perm, axis=1):
-        # Latent classes are on first axis
-        super().permute_classes(perm, axis)
 
 class MultinoulliNan(Multinoulli):
     """Multinoulli (categorical) emission model supporting missing values (Full Information Maximum Likelihood)."""
@@ -170,7 +167,7 @@ class MultinoulliNan(Multinoulli):
             resp_i = resp[is_observed[:, i]]
             pis[i] /= resp_i.sum(axis=0)
 
-        self.parameters["pis"] = pis
+        self.parameters["pis"] = pis.T
 
     def log_likelihood(self, X):
         X = self.encode_features(X)
@@ -180,6 +177,6 @@ class MultinoulliNan(Multinoulli):
         X = np.nan_to_num(X, nan=0)
 
         # compute log emission probabilities
-        pis = np.clip(self.parameters["pis"], 1e-15, 1 - 1e-15)
+        pis = np.clip(self.parameters["pis"].T, 1e-15, 1 - 1e-15)
         log_eps = X @ np.log(pis)
         return log_eps
