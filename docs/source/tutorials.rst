@@ -53,3 +53,10 @@ Detailed tutorials are available in notebooks :
 
     #. Selecting the number of latent classes (```n_components```);
     #. Comparing models with AIC and BIC.
+
+#. `Parameters, Bootstrapping and CI <https://colab.research.google.com/drive/14Ir08HXQ3svydbVV4jlvi1HjGnfc4fc0?usp=sharing>`_ :
+   a tutorial discussing how to:
+
+   #. Access StepMix parameters;
+   #. Bootstrap StepMix estimators;
+   #. Quickly plot confidence intervals.
