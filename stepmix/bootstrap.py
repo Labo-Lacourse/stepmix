@@ -229,4 +229,8 @@ def plot_all_parameters_CI(estimator_params_dict, bootstrapped_params_dict, alph
                 fig = percentiles_and_CI(estimate, params, key_i, key_j, alpha)
                 figures.append(fig)
 
+    # Make sure all figures have enough space for figure title
+    for f in figures:
+        f.subplots_adjust(top=0.85)
+
     return figures
