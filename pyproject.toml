@@ -26,7 +26,7 @@ keywords = ["clustering", "mixtures", "lca", "em", "latent-class-analysis", "exp
 dependencies = [
     "numpy",
     "pandas",
-    "scikit_learn >= 1.2.0",
+    "scikit-learn >= 1.0.0",
     "scipy",
     "matplotlib",
 ]
