@@ -13,7 +13,9 @@ readme = "README.md"
 authors = [
     {name = "Sacha Morin", email = "sacha.morin@mila.quebec"},
     {name = "Robin Legault", email = "robin.legault@umontreal.ca"},
+    {name = "Charles-Édouard Giguère", email = "ce.giguere@gmail.com"},
     {name = "Éric Lacourse", email = "eric.lacourse@umontreal.ca"},
+    {name = "Roxane de la Sablonnière", email = "roxane.de.la.sablonniere@umontreal.ca"},
 ]
 dynamic = ["version"]
 license = { file = "LICENSE" }
