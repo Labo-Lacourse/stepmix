@@ -111,13 +111,13 @@ class StepMix(BaseEstimator):
             - 'BCH' : Apply the empirical BCH correction from *Vermunt, 2004*.
             - 'ML' : Apply the ML correction from *Vermunt, 2010; Bakk et al., 2013*.
 
-    abs_tol : float, default=1e-6
+    abs_tol : float, default=1e-10
         The convergence threshold. EM iterations will stop when the
         lower bound average gain is below this threshold.
-    rel_tol : float, default=1e-10
+    rel_tol : float, default=0.00
         The convergence threshold. EM iterations will stop when the
         relative lower bound average gain is below this threshold.
-    max_iter : int, default=100
+    max_iter : int, default=1000
         The number of EM iterations to perform.
     n_init : int, default=1
         The number of initializations to perform. The best results are kept.
@@ -214,9 +214,9 @@ class StepMix(BaseEstimator):
         structural="gaussian_unit",
         assignment="modal",
         correction=None,
-        abs_tol=1e-6,
-        rel_tol=1e-10,
-        max_iter=100,
+        abs_tol=1e-10,
+        rel_tol=0.00,
+        max_iter=1000,
         n_init=1,
         init_params="random",
         random_state=None,
