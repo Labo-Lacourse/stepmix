@@ -399,7 +399,7 @@ class StepMix(BaseEstimator):
 
     @property
     def n_parameters(self):
-        """Get number of parameters."""
+        """Get number of free parameters."""
         check_is_fitted(self)
         n = self.n_components - 1 + self._mm.n_parameters
         if hasattr(self, "_sm"):

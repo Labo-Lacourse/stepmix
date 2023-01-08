@@ -132,4 +132,5 @@ class Covariate(Emission):
 
     @property
     def n_parameters(self):
-        return self.parameters["beta"].shape[0] * self.parameters["beta"].shape[1]
+        # Remove one degree of freedom in the classes, since the probabilities over classes sum to 1
+        return (self.parameters["beta"].shape[0] - 1) * self.parameters["beta"].shape[1]

@@ -147,8 +147,11 @@ class Multinoulli(Emission):
 
     @property
     def n_parameters(self):
-        n_params = self.parameters["pis"].shape[0] * self.parameters["pis"].shape[1]
-        return n_params
+        n_classes = self.parameters["pis"].shape[0]
+
+        # Only n-1 free parameters per outcome since probabilities sum to 1
+        n_free_parameters_per_class = (self.get_n_features() - 1) * self.n_outcomes
+        return n_classes * n_free_parameters_per_class
 
 
 class MultinoulliNan(Multinoulli):
