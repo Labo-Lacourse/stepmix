@@ -27,7 +27,7 @@ class Covariate(Emission):
     """
 
     def __init__(
-        self, tol=1e-4, max_iter=1, lr=1e-3, intercept=True, method="gradient", **kwargs
+        self, tol=1e-4, max_iter=1, lr=1e-3, intercept=True, method="newton-raphson", **kwargs
     ):
         super().__init__(**kwargs)
         self.tol = tol
