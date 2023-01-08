@@ -242,7 +242,6 @@ class StepMix(BaseEstimator):
         self.correction = correction
 
         # Additional attributes to specify the measurement and structural models
-        # Deep copy the parameters since they are potentially dictionaries
         self.measurement = measurement
         self.measurement_params = measurement_params
         self.structural = structural
