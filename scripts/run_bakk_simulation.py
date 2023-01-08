@@ -16,7 +16,7 @@ def main(n_simulations=10, latex=False, covariate=False):
         measurement="bernoulli",
         structural="covariate" if covariate else "gaussian_unit",
         n_init=1,
-        max_iter=1000,
+        max_iter=10000,
     )
 
     # Model-specific arguments
