@@ -22,10 +22,10 @@ def main(n_simulations=10, latex=False, covariate=False):
     # Model-specific arguments
     # Specify optimization parameters if we have a covariate model
     structural_params_12 = (
-        dict(method="newton-raphson", lr=0.2, max_iter=1) if covariate else dict()
+        dict(method="newton-raphson", max_iter=1) if covariate else dict()
     )
     structural_params_3 = (
-        dict(method="newton-raphson", lr=0.2, max_iter=stepmix_args["max_iter"])
+        dict(method="newton-raphson", max_iter=stepmix_args["max_iter"])
         if covariate
         else dict()
     )
@@ -84,8 +84,8 @@ def main(n_simulations=10, latex=False, covariate=False):
                         # Recenter the middle coefficient to 0 to "recreate" the reference class
                         coef = identify_coef(coeff)
 
-                        # Pick highest coefficient
-                        mu = coef[0].max()
+                        # Pick highest slope coefficient
+                        mu = coef[:, 1].max()
                     else:
                         # Get max mean
                         mu = model.get_parameters()["structural"]["means"].max()

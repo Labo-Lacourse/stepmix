@@ -179,8 +179,9 @@ def check_descriptor_nan(descriptor):
 def identify_coef(coef):
     """Find a reference configuration of the coefficients.
 
-    Pick whichever coefficient is closest to 0 in the first row of coef. Subtract the associated
-    column from all coefficients. This will give us a reference class with 0 coefficients everywhere.
+    Pick whichever coefficient is closest to 0 in the first colum of coef. Subtract the associated
+    row from all coefficients. This will give us a reference class with 0 coefficients everywhere.
+    Pick index of second largest coefficient in the slope coefficients (second column). Subtract
 
 
     Parameters
@@ -192,8 +193,8 @@ def identify_coef(coef):
     coef: np.ndarray, Corrected coefficient estimates with a null reference class.
 
     """
-    closest_id = np.argsort(coef[0])[1]
-    coef -= coef[:, closest_id].reshape((-1, 1))
+    second_coeff = coef[:, 1].argsort()[1]
+    coef -= coef[second_coeff, :].reshape((1, -1))
     return coef
 
 
