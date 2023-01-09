@@ -302,6 +302,13 @@ class StepMix(BaseEstimator):
         # Buffer to save the likelihoods of different inits for debugging
         self.lower_bound_buffer_ = list()
 
+        # Covariate models have special constraints. Check them.
+        is_covariate = utils.check_covariate(self.measurement, self.structural)
+
+        # Covariate models use a different conditional likelihood (See Bakk and Kuha, 2018), which should
+        # not include the marginal likelihood over the latent classes in the E-step
+        self._class_weight_likelihood = not is_covariate
+
     def _initialize_parameters(self, X, random_state):
         """Initialize the weights and measurement model parameters.
 
@@ -856,7 +863,8 @@ class StepMix(BaseEstimator):
             log_resp = self._mm.log_likelihood(X)
 
         # Add class prior probabilities
-        log_resp += np.log(self.weights_).reshape((1, -1))
+        if self._class_weight_likelihood:
+            log_resp += np.log(self.weights_).reshape((1, -1))
 
         # Add structural model likelihood (if structural data is provided)
         if Y is not None:

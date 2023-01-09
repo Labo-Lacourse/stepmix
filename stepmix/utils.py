@@ -128,10 +128,9 @@ def check_descriptor(descriptor, keys):
     descriptor: str or dict, parameter description.
     keys: list, list of valid emission strings.
 
-    Returns
-    -------
-    is_valid: bool, indicating a valid parameter description.
-
+    Raises
+    ------
+    ValueError : illegal model descriptor.
     """
     if isinstance(descriptor, str):
         check_in(keys, emission=descriptor)
@@ -154,6 +153,27 @@ def check_descriptor(descriptor, keys):
     else:
         raise ValueError(f"Emission descriptor should be either a string or a dict.")
 
+def check_covariate(measurement_descriptor, structural_descriptor):
+    """Check if measurement or structural models include a covariate model.
+
+    Parameters
+    ----------
+    measurement_descriptor: str or dict, measurement parameter description.
+    structural_descriptor: str or dict, structural parameter description.
+
+    Returns
+    -------
+    is_covariate: bool, indicating if measurement or structural model includes a covariate model.
+
+    Raises
+    ------
+    ValueError : illegal use of a covariate model.
+    """
+    # Models can't both be covariate
+    if measurement_descriptor == "covariate" and structural_descriptor == "covariate":
+        raise ValueError(f"Only the structural or measurement model can be a covariate model.")
+
+    return measurement_descriptor == "covariate" or structural_descriptor == "covariate"
 
 def check_descriptor_nan(descriptor):
     """Check if the provided descriptor describes a model supporting missing values.
