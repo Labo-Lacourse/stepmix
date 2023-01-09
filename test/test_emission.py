@@ -62,6 +62,7 @@ def test_covariate(data_covariate, kwargs, method, intercept):
     model_1.fit(X, Z)
     ll_1 = model_1.score(X, Z)  # Average log-likelihood
 
+
 def test_illegal_covariate(data_covariate, kwargs_nested):
     X, Z = data_covariate
 
