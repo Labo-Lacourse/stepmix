@@ -292,10 +292,10 @@ class StepMix(BaseEstimator):
 
         # Check if models support missing values
         # This is passed to sklearn.utils.check_array
-        self.force_all_finite_mm_ = (
+        self._force_all_finite_mm = (
             "allow-nan" if utils.check_descriptor_nan(self.measurement) else True
         )
-        self.force_all_finite_sm_ = (
+        self._force_all_finite_sm = (
             "allow-nan" if utils.check_descriptor_nan(self.structural) else True
         )
 
@@ -442,7 +442,7 @@ class StepMix(BaseEstimator):
                 X,
                 dtype=[np.float64, np.float32],
                 reset=True,
-                force_all_finite=self.force_all_finite_mm_,
+                force_all_finite=self._force_all_finite_mm,
             )
         if Y is not None:
             # Handle 1D Y array
@@ -451,7 +451,7 @@ class StepMix(BaseEstimator):
                 dtype=[np.float64, np.float32],
                 reset=True,
                 ensure_2d=False,
-                force_all_finite=self.force_all_finite_sm_,
+                force_all_finite=self._force_all_finite_sm,
             )
 
             # Force a matrix format
