@@ -14,7 +14,7 @@ class Nested(Emission):
     an n_columns key describing the number of columns (i.e. features for univariate variables or
     features*n_outcomes for one-hot encoded variables) associated with that model.
     For example, a model where the first 3 features are gaussian with unit variance, the next 3 are multinoulli
-    with 5 possible outcomes (for a total of 3*5=15 columns) and the last 4 are binary would be described likeso :
+    with 5 possible outcomes (for a total of 3*5=15 columns) and the last 4 are covariates would be described likeso :
 
     .. code-block:: python
 
@@ -26,23 +26,22 @@ class Nested(Emission):
            'model_2': {
                    'model': 'multinoulli',
                    'n_columns': 15,
-                   'integer_codes': False,
                    'n_outcomes': 5
             },
            'model_3': {
-                   'model': 'binary',
+                   'model': 'covariate',
                    'n_columns': 4,
+                   'method': "newton-raphson",
+                   'lr': 1e-3,
             }
         }
 
     The above model would then expect an n_samples x 22 matrix as input (3 + 15 + 4 = 22) where columns follow the same
     order of declaration (i.e., the columns of model_1 are first, columns of model_2 come after etc.).
 
-    As demonstrated by the categorical model, additional arguments can be specified and are passed to the
-    associated Emission class.
-
-    Currently, covariate models are not supported in a nested model due to differences in the likelihood of
-    mixture models and covariate models.
+    As demonstrated by the covariate argument, additional arguments can be specified and are passed to the
+    associated Emission class. Particularly useful to specify optimization parameters for
+    :class:`stepmix.emission.covariate.Covariate`.
     """
 
     def __init__(self, descriptor, emission_dict, n_components, random_state, **kwargs):
@@ -59,10 +58,6 @@ class Nested(Emission):
         for key, item in descriptor.items():
             # Read in model type and the number of features. Other keys are used as arguments
             model = item.pop("model")
-
-            if model == "covariate":
-                raise ValueError(f"Covariate model cannot be used as part of a nested model.")
-
             n_columns = item.pop("n_columns")
 
             # Build model

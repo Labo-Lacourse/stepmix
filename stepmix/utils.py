@@ -155,11 +155,14 @@ def check_descriptor(descriptor, keys):
 
 def check_covariate(measurement_descriptor, structural_descriptor):
     """Check if measurement or structural models include a covariate model.
+    
+    Only one covariate model should be used in an entire StepMix estimator, be it in the measurement or the 
+    structural model and including in nested models.
 
     Parameters
     ----------
     measurement_descriptor: str or dict, measurement parameter description.
-    structural_descriptor: str or dict, structural parameter description.
+    structural_descriptor: str, dict or None, structural parameter description.
 
     Returns
     -------
@@ -169,11 +172,32 @@ def check_covariate(measurement_descriptor, structural_descriptor):
     ------
     ValueError : illegal use of a covariate model.
     """
-    # Models can't both be covariate
-    if measurement_descriptor == "covariate" and structural_descriptor == "covariate":
-        raise ValueError(f"Only the structural or measurement model can be a covariate model.")
+    def is_covariate(desc):
+        if isinstance(desc, str):
+            return desc == "covariate"
+        elif isinstance(desc, dict):
+            # Iterate through all nested models to identify covariate models
+            covariate_count = 0
+            for key, value in desc.items():
+                if value["model"] == "covariate":
+                    covariate_count += 1
+            if covariate_count > 1:
+                raise ValueError("Only one covariate model should be used in an entire StepMix estimator, be it in "
+                                 "the measurement or the structural model and including in nested models.")
+            return covariate_count == 1
+        elif desc is None:
+            return False
+        else:
+            raise ValueError("Wrong model descriptor. Model descriptors should be dictionaries or string.")
 
-    return measurement_descriptor == "covariate" or structural_descriptor == "covariate"
+    m_covariate = is_covariate(measurement_descriptor)
+    s_covariate = is_covariate(structural_descriptor)
+
+    # Models can't both be covariate models
+    if m_covariate and s_covariate:
+        raise ValueError(f"Only the structural or measurement model can be a covariate model, not both.")
+
+    return m_covariate or s_covariate
 
 def check_descriptor_nan(descriptor):
     """Check if the provided descriptor describes a model supporting missing values.
