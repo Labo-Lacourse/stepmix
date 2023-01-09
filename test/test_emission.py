@@ -62,6 +62,43 @@ def test_covariate(data_covariate, kwargs, method, intercept):
     model_1.fit(X, Z)
     ll_1 = model_1.score(X, Z)  # Average log-likelihood
 
+def test_illegal_covariate(data_covariate, kwargs_nested):
+    X, Z = data_covariate
+
+    # Make sure we can't have two covariate models.
+    with pytest.raises(ValueError) as e_info:
+        model_1 = StepMix(
+            n_steps=1,
+            measurement="covariate",
+            structural="covariate",
+        )
+        model_1.fit(X, Z)
+
+    kwargs_covariate = copy.deepcopy(kwargs_nested)
+    kwargs_covariate["measurement"]["model_1"]["model"] = "covariate"
+    with pytest.raises(ValueError) as e_info:
+        model_1 = StepMix(
+            n_steps=1,
+            measurement=kwargs_covariate["measurement"],
+            structural="covariate",
+        )
+        model_1.fit(X, Z)
+    with pytest.raises(ValueError) as e_info:
+        model_1 = StepMix(
+            n_steps=1,
+            measurement="covariate",
+            structural=kwargs_covariate["measurement"],
+        )
+        model_1.fit(X, Z)
+
+    kwargs_covariate["measurement"]["model_2"]["model"] = "covariate"
+    with pytest.raises(ValueError) as e_info:
+        model_1 = StepMix(
+            n_steps=1,
+            measurement=kwargs_covariate["measurement"],
+        )
+        model_1.fit(X)
+
 
 def test_nested(data_nested, kwargs_nested):
     """Test verbose output and sampling of nested model."""
