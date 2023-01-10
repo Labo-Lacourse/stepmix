@@ -1,5 +1,6 @@
 """Reproduction of results from Bakk & Kuha (2018)"""
 import argparse
+import warnings
 
 import pandas as pd
 import numpy as np
@@ -16,7 +17,8 @@ def main(n_simulations=10, latex=False, covariate=False):
         measurement="bernoulli",
         structural="covariate" if covariate else "gaussian_unit",
         n_init=1,
-        max_iter=10000,
+        max_iter=10000,  # Latent Gold default : 250 EM iterations + 50 NR iterations
+        abs_tol=1e-8     # Latent Gold default : 1e-8
     )
 
     # Model-specific arguments
@@ -87,8 +89,9 @@ def main(n_simulations=10, latex=False, covariate=False):
                         # Pick highest slope coefficient
                         mu = coef[:, 1].max()
                     else:
-                        # Get max mean
-                        mu = model.get_parameters()["structural"]["means"].max()
+                        # Get highest mean
+                        coef = model.get_parameters()["structural"]["means"]
+                        mu = coef.max()
 
                     # Save results
                     result_i = {
@@ -97,7 +100,14 @@ def main(n_simulations=10, latex=False, covariate=False):
                         "Model": name,
                         "mu": mu,
                     }
-                    results.append(result_i)
+
+                    # Test if the coefficients are degenerate
+                    # This tends to happen (rarely) with the BCH correction in the low separation case
+                    # with a covariate structural
+                    if np.absolute(coef).max() < 1000:
+                        results.append(result_i)
+                    else:
+                        warnings.warn(f"Model {name} with sample size {size} appears degenerate. Excluding run from results.")
 
     # Use pandas to average and print results
     df = pd.DataFrame(results)
