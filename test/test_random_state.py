@@ -111,6 +111,7 @@ def test_diff_inits(data_covariate, kwargs_covariate):
     assert not np.all(ll_2 == ll_2[0])
     assert not np.all(ll_3 == ll_3[0])
 
+
 def test_sampling_rng():
     """Make sure the measurement and structural models don't sample
     the same data (e.g., they shouldn't share independent generators

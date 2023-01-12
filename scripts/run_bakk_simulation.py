@@ -18,7 +18,7 @@ def main(n_simulations=10, latex=False, covariate=False):
         structural="covariate" if covariate else "gaussian_unit",
         n_init=1,
         max_iter=250,  # Latent Gold default : 250 EM iterations + 50 NR iterations
-        abs_tol=1e-8     # Latent Gold default : 1e-8
+        abs_tol=1e-8,  # Latent Gold default : 1e-8
     )
 
     # Model-specific arguments
@@ -107,7 +107,9 @@ def main(n_simulations=10, latex=False, covariate=False):
                     if np.absolute(coef).max() < 1000:
                         results.append(result_i)
                     else:
-                        warnings.warn(f"Model {name} with sample size {size} appears degenerate. Excluding run from results.")
+                        warnings.warn(
+                            f"Model {name} with sample size {size} appears degenerate. Excluding run from results."
+                        )
 
     # Use pandas to average and print results
     df = pd.DataFrame(results)
