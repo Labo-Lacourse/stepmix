@@ -72,7 +72,7 @@ def data_bakk_response(n_samples, sep_level, n_classes=3, n_mm=6, random_state=N
     pis = bakk_measurements(n_classes, n_mm, sep_level)
 
     # Structural means
-    means = [[-1], [0], [1]]
+    means = [[-1], [1], [0]]
 
     # Model parameters
     params = dict(
