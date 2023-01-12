@@ -17,7 +17,7 @@ def main(n_simulations=10, latex=False, covariate=False):
         measurement="bernoulli",
         structural="covariate" if covariate else "gaussian_unit",
         n_init=1,
-        max_iter=10000,  # Latent Gold default : 250 EM iterations + 50 NR iterations
+        max_iter=250,  # Latent Gold default : 250 EM iterations + 50 NR iterations
         abs_tol=1e-8     # Latent Gold default : 1e-8
     )
 
