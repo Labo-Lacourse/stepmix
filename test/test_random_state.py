@@ -110,3 +110,31 @@ def test_diff_inits(data_covariate, kwargs_covariate):
     # a bit different
     assert not np.all(ll_2 == ll_2[0])
     assert not np.all(ll_3 == ll_3[0])
+
+def test_sampling_rng():
+    """Make sure the measurement and structural models don't sample
+    the same data (e.g., they shouldn't share independent generators
+    with the same seed)"""
+    # Structural means
+    means = [[-1], [1], [0]]
+
+    # Model parameters
+    params = dict(
+        weights=np.ones(3) / 3,
+        measurement=dict(means=np.array(means)),
+        structural=dict(means=np.array(means)),
+        measurement_in=1,
+        structural_in=1,
+    )
+
+    # Sample data
+    generator = StepMix(
+        n_components=3,
+        measurement="gaussian_unit",
+        structural="gaussian_unit",
+        random_state=42,
+    )
+    generator.set_parameters(params)
+    X, Y, labels = generator.sample(10)
+
+    assert not np.array_equal(X, Y)
