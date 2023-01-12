@@ -524,11 +524,11 @@ class StepMix(BaseEstimator):
 
         """
         self.weights_ = params["weights"]
+        random_state = check_random_state(self.random_state)
 
         if not hasattr(self, "_mm"):
-            # Init model without random initializations (we will provide one)
             self._initialize_parameters_measurement(
-                None, random_state=self.random_state, init_emission=False
+                None, random_state=random_state, init_emission=False
             )
         self._mm.set_parameters(params["measurement"])
         self.measurement_in_ = params["measurement_in"]
@@ -537,7 +537,7 @@ class StepMix(BaseEstimator):
             if not hasattr(self, "_sm"):
                 # Init model without random initializations (we will provide one)
                 self._initialize_parameters_structural(
-                    None, random_state=self.random_state, init_emission=False
+                    None, random_state=random_state, init_emission=False
                 )
             self._sm.set_parameters(params["structural"])
             self.structural_in_ = params["structural_in"]
@@ -1141,7 +1141,8 @@ class StepMix(BaseEstimator):
             )
 
         # Sample
-        rng = check_random_state(self.random_state)
+        # Use measurement model generator
+        rng = self._mm.random_state
         if labels is None:
             n_samples_comp = rng.multinomial(n_samples, self.weights_)
         else:
