@@ -7,7 +7,7 @@ StepMix
 
 A Python package following the scikit-learn API for model-based clustering and generalized mixture modeling (latent class/profile analysis) of continuous and categorical data. 
 StepMix handles missing values through Full Information Maximum Likelihood (FIML) and provides multiple stepwise Expectation-Maximization (EM) estimation methods based on pseudolikelihood theory. 
-Additional features include support for covariates and distal outcomes, various simulation utilities, and non-parametric bootstrapping, which allow inference
+Additional features include support for covariates and distal outcomes, various simulation utilities, and non-parametric bootstrapping, which allows inference
 in semi-supervised and unsupervised settings.
 
 
