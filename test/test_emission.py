@@ -43,6 +43,41 @@ def test_emissions(data, kwargs, model):
         # Test sampling
         model_1.sample(100)
 
+@pytest.mark.filterwarnings(
+    "ignore::RuntimeWarning"
+)  # Ignore most numerical errors since we do not run the emission models on appropriate data
+@pytest.mark.filterwarnings(
+    "ignore::sklearn.exceptions.ConvergenceWarning"
+)  # Ignore convergence warnings for same reason
+def test_nested_with_cat_data():
+    """Fit a mixed features model with different datasets for training and prediction."""
+    df = pd.DataFrame(
+        {
+            # continuous
+            "A": np.random.normal(0, 1, 100),
+            # categorical encoded as integers
+            "B": np.random.choice([0, 1, 2, 3, 4, 5], 100),
+            # binary
+            "C": np.random.choice([0, 1], 100),
+        }
+    )
+
+    mixed_data, mixed_descriptor = get_mixed_descriptor(
+        dataframe=df,
+        continuous=['A'],
+        categorical=['B'],
+        binary=['C'],
+    )
+
+    X_train, X_test = mixed_data[:80], mixed_data[80:]
+
+    model = StepMix(n_components=3, measurement=mixed_descriptor, verbose=1, random_state=123)
+
+    model.fit(X_train)
+
+    preds = model.predict(X_test)
+    
+    assert preds.shape == (20,)
 
 @pytest.mark.parametrize("intercept", [False, True])
 @pytest.mark.parametrize("method", ["gradient", "newton-raphson"])
