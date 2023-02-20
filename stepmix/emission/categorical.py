@@ -101,7 +101,7 @@ class Multinoulli(Emission):
         return n_features
 
     def encode_features(self, X):
-        if self.integer_codes and self._cache is None:
+        if self.integer_codes:
             self._cache, self.n_outcomes = max_one_hot(X)
 
         if self.integer_codes:
