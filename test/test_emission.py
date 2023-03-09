@@ -258,3 +258,13 @@ def test_categorical_encoding(kwargs):
 
     # Check if parameters are the same
     assert np.all(param_1 == param_2)
+
+def test_categorical_less_categories_in_test():
+    train = np.random.choice([0, 1, 2, 3], 100).reshape((-1, 1))
+    test = np.random.choice([0, 1, 3], 100).reshape((-1, 1))
+
+    model = StepMix(n_components=3, measurement="categorical", verbose=1, random_state=123)
+
+    model.fit(train)
+
+    preds = model.predict(test)
