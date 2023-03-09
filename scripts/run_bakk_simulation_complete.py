@@ -24,22 +24,19 @@ def main(n_simulations=10, latex=False, covariate=False):
     # Model specific arguments
     structural_descriptor = {
         # Covariate
-        'covariate': {
-            'model': 'covariate',
-            'n_columns': 1,
-            'method':"newton-raphson",
-            'max_iter':1
+        "covariate": {
+            "model": "covariate",
+            "n_columns": 1,
+            "method": "newton-raphson",
+            "max_iter": 1,
         },
         # Response
-        'response': {
-            'model': 'gaussian_unit_nan',
-            'n_columns': 1
-        }
+        "response": {"model": "gaussian_unit_nan", "n_columns": 1},
     }
-    
+
     # Since 3 step only calls M-Step one time, we allow the covariate model to take multiple newton-raphson steps
     structural_descriptor_3 = copy.deepcopy(structural_descriptor)
-    structural_descriptor_3['covariate']['max_iter'] = stepmix_args["max_iter"]
+    structural_descriptor_3["covariate"]["max_iter"] = stepmix_args["max_iter"]
 
     models = {
         "1-step": dict(n_steps=1, structural=structural_descriptor),
@@ -74,10 +71,13 @@ def main(n_simulations=10, latex=False, covariate=False):
         # Loop over sample sizes
         for size in [500, 1000, 2000]:
             # Loop over ratio of missing values
-            for nan_ratio in [.00, .25, .50]:
+            for nan_ratio in [0.00, 0.25, 0.50]:
                 # Generate dataset
                 X, Y, _ = data_bakk_complete(
-                    n_samples=size, sep_level=.8, nan_ratio=nan_ratio, random_state=random_state
+                    n_samples=size,
+                    sep_level=0.8,
+                    nan_ratio=nan_ratio,
+                    random_state=random_state,
                 )
 
                 # Loop over models

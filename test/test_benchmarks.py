@@ -70,6 +70,7 @@ def test_steps_ll(data_large, kwargs_large, n_steps_1, n_steps_2):
 
     assert ll_1 < ll_2
 
+
 @pytest.mark.parametrize("n_steps_1,n_steps_2", [(3, 2), (2, 1)])
 def test_steps_ll_complete(data_complete_large, kwargs_complete, n_steps_1, n_steps_2):
     """Test binary measurements + gaussian unit structural response + covariate on Bakk data with multiple steps.

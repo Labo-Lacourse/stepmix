@@ -95,7 +95,9 @@ class Multinoulli(Emission):
         self.integer_codes = integer_codes
 
         if n_outcomes is None and not integer_codes:
-            raise ValueError("n_outcomes can only be set to None with integer_codes=True.")
+            raise ValueError(
+                "n_outcomes can only be set to None with integer_codes=True."
+            )
 
     def get_n_features(self):
         n_features_x_n_outcomes = self.parameters["pis"].shape[1]

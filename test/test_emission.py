@@ -43,6 +43,7 @@ def test_emissions(data, kwargs, model):
         # Test sampling
         model_1.sample(100)
 
+
 @pytest.mark.filterwarnings(
     "ignore::RuntimeWarning"
 )  # Ignore most numerical errors since we do not run the emission models on appropriate data
@@ -64,20 +65,23 @@ def test_nested_with_cat_data():
 
     mixed_data, mixed_descriptor = get_mixed_descriptor(
         dataframe=df,
-        continuous=['A'],
-        categorical=['B'],
-        binary=['C'],
+        continuous=["A"],
+        categorical=["B"],
+        binary=["C"],
     )
 
     X_train, X_test = mixed_data[:80], mixed_data[80:]
 
-    model = StepMix(n_components=3, measurement=mixed_descriptor, verbose=1, random_state=123)
+    model = StepMix(
+        n_components=3, measurement=mixed_descriptor, verbose=1, random_state=123
+    )
 
     model.fit(X_train)
 
     preds = model.predict(X_test)
-    
+
     assert preds.shape == (20,)
+
 
 @pytest.mark.parametrize("intercept", [False, True])
 @pytest.mark.parametrize("method", ["gradient", "newton-raphson"])
@@ -242,7 +246,9 @@ def test_categorical_encoding(kwargs):
 
     # Model on integer codes
     model_1 = StepMix(
-        measurement="categorical", measurement_params=dict(integer_codes=True, n_outcomes=None), **kwargs
+        measurement="categorical",
+        measurement_params=dict(integer_codes=True, n_outcomes=None),
+        **kwargs,
     )
     model_1.fit(data_int)
     param_1 = model_1.get_parameters()["measurement"]["pis"]
@@ -259,11 +265,14 @@ def test_categorical_encoding(kwargs):
     # Check if parameters are the same
     assert np.all(param_1 == param_2)
 
+
 def test_categorical_less_categories_in_test():
     train = np.random.choice([0, 1, 2, 3], 100).reshape((-1, 1))
-    test = np.random.choice([0, 1, 2], 100).reshape((-1, 1)) # no class 3
+    test = np.random.choice([0, 1, 2], 100).reshape((-1, 1))  # no class 3
 
-    model = StepMix(n_components=3, measurement="categorical", verbose=1, random_state=123)
+    model = StepMix(
+        n_components=3, measurement="categorical", verbose=1, random_state=123
+    )
 
     model.fit(train)
 

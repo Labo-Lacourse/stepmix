@@ -224,7 +224,7 @@ def check_descriptor_nan(descriptor):
         # Models supporting missing values end with nan
         return descriptor.endswith("nan")
     elif isinstance(descriptor, dict):
-        return any([v['model'].endswith("nan") for v in descriptor.values()])
+        return any([v["model"].endswith("nan") for v in descriptor.values()])
     else:
         raise ValueError(f"Emission descriptor should be either a string or a dict.")
 

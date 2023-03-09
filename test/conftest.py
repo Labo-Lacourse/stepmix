@@ -97,15 +97,19 @@ def data_covariate_large():
     X, Z, _ = data_bakk_covariate(n_samples=1000, sep_level=0.7, random_state=42)
     return X, Z
 
+
 @pytest.fixture
 def data_complete_large():
     X, Y, labels = data_bakk_complete(n_samples=1000, sep_level=0.7, random_state=42)
     return X, Y
 
+
 @pytest.fixture
 def kwargs_complete():
-    structural_descriptor = {'covariate': {'model': 'covariate', 'n_columns': 1},
-                             'gaussian_unit': {'model': 'gaussian_unit', 'n_columns': 1}}
+    structural_descriptor = {
+        "covariate": {"model": "covariate", "n_columns": 1},
+        "gaussian_unit": {"model": "gaussian_unit", "n_columns": 1},
+    }
     kwargs = dict(
         n_components=3,
         measurement="bernoulli",

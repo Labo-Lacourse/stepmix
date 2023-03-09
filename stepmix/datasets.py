@@ -7,6 +7,7 @@ from scipy.special import softmax
 
 from .stepmix import StepMix
 
+
 def random_nan(X, Y, nan_ratio, random_state=None):
     """Randomly replace values in X and Y with NaNs with probability nan_ratio."""
     (n_samples, n_mm), n_sm = X.shape, Y.shape[1]
