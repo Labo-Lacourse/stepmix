@@ -69,6 +69,13 @@ class Nested(Emission):
             self.models[key] = m
             self.columns_per_model.append(n_columns)
 
+    def initialize(self, X, resp, random_state=None):
+        i = 0
+        for m, range_ in zip(self.models.values(), self.columns_per_model):
+            # Slice columns to call the m-step only on the appropriate features
+            m.initialize(X[:, i : i + range_], resp)
+            i += range_
+
     def m_step(self, X, resp):
         i = 0
         for m, range_ in zip(self.models.values(), self.columns_per_model):
