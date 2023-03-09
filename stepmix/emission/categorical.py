@@ -88,12 +88,14 @@ class Multinoulli(Emission):
     """
 
     def __init__(
-        self, n_components=2, random_state=None, n_outcomes=2, integer_codes=True
+        self, n_components=2, random_state=None, n_outcomes=None, integer_codes=True
     ):
         super().__init__(n_components=n_components, random_state=random_state)
         self.n_outcomes = n_outcomes
         self.integer_codes = integer_codes
-        self._cache = None
+
+        if n_outcomes is None and not integer_codes:
+            raise ValueError("n_outcomes can only be set to None with integer_codes=True.")
 
     def get_n_features(self):
         n_features_x_n_outcomes = self.parameters["pis"].shape[1]
@@ -102,12 +104,10 @@ class Multinoulli(Emission):
 
     def encode_features(self, X):
         if self.integer_codes:
-            self._cache, self.n_outcomes = max_one_hot(X)
+            # Self.n_outcomes will only be updated if it is still None
+            X, self.n_outcomes = max_one_hot(X, max_n_outcomes=self.n_outcomes)
 
-        if self.integer_codes:
-            return self._cache
-        else:
-            return X
+        return X
 
     def m_step(self, X, resp):
         X = self.encode_features(X)

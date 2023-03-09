@@ -448,7 +448,7 @@ def print_parameters(
                     print(indent_str + f"Class {i + 1} : {p:.2f}")
 
 
-def max_one_hot(array):
+def max_one_hot(array, max_n_outcomes=None):
     """Multiple categorical one-hot encoding.
 
     Takes an n_samples x n_features array of integer-encoded categorical features and returns an
@@ -480,6 +480,9 @@ def max_one_hot(array):
     ----------
     array : ndarray of shape  (n_samples, n_features)
         Integer-encoded categorical data. Will be float due to sklearn casting. We'll cast back to ints.
+    max_n_outcomes : max_n_outcomes, default=None
+        Maximum number of outcomes. Each column will max_n_outcomes associated columns. If None, will be inferred
+        from the data.
 
     Returns
     -------
@@ -487,18 +490,15 @@ def max_one_hot(array):
         One-hot encoded categories.
 
     max_n_outcomes : max_n_outcomes
-        Validated structural data or None if not provided.
+        Maximum number of outcomes. Each column will max_n_outcomes associated columns.
 
     """
     n_samples = array.shape[0]
     n_features = array.shape[1]
 
-    # First iterate over columns and make sure the categories are 0-indexed
-    for c in range(array.shape[1]):
-        _, array[:, c] = np.unique(array[:, c], return_inverse=True)
-
     # Get maximal number of outcomes
-    max_n_outcomes = int(array.max() + 1)
+    if max_n_outcomes is None:
+        max_n_outcomes = int(array.max() + 1)
 
     # Create one-hot encoding
     one_hot = np.zeros((n_samples, array.shape[1] * max_n_outcomes))

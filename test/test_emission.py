@@ -242,7 +242,7 @@ def test_categorical_encoding(kwargs):
 
     # Model on integer codes
     model_1 = StepMix(
-        measurement="categorical", measurement_params=dict(integer_codes=True), **kwargs
+        measurement="categorical", measurement_params=dict(integer_codes=True, n_outcomes=None), **kwargs
     )
     model_1.fit(data_int)
     param_1 = model_1.get_parameters()["measurement"]["pis"]
@@ -250,7 +250,7 @@ def test_categorical_encoding(kwargs):
     # Model on one-hot codes
     model_2 = StepMix(
         measurement="categorical",
-        measurement_params=dict(integer_codes=False),
+        measurement_params=dict(integer_codes=False, n_outcomes=2),
         **kwargs,
     )
     model_2.fit(data_one_hot)
@@ -261,7 +261,7 @@ def test_categorical_encoding(kwargs):
 
 def test_categorical_less_categories_in_test():
     train = np.random.choice([0, 1, 2, 3], 100).reshape((-1, 1))
-    test = np.random.choice([0, 1, 3], 100).reshape((-1, 1))
+    test = np.random.choice([0, 1, 2], 100).reshape((-1, 1)) # no class 3
 
     model = StepMix(n_components=3, measurement="categorical", verbose=1, random_state=123)
 
