@@ -7,6 +7,26 @@ from scipy.special import softmax
 
 from .stepmix import StepMix
 
+def random_nan(X, Y, nan_ratio, random_state=None):
+    """Randomly replace values in X and Y with NaNs with probability nan_ratio."""
+    (n_samples, n_mm), n_sm = X.shape, Y.shape[1]
+    rng = np.random.default_rng(random_state)
+
+    observed_mask = rng.random((n_samples, n_mm + n_sm)) > nan_ratio
+
+    if not observed_mask.sum(axis=1).all():
+        warnings.warn(
+            "Some samples are completely unobserved. This will likely result in downstream errors. Reduce the nan_ratio or try another"
+            "seed."
+        )
+
+    mm_mask, sm_mask = observed_mask[:, :n_mm], observed_mask[:, n_mm:]
+
+    X = np.where(mm_mask, X, np.nan)
+    Y = np.where(sm_mask, Y, np.nan)
+
+    return X, Y
+
 
 def bakk_measurements(n_classes, n_mm, sep_level):
     """Binary measurement parameters in Bakk 2018.
@@ -172,7 +192,7 @@ def data_bakk_covariate(n_samples, sep_level, n_mm=6, random_state=None):
     return X, Y, labels
 
 
-def data_bakk_complete(n_samples, sep_level, n_mm=6, random_state=None):
+def data_bakk_complete(n_samples, sep_level, n_mm=6, random_state=None, nan_ratio=0.0):
     """Stitch together data_bakk_covariate and data_bakk_response to get a complete model."""
 
     # Get covariate data
@@ -197,6 +217,10 @@ def data_bakk_complete(n_samples, sep_level, n_mm=6, random_state=None):
     generator.set_parameters(params)
 
     Y_o, _, _ = generator.sample(n_samples, labels=labels)
+
+    # Drop some values in measurements and response
+    if nan_ratio:
+        X, Y_o = random_nan(X, Y_o, nan_ratio, random_state=random_state)
 
     return X, np.hstack((Y_p, Y_o)), labels
 
