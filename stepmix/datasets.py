@@ -17,7 +17,7 @@ def random_nan(X, Y, nan_ratio, random_state=None):
     if not observed_mask.sum(axis=1).all():
         warnings.warn(
             "Some samples are completely unobserved. This will likely result in downstream errors. Reduce the nan_ratio or try another"
-            "seed."
+            " seed."
         )
 
     mm_mask, sm_mask = observed_mask[:, :n_mm], observed_mask[:, n_mm:]
