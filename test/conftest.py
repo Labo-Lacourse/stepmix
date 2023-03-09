@@ -7,6 +7,7 @@ import numpy as np
 from stepmix.datasets import (
     data_bakk_response,
     data_bakk_covariate,
+    data_bakk_complete,
     data_generation_gaussian,
     data_gaussian_diag,
 )
@@ -95,6 +96,27 @@ def data_large():
 def data_covariate_large():
     X, Z, _ = data_bakk_covariate(n_samples=1000, sep_level=0.7, random_state=42)
     return X, Z
+
+@pytest.fixture
+def data_complete_large():
+    X, Y, labels = data_bakk_complete(n_samples=1000, sep_level=0.7, random_state=42)
+    return X, Y
+
+@pytest.fixture
+def kwargs_complete():
+    structural_descriptor = {'covariate': {'model': 'covariate', 'n_columns': 1},
+                             'gaussian_unit': {'model': 'gaussian_unit', 'n_columns': 1}}
+    kwargs = dict(
+        n_components=3,
+        measurement="bernoulli",
+        structural=structural_descriptor,
+        random_state=42,
+        abs_tol=1e-5,
+        n_init=10,
+        max_iter=300,
+        verbose=0,
+    )
+    return kwargs
 
 
 @pytest.fixture

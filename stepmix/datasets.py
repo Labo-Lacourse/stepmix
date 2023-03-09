@@ -172,6 +172,35 @@ def data_bakk_covariate(n_samples, sep_level, n_mm=6, random_state=None):
     return X, Y, labels
 
 
+def data_bakk_complete(n_samples, sep_level, n_mm=6, random_state=None):
+    """Stitch together data_bakk_covariate and data_bakk_response to get a complete model."""
+
+    # Get covariate data
+    X, Y_p, labels = data_bakk_covariate(n_samples, sep_level, n_mm, random_state)
+
+    # Now use the labels to conditionally sample from a response model
+    means = [[-1], [1], [0]]
+
+    # Model parameters
+    params = dict(
+        weights=np.ones(3) / 3,
+        measurement=dict(means=np.array(means)),
+        measurement_in=1,
+    )
+
+    # Sample data
+    generator = StepMix(
+        n_components=3,
+        measurement="gaussian_unit",
+        random_state=random_state,
+    )
+    generator.set_parameters(params)
+
+    Y_o, _, _ = generator.sample(n_samples, labels=labels)
+
+    return X, np.hstack((Y_p, Y_o)), labels
+
+
 # Data generation: Simulated problems from IFT6269 Hwk 4
 def data_generation_gaussian(n_samples, sep_level, n_mm=6, random_state=None):
     """Bakk binary measurement model with more complex gaussian structural model.

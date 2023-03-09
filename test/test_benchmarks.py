@@ -70,6 +70,23 @@ def test_steps_ll(data_large, kwargs_large, n_steps_1, n_steps_2):
 
     assert ll_1 < ll_2
 
+@pytest.mark.parametrize("n_steps_1,n_steps_2", [(3, 2), (2, 1)])
+def test_steps_ll_complete(data_complete_large, kwargs_complete, n_steps_1, n_steps_2):
+    """Test binary measurements + gaussian unit structural response + covariate on Bakk data with multiple steps.
+
+    We expect 1-step > 2-step > 3-step in terms of final likelihood."""
+    X, Y = data_complete_large
+
+    model_1 = StepMix(n_steps=n_steps_1, **kwargs_complete)
+    model_1.fit(X, Y)
+    ll_1 = model_1.score(X, Y)
+
+    model_2 = StepMix(n_steps=n_steps_2, **kwargs_complete)
+    model_2.fit(X, Y)
+    ll_2 = model_2.score(X, Y)
+
+    assert ll_1 < ll_2
+
 
 @pytest.mark.parametrize("corr_1,corr_2", [(None, "BCH"), (None, "ML")])
 def test_corrections_ll(data_large, kwargs_large, corr_1, corr_2):
