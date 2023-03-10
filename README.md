@@ -21,21 +21,21 @@ Detailed tutorials are available in notebooks :
 1. [Latent Class Analysis with StepMix](https://colab.research.google.com/drive/1KAxcvxjL_vB2lAG9e47we7hrf_2fR1eK?usp=sharing) : 
 an in-depth look at how latent class models can be defined with StepMix. The tutorial uses the Iris Dataset as an example
 and covers :
-   1. Continuous LCA models;
+   1. Continuous Gaussian mixture models (latent profile analysis;
    2. Binary LCA models;
    3. Categorical LCA models;
-   3. Mixed LCA models (continuous and categorical data);
-   5. Missing Values.
+   3. Mixed variables mixture models (continuous and categorical data);
+   5. Missing Values through Full-Information Maximum Likelihood.
 2. [Stepwise Estimation with StepMix](https://colab.research.google.com/drive/1T_UObkN5Y-iFTKiun0zOkKk7LjtMeV25?usp=sharing) :
     a tutorial demonstrating how to define measurement and structural models. The tutorial discusses:
-   1. LCA models with response variables;
+   1. LCA models with distal outcomes;
    2. LCA models with covariates; 
    3. 1-step, 2-step and 3-step estimation;
-   4. Corrections and other options for 3-step estimation.
+   4. Corrections (BCH or ML) and other options for 3-step estimation.
 3. [Model Selection](https://colab.research.google.com/drive/1iyFTD-D2wn88_vd-qxXkovIuWHRtU7V8?usp=sharing) :
    a short tutorial discussing:
-    1. Selecting the number of latent classes (```n_components```);
-    2. Comparing models with AIC and BIC.
+    1. Selecting the number of components in a mixture model (```n_components```);
+    2. Comparing models with fit indices: AIC and BIC.
 4. [Parameters, Bootstrapping and CI](https://colab.research.google.com/drive/14Ir08HXQ3svydbVV4jlvi1HjGnfc4fc0?usp=sharing) :
    a tutorial discussing how to:
    1. Access StepMix parameters;
@@ -69,6 +69,7 @@ methods are available for 3-step estimation.
 # References
 - Bolck, A., Croon, M., and Hagenaars, J. Estimating latent structure models with categorical variables: One-step
 versus three-step estimators. Political analysis, 12(1): 3–27, 2004.
+
 - Vermunt, J. K. Latent class modeling with covariates: Two improved three-step approaches. Political analysis,
 18 (4):450–469, 2010.
 
