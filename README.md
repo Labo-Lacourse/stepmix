@@ -21,7 +21,7 @@ Detailed tutorials are available in notebooks :
 1. [Latent Class Analysis with StepMix](https://colab.research.google.com/drive/1KAxcvxjL_vB2lAG9e47we7hrf_2fR1eK?usp=sharing) : 
 an in-depth look at how latent class models can be defined with StepMix. The tutorial uses the Iris Dataset as an example
 and covers :
-   1. Continuous Gaussian mixture models (latent profile analysis;
+   1. Continuous LCA models (latent profile analysis/gaussian mixture model);
    2. Binary LCA models;
    3. Categorical LCA models;
    3. Mixed variables mixture models (continuous and categorical data);
