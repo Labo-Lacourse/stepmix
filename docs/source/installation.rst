@@ -12,5 +12,5 @@ To use Stepmix, simply install it using pip, preferably in a virtual environment
 
 R
 -
-TODO
+For the installing StepMixR, please refer to `this repository <https://github.com/Labo-Lacourse/stepmixr>`_.
 
