@@ -46,7 +46,7 @@ black .
 in the project directory to reformat Python files.
 
 # Bump versions
-We use ```bumpver``` and the ```MAJOR.MINOR.PATCH``` convention. Use on of
+We use ```bumpver``` and the ```MAJOR.MINOR.PATCH``` convention. Use one of
 ```
 bumpver update --patch 
 bumpver update --minor 
