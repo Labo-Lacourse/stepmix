@@ -6,6 +6,7 @@ StepMix
 <a href="https://github.com/psf/black"><img alt="Code style: black" src="https://img.shields.io/badge/code%20style-black-000000.svg"></a>
 [![Downloads](https://static.pepy.tech/badge/stepmix)](https://pepy.tech/project/stepmix)
 [![Downloads](https://static.pepy.tech/badge/stepmix/month)](https://pepy.tech/project/stepmix)
+[![arXiv](https://img.shields.io/badge/arXiv-2304.03853-b31b1b.svg)](https://arxiv.org/abs/2304.03853)
 
 *For StepMixR, please refer to <a href="https://github.com/Labo-Lacourse/stepmixr">this repository.</a>*
 
@@ -13,6 +14,17 @@ A Python package following the scikit-learn API for model-based clustering and g
 StepMix handles missing values through Full Information Maximum Likelihood (FIML) and provides multiple stepwise Expectation-Maximization (EM) estimation methods based on pseudolikelihood theory. 
 Additional features include support for covariates and distal outcomes, various simulation utilities, and non-parametric bootstrapping, which allows inference
 in semi-supervised and unsupervised settings.
+
+# Reference
+If you find this work useful, please consider citing our [arXiv preprint](https://arxiv.org/abs/2304.03853):
+```
+@article{morin2023stepmix,
+  title={StepMix: A Python Package for Pseudo-Likelihood Estimation of Generalized Mixture Models with External Variables},
+  author={Morin, Sacha and Legault, Robin and Bakk, Zsuzsa and Gigu{\`e}re, Charles-{\'E}douard and de la Sablonni{\`e}re, Roxane and Lacourse, {\'E}ric},
+  journal={arXiv preprint arXiv:2304.03853},
+  year={2023}
+}
+```
 
 
 # Install
