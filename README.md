@@ -16,7 +16,7 @@ Additional features include support for covariates and distal outcomes, various 
 in semi-supervised and unsupervised settings.
 
 # Reference
-If you find this work useful, please consider citing our [arXiv preprint](https://arxiv.org/abs/2304.03853):
+If you find StepMix useful, please consider citing our [arXiv preprint](https://arxiv.org/abs/2304.03853):
 ```
 @article{morin2023stepmix,
   title={StepMix: A Python Package for Pseudo-Likelihood Estimation of Generalized Mixture Models with External Variables},
