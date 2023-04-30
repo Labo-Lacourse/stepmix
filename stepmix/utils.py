@@ -456,6 +456,8 @@ def max_one_hot(array, max_n_outcomes=None):
     categorical feature with the most categories. Categories are one-hot encoded and categories with
     fewer than max_n_outcomes simply have unused extra columns.
 
+    Handles missing values.
+
     Examples
     --------
     .. code-block:: python
@@ -504,7 +506,13 @@ def max_one_hot(array, max_n_outcomes=None):
     one_hot = np.zeros((n_samples, array.shape[1] * max_n_outcomes))
 
     for c in range(n_features):
-        one_hot[np.arange(n_samples), array[:, c].astype(int) + c * max_n_outcomes] = 1
+        integer_codes = array[:, c]
+        not_observed = np.isnan(integer_codes)
+        integer_codes = np.nan_to_num(integer_codes, nan=0).astype(int)
+        one_hot[np.arange(n_samples), integer_codes + c * max_n_outcomes] = 1.
+
+        # Now reapply NaNs
+        one_hot[not_observed, c * max_n_outcomes:(c+1) * max_n_outcomes] = np.nan
 
     return one_hot, max_n_outcomes
 

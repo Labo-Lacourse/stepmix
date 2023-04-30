@@ -219,6 +219,30 @@ def test_max_one_hot(data, kwargs):
     assert max_n_outcomes == 4
     assert np.all(onehot == target)
 
+def test_max_one_hot_nan(data, kwargs):
+    """Test the max_one_hot method in utils with NaNs"""
+    a = np.array(
+        [
+            [0, 3],
+            [1, np.nan],
+            [np.nan, 1],
+            [2, 2],
+        ]
+    )
+
+    target = np.array(
+        [
+            [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0],
+            [0.0, 1.0, 0.0, 0.0, np.nan, np.nan, np.nan, np.nan],
+            [np.nan, np.nan, np.nan, np.nan, 0.0, 1.0, 0.0, 0.0],
+            [0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0],
+        ]
+    )
+
+    onehot, max_n_outcomes = max_one_hot(a)
+
+    assert max_n_outcomes == 4
+    assert np.allclose(onehot, target, equal_nan=True)
 
 def test_categorical_encoding(kwargs):
     # Ignore base measurement and structural for this step
