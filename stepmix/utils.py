@@ -500,7 +500,7 @@ def max_one_hot(array, max_n_outcomes=None):
 
     # Get maximal number of outcomes
     if max_n_outcomes is None:
-        max_n_outcomes = int(array.max() + 1)
+        max_n_outcomes = int(np.nanmax(array) + 1)
 
     # Create one-hot encoding
     one_hot = np.zeros((n_samples, array.shape[1] * max_n_outcomes))
