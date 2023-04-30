@@ -32,8 +32,8 @@ def test_dataframe(data, kwargs):
 @pytest.mark.parametrize("model", EMISSION_DICT.keys())
 def test_nan(data, kwargs, model):
     X, Y = data
-    kwargs['measurement'] = model
-    kwargs['structural'] = model
+    kwargs["measurement"] = model
+    kwargs["structural"] = model
 
     # Test on numpy arrays
     model_1 = StepMix(n_steps=1, **kwargs)

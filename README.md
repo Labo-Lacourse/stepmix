@@ -28,12 +28,12 @@ If you find StepMix useful, please consider citing our [arXiv preprint](https://
 
 
 # Install
-You can install StepMix with pip, preferably in a virtual environment : 
+You can install StepMix with pip, preferably in a virtual environment: 
 ```
 pip install stepmix
 ``` 
 # Quickstart
-A simple StepMix mixture using the continuous variables of the Iris dataset:
+A simple StepMix mixture using the continuous variables of the Iris Dataset:
 
 ```python
 import pandas as pd
@@ -58,7 +58,7 @@ print(rand_score(pred_continuous, target))
 StepMix also provides support for categorical mixtures:
 
 ```python
-# Create categorical data based on the Iris data quantiles
+# Create categorical data based on the Iris Dataset quantiles
 data_categorical = data_continuous.copy()
 for col in data_categorical:
    data_categorical[col] = pd.qcut(data_continuous[col], q=3).cat.codes
@@ -75,26 +75,26 @@ print(rand_score(pred_categorical, target))
 ```
 Please refer to the StepMix tutorials to learn how to handle missing values and combine continuous and categorical data in the same model.
 # Tutorials
-Detailed tutorials are available in notebooks : 
-1. [Generalized Mixture Models with StepMix](https://colab.research.google.com/drive/1KAxcvxjL_vB2lAG9e47we7hrf_2fR1eK?usp=sharing) : 
+Detailed tutorials are available in notebooks: 
+1. [Generalized Mixture Models with StepMix](https://colab.research.google.com/drive/1KAxcvxjL_vB2lAG9e47we7hrf_2fR1eK?usp=sharing): 
 an in-depth look at how latent class models can be defined with StepMix. The tutorial uses the Iris Dataset as an example
-and covers :
+and covers:
    1. Continuous LCA models (latent profile analysis/gaussian mixture model);
    2. Binary LCA models;
    3. Categorical LCA models;
    3. Mixed variables mixture models (continuous and categorical data);
    5. Missing Values through Full-Information Maximum Likelihood.
-2. [Stepwise Estimation with StepMix](https://colab.research.google.com/drive/1T_UObkN5Y-iFTKiun0zOkKk7LjtMeV25?usp=sharing) :
+2. [Stepwise Estimation with StepMix](https://colab.research.google.com/drive/1T_UObkN5Y-iFTKiun0zOkKk7LjtMeV25?usp=sharing):
     a tutorial demonstrating how to define measurement and structural models. The tutorial discusses:
    1. LCA models with distal outcomes;
    2. LCA models with covariates; 
    3. 1-step, 2-step and 3-step estimation;
    4. Corrections (BCH or ML) and other options for 3-step estimation.
-3. [Model Selection](https://colab.research.google.com/drive/1iyFTD-D2wn88_vd-qxXkovIuWHRtU7V8?usp=sharing) :
+3. [Model Selection](https://colab.research.google.com/drive/1iyFTD-D2wn88_vd-qxXkovIuWHRtU7V8?usp=sharing):
    a short tutorial discussing:
     1. Selecting the number of components in a mixture model (```n_components```);
     2. Comparing models with fit indices: AIC and BIC.
-4. [Parameters, Bootstrapping and CI](https://colab.research.google.com/drive/14Ir08HXQ3svydbVV4jlvi1HjGnfc4fc0?usp=sharing) :
+4. [Parameters, Bootstrapping and CI](https://colab.research.google.com/drive/14Ir08HXQ3svydbVV4jlvi1HjGnfc4fc0?usp=sharing):
    a tutorial discussing how to:
    1. Access StepMix parameters;
    2. Bootstrap StepMix estimators;

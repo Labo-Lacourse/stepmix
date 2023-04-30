@@ -509,10 +509,10 @@ def max_one_hot(array, max_n_outcomes=None):
         integer_codes = array[:, c]
         not_observed = np.isnan(integer_codes)
         integer_codes = np.nan_to_num(integer_codes, nan=0).astype(int)
-        one_hot[np.arange(n_samples), integer_codes + c * max_n_outcomes] = 1.
+        one_hot[np.arange(n_samples), integer_codes + c * max_n_outcomes] = 1.0
 
         # Now reapply NaNs
-        one_hot[not_observed, c * max_n_outcomes:(c+1) * max_n_outcomes] = np.nan
+        one_hot[not_observed, c * max_n_outcomes : (c + 1) * max_n_outcomes] = np.nan
 
     return one_hot, max_n_outcomes
 
