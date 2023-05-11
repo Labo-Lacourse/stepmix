@@ -96,6 +96,11 @@ def bootstrap(estimator, X, Y=None, n_repetitions=1000):
     """
     n_samples = X.shape[0]
 
+    # Use the estimator built-in method to check the input
+    # This will ensure that X and Y are numpy arrays for the rest of the bootstrap procedure
+    estimator._check_initial_parameters(X)
+    X, Y = estimator._check_x_y(X, Y, reset=True)
+
     # First fit the base estimator and get class probabilities
     estimator.fit(X, Y)
     ref_class_probabilities = estimator.predict_proba(X, Y)
