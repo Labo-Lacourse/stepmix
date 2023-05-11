@@ -120,6 +120,7 @@ def test_nested_bootstrap(data_nested, kwargs_nested):
     for f in figures:
         plt.close(f)
 
+
 def test_bootstrap_df(data_nested, kwargs_nested):
     """Call bootstrap procedure on a DataFrame."""
     data_nested = pd.DataFrame(data_nested)
