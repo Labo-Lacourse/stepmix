@@ -4,6 +4,7 @@ import itertools
 import math
 
 import numpy as np
+import matplotlib
 import matplotlib.pyplot as plt
 
 from sklearn.base import clone
@@ -155,11 +156,13 @@ def plot_parameters_CI(bottom, estimate, top, title):
     n_rows = math.ceil(n_parameters / n_cols)
     fig, axes = plt.subplots(n_rows, n_cols, figsize=(4 * n_cols, 4 * n_rows))
 
-    if n_parameters != 1 and axes.ndim != 1:
+    if isinstance(axes, np.ndarray):
         axes = axes.flatten()
-    else:
-        # Wrap axes for iteration
+    elif isinstance(axes, matplotlib.axes.Axes):
+        # We only have one axis, wrap it for iteration
         axes = [axes]
+    else:
+        raise ValueError("Unexpected axes type.")
 
     for i, (b, e, t, ax) in enumerate(zip(bottom.T, estimate.T, top.T, axes)):
         ax.set_title(f"Parameter {i}")

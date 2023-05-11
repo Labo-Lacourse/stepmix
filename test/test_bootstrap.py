@@ -127,9 +127,10 @@ def test_bootstrap_df(data_nested, kwargs_nested):
     model_1 = StepMix(**kwargs_nested)
     model, params = bootstrap(model_1, data_nested, data_nested, n_repetitions=3)
 
+
 @pytest.mark.parametrize("n", [1, 2, 3, 4, 5, 6])
 def test_bootstrap_plots_n_parameters(data_nested, kwargs_nested, n):
-    """Make sure the 4x4 grid in bootstrap plots does not raise errors with 1, 2, 3, 4, 5, 6 plots."""
+    """Make sure the 3-column grid in bootstrap plots does not raise errors with 1, 2, 3, 4, 5, 6 plots."""
     # Iterate over different number of parameters in the binary model
     kwargs_nested["measurement"]["model_1"]["n_columns"] = n
     kwargs_nested["structural"]["model_1"]["n_columns"] = n
