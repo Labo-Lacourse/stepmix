@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 import pytest
 import matplotlib.pyplot as plt
 
@@ -118,3 +119,9 @@ def test_nested_bootstrap(data_nested, kwargs_nested):
     figures = plot_all_parameters_CI(model.get_parameters(), params)
     for f in figures:
         plt.close(f)
+
+def test_bootstrap_df(data_nested, kwargs_nested):
+    """Call bootstrap procedure on a DataFrame."""
+    data_nested = pd.DataFrame(data_nested)
+    model_1 = StepMix(**kwargs_nested)
+    model, params = bootstrap(model_1, data_nested, data_nested, n_repetitions=3)
