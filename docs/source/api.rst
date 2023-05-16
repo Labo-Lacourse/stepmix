@@ -13,6 +13,13 @@ StepMix
     :inherited-members:
     :show-inheritance:
 
+Bootstrap
+---------------
+.. automodule:: stepmix.bootstrap
+    :members:
+    :inherited-members:
+    :show-inheritance:
+
 Emission Models
 ---------------
 Categorical

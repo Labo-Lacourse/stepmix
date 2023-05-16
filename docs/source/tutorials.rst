@@ -2,26 +2,49 @@ Tutorials
 =========
 Quickstart
 ----------
-The following shows how to run StepMix on simulated data from Bakk and Kuha, 2018 to identify three latent groups.
+The following shows a simple StepMix mixture using the continuous variables of the Iris Dataset. ``n_components`` controls
+the number of latent classes.::
 
-``n_components`` controls
-the number of latent classes while ``n_steps`` sets the stepwise estimation procedure. Homogeneous models (e.g., all binary, all gaussian) can be described with a single string by setting the
-``measurement`` and ``structural`` parameters. Setting ``verbose=1`` ensures we get a detailed print statement::
+    import pandas as pd
+    from sklearn.datasets import load_iris
+    from sklearn.metrics import rand_score
 
-   from stepmix.datasets import data_bakk_response
-   from stepmix.stepmix import StepMix
+    from stepmix.stepmix import StepMix
 
-   # Soft 3-step
-   # X is an array of binary measurements. Y is a single continuous response
-   X, Y, _ = data_bakk_response(n_samples=1000, sep_level=.9, random_state=42)
-   model = StepMix(n_components=3, n_steps=3, measurement='bernoulli',
-                   structural='gaussian_unit', assignment='soft', verbose=1, random_state=42)
-   model.fit(X, Y)
+    # Load dataset in a Dataframe
+    data_continuous, target = load_iris(return_X_y=True, as_frame=True)
+
+    # Continuous StepMix Model with 3 latent classes
+    model = StepMix(n_components=3, measurement="continuous", verbose=1, random_state=123)
+
+    # Fit model and predict clusters
+    model.fit(data_continuous)
+    pred_continuous = model.predict(data_continuous)
+
+    # A Rand score close to 1 indicates good alignment between clusters and flower types
+    print(rand_score(pred_continuous, target))
 
 The API allows to easily predict class memberships or probabilities::
 
     class_ids = model.predict(X, Y)
     class_probs = model.predict_proba(X, Y)
+
+StepMix also provides support for categorical mixtures::
+
+    # Create categorical data based on the Iris Dataset quantiles
+    data_categorical = data_continuous.copy()
+    for col in data_categorical:
+       data_categorical[col] = pd.qcut(data_continuous[col], q=3).cat.codes
+
+    # Categorical StepMix Model with 3 latent classes
+    model = StepMix(n_components=3, measurement="categorical", verbose=0, random_state=123)
+
+    # Fit model and predict clusters
+    model.fit(data_categorical)
+    pred_categorical = model.predict(data_categorical)
+
+    # A Rand score close to 1 indicates good alignment between clusters and flower types
+    print(rand_score(pred_categorical, target))
 
 Input Data
 ----------
