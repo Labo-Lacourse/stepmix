@@ -6,6 +6,7 @@ import math
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
+import tqdm
 
 from sklearn.base import clone
 from sklearn.utils.validation import check_random_state
@@ -70,7 +71,7 @@ def stack_stepmix_parameters(params):
     return base
 
 
-def bootstrap(estimator, X, Y=None, n_repetitions=1000):
+def bootstrap(estimator, X, Y=None, n_repetitions=1000, progress_bar=True):
     """Non-parametric boostrap of StepMix estimator.
 
     Fit the estimator on X,Y then fit n_repetitions on resampled datasets.
@@ -87,6 +88,8 @@ def bootstrap(estimator, X, Y=None, n_repetitions=1000):
         Structural data.
     n_repetitions: int
         Number of repetitions to fit.
+    progress_bar : bool, default=True
+        Display a tqdm progress bar for repetitions.
     Returns
     ----------
     estimator: StepMix
@@ -110,7 +113,8 @@ def bootstrap(estimator, X, Y=None, n_repetitions=1000):
     rng = check_random_state(estimator.random_state)
     parameters = list()
 
-    for _ in range(n_repetitions):
+    tqdm_rep = tqdm.trange(n_repetitions, disable=not progress_bar, desc="Bootstrap Repetitions    ")
+    for _ in tqdm_rep:
         # Resample data
         rep_samples = rng.choice(n_samples, size=(n_samples,), replace=True)
         X_rep = X[rep_samples]
@@ -118,6 +122,10 @@ def bootstrap(estimator, X, Y=None, n_repetitions=1000):
 
         # Fit estimator on resample data
         estimator_rep = clone(estimator)
+
+        # Disable printing for repeated estimators and fit
+        estimator_rep.verbose=0
+        estimator_rep.progress_bar=False
         estimator_rep.fit(X_rep, Y_rep)
 
         # Class ordering may be different. Reorder based on best permutation of class probabilites
