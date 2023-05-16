@@ -140,7 +140,7 @@ class StepMix(BaseEstimator):
 
             - 0 : No progress bar.
             - 1 : Progress bar for initializations.
-            - 2 : Progress bars for initializations and iterations. This requires a nested tqdm bar and will only work
+            - 2 : Progress bars for initializations and iterations. This requires a nested tqdm bar and may not work\
             properly in some terminals.
 
     measurement_params: {dict, None}, default=None
