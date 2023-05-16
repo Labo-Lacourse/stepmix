@@ -71,7 +71,9 @@ def stack_stepmix_parameters(params):
     return base
 
 
-def bootstrap(estimator, X, Y=None, sample_weight=None, n_repetitions=1000, progress_bar=True):
+def bootstrap(
+    estimator, X, Y=None, sample_weight=None, n_repetitions=1000, progress_bar=True
+):
     """Non-parametric boostrap of StepMix estimator.
 
     Fit the estimator on X,Y then fit n_repetitions on resampled datasets.
@@ -122,20 +124,24 @@ def bootstrap(estimator, X, Y=None, sample_weight=None, n_repetitions=1000, prog
     if progress_bar:
         print("\nBootstrapping estimator...")
 
-    tqdm_rep = tqdm.trange(n_repetitions, disable=not progress_bar, desc="Bootstrap Repetitions    ")
+    tqdm_rep = tqdm.trange(
+        n_repetitions, disable=not progress_bar, desc="Bootstrap Repetitions    "
+    )
     for _ in tqdm_rep:
         # Resample data
         rep_samples = rng.choice(n_samples, size=(n_samples,), replace=True)
         X_rep = X[rep_samples]
         Y_rep = Y[rep_samples] if Y is not None else None
-        sample_weight_rep = sample_weight[rep_samples] if sample_weight is not None else None
+        sample_weight_rep = (
+            sample_weight[rep_samples] if sample_weight is not None else None
+        )
 
         # Fit estimator on resample data
         estimator_rep = clone(estimator)
 
         # Disable printing for repeated estimators and fit
-        estimator_rep.verbose=0
-        estimator_rep.progress_bar=0
+        estimator_rep.verbose = 0
+        estimator_rep.progress_bar = 0
         estimator_rep.fit(X_rep, Y_rep, sample_weight=sample_weight_rep)
 
         # Class ordering may be different. Reorder based on best permutation of class probabilites
@@ -150,22 +156,28 @@ def bootstrap(estimator, X, Y=None, sample_weight=None, n_repetitions=1000, prog
 
         # Save likelihood
         avg_ll = estimator_rep.score(X_rep, Y_rep, sample_weight=sample_weight_rep)
-        ll = avg_ll * np.sum(sample_weight) if sample_weight is not None else avg_ll * n_samples
+        ll = (
+            avg_ll * np.sum(sample_weight)
+            if sample_weight is not None
+            else avg_ll * n_samples
+        )
         avg_ll_buffer.append(avg_ll)
         ll_buffer.append(ll)
 
         # Ask tqdm to display current max likelihood
-        tqdm_rep.set_postfix(median_LL = np.median(ll_buffer),
-                             # min_avg_LL=np.min(avg_ll_buffer),
-                             # max_avg_LL=np.max(avg_ll_buffer),
-                             min_LL=np.min(ll_buffer),
-                             max_LL=np.max(ll_buffer))
+        tqdm_rep.set_postfix(
+            median_LL=np.median(ll_buffer),
+            # min_avg_LL=np.min(avg_ll_buffer),
+            # max_avg_LL=np.max(avg_ll_buffer),
+            min_LL=np.min(ll_buffer),
+            max_LL=np.max(ll_buffer),
+        )
 
     return_dict = stack_stepmix_parameters(parameters)
 
     # Add likelihoods statistics
-    return_dict['LL'] = np.array(ll_buffer)
-    return_dict['avg_LL'] = np.array(avg_ll_buffer)
+    return_dict["LL"] = np.array(ll_buffer)
+    return_dict["avg_LL"] = np.array(avg_ll_buffer)
 
     return estimator, return_dict
 

@@ -3,6 +3,7 @@ import numpy as np
 from stepmix.stepmix import StepMix
 from stepmix.bootstrap import bootstrap
 
+
 def test_default_weights(data, kwargs):
     """Running StepMix without sample weights should be the same as running StepMix with unit weights."""
     X, Y = data
@@ -17,6 +18,7 @@ def test_default_weights(data, kwargs):
     ll_2 = model_2.score(X, Y, sample_weight=sample_weight)
 
     assert ll_1 == ll_2
+
 
 def test_different_weights(data, kwargs):
     """Running StepMix with different weights should result in a different likelihood."""
@@ -33,6 +35,8 @@ def test_different_weights(data, kwargs):
     ll_2 = model_2.score(X, Y, sample_weight=sample_weight)
 
     assert ll_1 != ll_2
+
+
 def test_default_weights_bootstrap(data, kwargs):
     """Running StepMix without sample weights should be the same as running StepMix with unit weights."""
     X, Y = data
@@ -47,6 +51,7 @@ def test_default_weights_bootstrap(data, kwargs):
     ll_2 = model_2.score(X, Y)
 
     assert ll_1 == ll_2
+
 
 def test_different_weights_bootstrap(data, kwargs):
     """Running StepMix with different sample weights should result in a different likelihood."""

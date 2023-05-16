@@ -766,8 +766,12 @@ class StepMix(BaseEstimator):
         if self.progress_bar:
             print("Fitting StepMix...")
         if self.progress_bar == 2:
-            print("The Iteration bar may update too quickly to be visualized depending on dataset size and StepMix settings.\n")
-        tqdm_init = tqdm.trange(self.n_init, disable=not self.progress_bar, desc="Initializations (n_init) ")
+            print(
+                "The Iteration bar may update too quickly to be visualized depending on dataset size and StepMix settings.\n"
+            )
+        tqdm_init = tqdm.trange(
+            self.n_init, disable=not self.progress_bar, desc="Initializations (n_init) "
+        )
         for init in tqdm_init:
             if not freeze_measurement:
                 self._initialize_parameters(X, random_state)  # Measurement model
@@ -780,8 +784,12 @@ class StepMix(BaseEstimator):
             lower_bound = -np.inf
 
             # EM iterations
-            tqdm_iter = tqdm.tqdm(range(1, self.max_iter + 1), disable=self.progress_bar < 2,
-                                  desc="Iterations (max_iter)    ", leave=False)
+            tqdm_iter = tqdm.tqdm(
+                range(1, self.max_iter + 1),
+                disable=self.progress_bar < 2,
+                desc="Iterations (max_iter)    ",
+                leave=False,
+            )
             for n_iter in tqdm_iter:
                 prev_lower_bound = lower_bound
 
@@ -814,7 +822,11 @@ class StepMix(BaseEstimator):
                     break
 
                 # Ask tqdm to display current max lower bound
-                ll = lower_bound * np.sum(sample_weight) if sample_weight is not None else lower_bound * n_samples
+                ll = (
+                    lower_bound * np.sum(sample_weight)
+                    if sample_weight is not None
+                    else lower_bound * n_samples
+                )
                 tqdm_iter.set_postfix(avg_LL=lower_bound, LL=ll)
 
             if (
@@ -827,7 +839,11 @@ class StepMix(BaseEstimator):
                 best_n_iter = n_iter
 
             # Ask tqdm to display current max lower bound
-            max_ll = max_lower_bound * np.sum(sample_weight) if sample_weight is not None else max_lower_bound * n_samples
+            max_ll = (
+                max_lower_bound * np.sum(sample_weight)
+                if sample_weight is not None
+                else max_lower_bound * n_samples
+            )
             tqdm_init.set_postfix(max_avg_LL=max_lower_bound, max_LL=max_ll)
 
         if not self.converged_:

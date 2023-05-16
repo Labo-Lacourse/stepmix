@@ -308,7 +308,11 @@ def print_report(model, X, Y=None, sample_weight=None):
     n_samples = X.shape[0]
     n_parameters = model.n_parameters
     avg_ll = model.score(X, Y, sample_weight=sample_weight)
-    ll = avg_ll * np.sum(sample_weight) if sample_weight is not None else avg_ll * n_samples
+    ll = (
+        avg_ll * np.sum(sample_weight)
+        if sample_weight is not None
+        else avg_ll * n_samples
+    )
     minus2ll = -2 * ll
 
     bic = model.bic(X, Y)
