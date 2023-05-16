@@ -32,4 +32,4 @@ def test_different_weights(data, kwargs):
     model_2.fit(X, Y, sample_weight=sample_weight)
     ll_2 = model_2.score(X, Y, sample_weight=sample_weight)
 
-    assert ll_1 == ll_2
+    assert ll_1 != ll_2
