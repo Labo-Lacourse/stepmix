@@ -23,6 +23,7 @@ from sklearn.utils.validation import (
     _check_sample_weight,
 )
 from sklearn.cluster import KMeans
+import tqdm
 
 from . import utils
 from .corrections import compute_bch_matrix, compute_log_emission_pm
@@ -134,6 +135,8 @@ class StepMix(BaseEstimator):
         parameters. Pass an int for reproducible output across multiple function calls.
     verbose : int, default=0
         Enable verbose output. If 1, will print detailed report of the model and the performance metrics after fitting.
+    progress_bar : bool, default=True
+        Display a tqdm progress bar during fitting.
     measurement_params: {dict, None}, default=None
         Additional params passed to the measurement model class.  Particularly useful to specify optimization parameters
         for :class:`stepmix.emission.covariate.Covariate`. Ignored if the measurement descriptor is a nested object
@@ -219,6 +222,7 @@ class StepMix(BaseEstimator):
         init_params="random",
         random_state=None,
         verbose=0,
+        progress_bar=True,
         measurement_params=None,
         structural_params=None,
     ):
@@ -231,6 +235,7 @@ class StepMix(BaseEstimator):
         self.init_params = init_params
         self.random_state = random_state
         self.verbose = verbose
+        self.progress_bar = progress_bar
         self.n_steps = n_steps
 
         # Additional attributes for 3-step estimation
@@ -269,6 +274,10 @@ class StepMix(BaseEstimator):
             n_components=self.n_components,
             max_iter=self.max_iter,
             n_init=self.n_init,
+        )
+        utils.check_type(
+            bool,
+            progress_bar=self.progress_bar,
         )
         utils.check_nonneg(abs_tol=self.abs_tol, verbose=self.verbose)
         utils.check_nonneg(rel_tol=self.rel_tol, verbose=self.verbose)
@@ -751,9 +760,11 @@ class StepMix(BaseEstimator):
         self.converged_ = False
 
         # Run multiple restarts
-        for init in range(self.n_init):
-            # self._print_verbose_msg_init_beg(init)
-
+        if self.progress_bar:
+            print("Fitting StepMix...")
+            print("The Iteration bar may update too quickly to be visualized depending on dataset size and StepMix settings.\n")
+        tqdm_init = tqdm.trange(self.n_init, disable=not self.progress_bar, desc="Initializations (n_init) ")
+        for init in tqdm_init:
             if not freeze_measurement:
                 self._initialize_parameters(X, random_state)  # Measurement model
 
@@ -765,7 +776,9 @@ class StepMix(BaseEstimator):
             lower_bound = -np.inf
 
             # EM iterations
-            for n_iter in range(1, self.max_iter + 1):
+            tqdm_iter = tqdm.tqdm(range(1, self.max_iter + 1), disable=not self.progress_bar,
+                                  desc="Iterations (max_iter)    ", leave=False)
+            for n_iter in tqdm_iter:
                 prev_lower_bound = lower_bound
 
                 # E-step
@@ -796,6 +809,10 @@ class StepMix(BaseEstimator):
                     self.converged_ = True
                     break
 
+                # Ask tqdm to display current max lower bound
+                ll = lower_bound * np.sum(sample_weight) if sample_weight is not None else lower_bound * n_samples
+                tqdm_iter.set_postfix(avg_LL=lower_bound, LL=ll)
+
             if (
                 lower_bound > max_lower_bound
                 or max_lower_bound == -np.inf
@@ -804,6 +821,10 @@ class StepMix(BaseEstimator):
                 max_lower_bound = lower_bound
                 best_params = self.get_parameters()
                 best_n_iter = n_iter
+
+            # Ask tqdm to display current max lower bound
+            max_ll = max_lower_bound * np.sum(sample_weight) if sample_weight is not None else max_lower_bound * n_samples
+            tqdm_init.set_postfix(max_avg_LL=max_lower_bound, max_LL=max_ll)
 
         if not self.converged_:
             warnings.warn(
