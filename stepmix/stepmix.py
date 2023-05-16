@@ -666,11 +666,11 @@ class StepMix(BaseEstimator):
 
         # Print report if required
         if self.verbose == 1:
-            self.report(X, Y)
+            self.report(X, Y, sample_weight=sample_weight)
 
         return self
 
-    def report(self, X, Y=None):
+    def report(self, X, Y=None, sample_weight=None):
         """Print detailed report of the model and performance metrics.
 
 
@@ -688,8 +688,11 @@ class StepMix(BaseEstimator):
             and each group of L columns corresponds to a feature for one-hot encoded
             variables with L possible outcomes (n_features=n_columns_structural/L).
             Each row corresponds to a  single data point of the structural model.
+        sample_weight : array-like of shape(n_samples,), default=None
+            Array of weights that are assigned to individual samples.
+            If not provided, then each sample is given unit weight.
         """
-        utils.print_report(self, X, Y)
+        utils.print_report(self, X, Y, sample_weight)
 
     def em(
         self,

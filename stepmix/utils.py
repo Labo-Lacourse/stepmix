@@ -280,7 +280,7 @@ def modal(resp, clip=False):
     return modal_resp
 
 
-def print_report(model, X, Y=None):
+def print_report(model, X, Y=None, sample_weight=None):
     """Print detailed output for the model.
 
     Parameters
@@ -299,13 +299,16 @@ def print_report(model, X, Y=None):
         and each group of L columns corresponds to a feature for one-hot encoded
         variables with L possible outcomes (n_features=n_columns_structural/L).
         Each row corresponds to a  single data point of the structural model.
+    sample_weight : array-like of shape(n_samples,), default=None
+        Array of weights that are assigned to individual samples.
+        If not provided, then each sample is given unit weight.
     """
     check_is_fitted(model)
     n_classes = model.n_components
     n_samples = X.shape[0]
     n_parameters = model.n_parameters
-    avg_ll = model.score(X, Y)
-    ll = avg_ll * n_samples
+    avg_ll = model.score(X, Y, sample_weight=sample_weight)
+    ll = avg_ll * np.sum(sample_weight) if sample_weight is not None else avg_ll * n_samples
     minus2ll = -2 * ll
 
     bic = model.bic(X, Y)
