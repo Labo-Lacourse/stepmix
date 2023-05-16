@@ -97,9 +97,10 @@ def bootstrap(estimator, X, Y=None, sample_weight=None, n_repetitions=1000, prog
     ----------
     estimator: StepMix
         Fitted instance of the estimator.
-    parameters: ndarray
+    parameters: Dict
         StepMix parameter dictionary. Follows the same convention as the parameters of the StepMix
         object. An additional axis of size (n_repetitions,) is added at position 0 of each parameter array.
+        Additional "LL" and "avg_LL" keys contain the likelihood and average likelihood of different repetitions.
     """
     n_samples = X.shape[0]
 
@@ -115,6 +116,11 @@ def bootstrap(estimator, X, Y=None, sample_weight=None, n_repetitions=1000, prog
     # Now fit n_repetitions estimator with resampling and save parameters
     rng = check_random_state(estimator.random_state)
     parameters = list()
+    avg_ll_buffer = list()
+    ll_buffer = list()
+
+    if progress_bar:
+        print("\nBootstrapping estimator...")
 
     tqdm_rep = tqdm.trange(n_repetitions, disable=not progress_bar, desc="Bootstrap Repetitions    ")
     for _ in tqdm_rep:
@@ -142,7 +148,26 @@ def bootstrap(estimator, X, Y=None, sample_weight=None, n_repetitions=1000, prog
         # Save parameters
         parameters.append(estimator_rep.get_parameters())
 
-    return estimator, stack_stepmix_parameters(parameters)
+        # Save likelihood
+        avg_ll = estimator_rep.score(X_rep, Y_rep, sample_weight=sample_weight_rep)
+        ll = avg_ll * np.sum(sample_weight) if sample_weight is not None else avg_ll * n_samples
+        avg_ll_buffer.append(avg_ll)
+        ll_buffer.append(ll)
+
+        # Ask tqdm to display current max likelihood
+        tqdm_rep.set_postfix(median_LL = np.median(ll_buffer),
+                             # min_avg_LL=np.min(avg_ll_buffer),
+                             # max_avg_LL=np.max(avg_ll_buffer),
+                             min_LL=np.min(ll_buffer),
+                             max_LL=np.max(ll_buffer))
+
+    return_dict = stack_stepmix_parameters(parameters)
+
+    # Add likelihoods statistics
+    return_dict['LL'] = np.array(ll_buffer)
+    return_dict['avg_LL'] = np.array(avg_ll_buffer)
+
+    return estimator, return_dict
 
 
 def plot_CI(bottom, estimate, top, ax):
