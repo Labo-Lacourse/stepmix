@@ -304,7 +304,10 @@ def print_report(model, X, Y=None):
     n_classes = model.n_components
     n_samples = X.shape[0]
     n_parameters = model.n_parameters
-    ll = model.score(X, Y)
+    avg_ll = model.score(X, Y)
+    ll = avg_ll * n_samples
+    minus2ll = -2 * ll
+
     bic = model.bic(X, Y)
     aic = model.aic(X, Y)
 
@@ -338,7 +341,9 @@ def print_report(model, X, Y=None):
     print(f"    Number of observations        : {n_samples}")
     print(f"    Number of latent classes      : {n_classes}")
     print(f"    Number of estimated parameters: {n_parameters}")
-    print(f"    Average log-likelihood        : {ll:.4f}")
+    print(f"    Log-likelihood (LL)           : {ll:.4f}")
+    print(f"    -2LL                          : {minus2ll:.4f}")
+    print(f"    Average LL                    : {avg_ll:.4f}")
     print(f"    AIC                           : {aic:.2f}")
     print(f"    BIC                           : {bic:.2f}")
 
