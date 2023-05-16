@@ -6,10 +6,10 @@ following commands:
 
 ```bash
 # Outcome simulation
-python3 run_bakk_simulation.py -s 500 -l
+python3 run_bakk_simulation.py -s 500
 # Covariate simulation
-python3 run_bakk_simulation.py -s 500 -l -c
+python3 run_bakk_simulation.py -s 500 -c
 # Complete simulation
-python3 run_bakk_simulation_complete.py -s 500 -l
+python3 run_bakk_simulation_complete.py -s 500
 ```
-All three commands should output the latex tables from the paper, up to formatting. You can ignore the UserWarnings.
+All three commands should output the simulation tables from the paper. You can ignore the UserWarnings.

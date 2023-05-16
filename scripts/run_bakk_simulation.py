@@ -156,7 +156,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--latex",
         "-l",
-        help="Also print a latex version of the results.",
+        help="Also print a latex version of the results. Requires the optional dependency Jinja2.",
         action="store_true",
     )
     parser.add_argument(
