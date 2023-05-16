@@ -134,8 +134,6 @@ class StepMix(BaseEstimator):
         parameters. Pass an int for reproducible output across multiple function calls.
     verbose : int, default=0
         Enable verbose output. If 1, will print detailed report of the model and the performance metrics after fitting.
-    verbose_interval : int, default=10
-        Number of iteration done before the next print. TODO: Not currently implemented.
     measurement_params: {dict, None}, default=None
         Additional params passed to the measurement model class.  Particularly useful to specify optimization parameters
         for :class:`stepmix.emission.covariate.Covariate`. Ignored if the measurement descriptor is a nested object
@@ -221,7 +219,6 @@ class StepMix(BaseEstimator):
         init_params="random",
         random_state=None,
         verbose=0,
-        verbose_interval=10,
         measurement_params=None,
         structural_params=None,
     ):
@@ -234,7 +231,6 @@ class StepMix(BaseEstimator):
         self.init_params = init_params
         self.random_state = random_state
         self.verbose = verbose
-        self.verbose_interval = verbose_interval
         self.n_steps = n_steps
 
         # Additional attributes for 3-step estimation
@@ -268,13 +264,11 @@ class StepMix(BaseEstimator):
             max_iter=self.max_iter,
             n_init=self.n_init,
             verbose=self.verbose,
-            verbose_interval=self.verbose_interval,
         )
         utils.check_positive(
             n_components=self.n_components,
             max_iter=self.max_iter,
             n_init=self.n_init,
-            verbose_interval=self.verbose_interval,
         )
         utils.check_nonneg(abs_tol=self.abs_tol, verbose=self.verbose)
         utils.check_nonneg(rel_tol=self.rel_tol, verbose=self.verbose)
