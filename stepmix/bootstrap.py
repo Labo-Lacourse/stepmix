@@ -125,7 +125,7 @@ def bootstrap(estimator, X, Y=None, n_repetitions=1000, progress_bar=True):
 
         # Disable printing for repeated estimators and fit
         estimator_rep.verbose=0
-        estimator_rep.progress_bar=False
+        estimator_rep.progress_bar=0
         estimator_rep.fit(X_rep, Y_rep)
 
         # Class ordering may be different. Reorder based on best permutation of class probabilites

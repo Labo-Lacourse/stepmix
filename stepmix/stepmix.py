@@ -135,8 +135,14 @@ class StepMix(BaseEstimator):
         parameters. Pass an int for reproducible output across multiple function calls.
     verbose : int, default=0
         Enable verbose output. If 1, will print detailed report of the model and the performance metrics after fitting.
-    progress_bar : bool, default=True
+    progress_bar : int, default=1
         Display a tqdm progress bar during fitting.
+
+            - 0 : No progress bar.
+            - 1 : Progress bar for initializations.
+            - 2 : Progress bars for initializations and iterations. This requires a nested tqdm bar and will only work
+            properly in some terminals.
+
     measurement_params: {dict, None}, default=None
         Additional params passed to the measurement model class.  Particularly useful to specify optimization parameters
         for :class:`stepmix.emission.covariate.Covariate`. Ignored if the measurement descriptor is a nested object
@@ -222,7 +228,7 @@ class StepMix(BaseEstimator):
         init_params="random",
         random_state=None,
         verbose=0,
-        progress_bar=True,
+        progress_bar=1,
         measurement_params=None,
         structural_params=None,
     ):
@@ -275,13 +281,10 @@ class StepMix(BaseEstimator):
             max_iter=self.max_iter,
             n_init=self.n_init,
         )
-        utils.check_type(
-            bool,
-            progress_bar=self.progress_bar,
-        )
         utils.check_nonneg(abs_tol=self.abs_tol, verbose=self.verbose)
         utils.check_nonneg(rel_tol=self.rel_tol, verbose=self.verbose)
         utils.check_in([1, 2, 3], n_steps=self.n_steps)
+        utils.check_in([0, 1, 2], progress_bar=self.progress_bar)
         utils.check_in(["kmeans", "random"], init_params=self.init_params)
         utils.check_in(["modal", "soft"], init_params=self.assignment)
         utils.check_in([None, "BCH", "ML"], init_params=self.correction)
@@ -762,6 +765,7 @@ class StepMix(BaseEstimator):
         # Run multiple restarts
         if self.progress_bar:
             print("Fitting StepMix...")
+        if self.progress_bar == 2:
             print("The Iteration bar may update too quickly to be visualized depending on dataset size and StepMix settings.\n")
         tqdm_init = tqdm.trange(self.n_init, disable=not self.progress_bar, desc="Initializations (n_init) ")
         for init in tqdm_init:
@@ -776,7 +780,7 @@ class StepMix(BaseEstimator):
             lower_bound = -np.inf
 
             # EM iterations
-            tqdm_iter = tqdm.tqdm(range(1, self.max_iter + 1), disable=not self.progress_bar,
+            tqdm_iter = tqdm.tqdm(range(1, self.max_iter + 1), disable=self.progress_bar < 2,
                                   desc="Iterations (max_iter)    ", leave=False)
             for n_iter in tqdm_iter:
                 prev_lower_bound = lower_bound
