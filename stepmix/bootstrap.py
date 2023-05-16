@@ -71,7 +71,7 @@ def stack_stepmix_parameters(params):
     return base
 
 
-def bootstrap(estimator, X, Y=None, n_repetitions=1000, progress_bar=True):
+def bootstrap(estimator, X, Y=None, sample_weight=None, n_repetitions=1000, progress_bar=True):
     """Non-parametric boostrap of StepMix estimator.
 
     Fit the estimator on X,Y then fit n_repetitions on resampled datasets.
@@ -86,6 +86,9 @@ def bootstrap(estimator, X, Y=None, n_repetitions=1000, progress_bar=True):
         Measurement data.
     Y : array-like of shape (n_samples, n_columns_structural), default=None
         Structural data.
+    sample_weight : array-like of shape(n_samples,), default=None
+        Array of weights that are assigned to individual samples.
+        If not provided, then each sample is given unit weight.
     n_repetitions: int
         Number of repetitions to fit.
     progress_bar : bool, default=True
@@ -106,10 +109,10 @@ def bootstrap(estimator, X, Y=None, n_repetitions=1000, progress_bar=True):
     X, Y = estimator._check_x_y(X, Y, reset=True)
 
     # First fit the base estimator and get class probabilities
-    estimator.fit(X, Y)
+    estimator.fit(X, Y, sample_weight=sample_weight)
     ref_class_probabilities = estimator.predict_proba(X, Y)
 
-    # Not fit n_repetitions estimator with resampling and save parameters
+    # Now fit n_repetitions estimator with resampling and save parameters
     rng = check_random_state(estimator.random_state)
     parameters = list()
 
@@ -119,6 +122,7 @@ def bootstrap(estimator, X, Y=None, n_repetitions=1000, progress_bar=True):
         rep_samples = rng.choice(n_samples, size=(n_samples,), replace=True)
         X_rep = X[rep_samples]
         Y_rep = Y[rep_samples] if Y is not None else None
+        sample_weight_rep = sample_weight[rep_samples] if sample_weight is not None else None
 
         # Fit estimator on resample data
         estimator_rep = clone(estimator)
@@ -126,7 +130,7 @@ def bootstrap(estimator, X, Y=None, n_repetitions=1000, progress_bar=True):
         # Disable printing for repeated estimators and fit
         estimator_rep.verbose=0
         estimator_rep.progress_bar=0
-        estimator_rep.fit(X_rep, Y_rep)
+        estimator_rep.fit(X_rep, Y_rep, sample_weight=sample_weight_rep)
 
         # Class ordering may be different. Reorder based on best permutation of class probabilites
         rep_class_probabilities = estimator_rep.predict_proba(
