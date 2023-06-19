@@ -22,6 +22,8 @@ class Emission(ABC):
     Model parameters should be ndarrays of shape (n_components, ...).
     In other words, the FIRST AXIS should always correspond to the latent class.
 
+    You can save other things to self.parameters, but they must NOT be ndarrays.
+
     To add an emission model, you must :
         - Inherit from Emission.
         - Implement the m_step, log_likelihood and sample methods.
@@ -180,4 +182,5 @@ class Emission(ABC):
 
         """
         for key, item in self.parameters.items():
-            self.parameters[key] = item[perm]
+            if isinstance(item, np.ndarray):
+                self.parameters[key] = item[perm]

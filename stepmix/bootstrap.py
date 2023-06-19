@@ -56,14 +56,15 @@ def stack_stepmix_parameters(params):
 
     for key_i in base_keys:
         for key_j in params[0][key_i].keys():
-            is_nested = not isinstance(base[key_i][key_j], np.ndarray)
+            is_nested = isinstance(base[key_i][key_j], dict)
             if is_nested:
                 # Nested parameters have another level of dictionaries
                 for key_k in params[0][key_i][key_j].keys():
-                    base[key_i][key_j][key_k] = np.stack(
-                        [p[key_i][key_j][key_k] for p in params]
-                    )
-            else:
+                    if isinstance(base[key_i][key_j][key_k], np.ndarray):
+                        base[key_i][key_j][key_k] = np.stack(
+                            [p[key_i][key_j][key_k] for p in params]
+                        )
+            elif isinstance(base[key_i][key_j], np.ndarray):
                 base[key_i][key_j] = np.stack([p[key_i][key_j] for p in params])
 
     base["weights"] = np.stack([p["weights"] for p in params])
@@ -270,21 +271,23 @@ def plot_all_parameters_CI(estimator_params_dict, bootstrapped_params_dict, alph
 
     for key_i in base_keys:
         for key_j in estimator_params_dict[key_i].keys():
-            is_nested = not isinstance(estimator_params_dict[key_i][key_j], np.ndarray)
+            is_nested = isinstance(estimator_params_dict[key_i][key_j], dict)
             if is_nested:
                 # Nested parameters have another level of dictionaries
                 for key_k in estimator_params_dict[key_i][key_j].keys():
                     estimate = estimator_params_dict[key_i][key_j][key_k]
-                    params = bootstrapped_params_dict[key_i][key_j][key_k]
-                    fig = percentiles_and_CI(
-                        estimate, params, key_i + " : " + key_j, key_k, alpha
-                    )
-                    figures.append(fig)
+                    if isinstance(estimate, np.ndarray):
+                        params = bootstrapped_params_dict[key_i][key_j][key_k]
+                        fig = percentiles_and_CI(
+                            estimate, params, key_i + " : " + key_j, key_k, alpha
+                        )
+                        figures.append(fig)
             else:
                 estimate = estimator_params_dict[key_i][key_j]
-                params = bootstrapped_params_dict[key_i][key_j]
-                fig = percentiles_and_CI(estimate, params, key_i, key_j, alpha)
-                figures.append(fig)
+                if isinstance(estimate, np.ndarray):
+                    params = bootstrapped_params_dict[key_i][key_j]
+                    fig = percentiles_and_CI(estimate, params, key_i, key_j, alpha)
+                    figures.append(fig)
 
     # Make sure all figures have enough space for figure title
     for f in figures:

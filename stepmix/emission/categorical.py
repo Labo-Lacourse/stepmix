@@ -111,8 +111,8 @@ class Multinoulli(Emission):
     ):
         super().__init__(n_components=n_components, random_state=random_state)
         self.integer_codes = integer_codes
-        self.max_n_outcomes = max_n_outcomes
-        self.total_outcomes = total_outcomes
+        self.parameters['max_n_outcomes'] = max_n_outcomes
+        self.parameters['total_outcomes'] = total_outcomes
 
         if max_n_outcomes is None and not integer_codes:
             raise ValueError(
@@ -125,13 +125,16 @@ class Multinoulli(Emission):
 
     def get_n_features(self):
         n_features_x_max_n_outcomes = self.parameters["pis"].shape[1]
-        n_features = int(n_features_x_max_n_outcomes / self.max_n_outcomes)
+        n_features = int(n_features_x_max_n_outcomes / self.parameters["max_n_outcomes"])
         return n_features
 
     def encode_features(self, X):
         if self.integer_codes:
             # Self.n_outcomes will only be updated if it is still None
-            X, self.max_n_outcomes, self.total_outcomes = max_one_hot(X, max_n_outcomes=self.max_n_outcomes, total_outcomes=self.total_outcomes)
+            X, self.parameters["max_n_outcomes"], self.parameters["total_outcomes"] = max_one_hot(X,
+                                                                                                  max_n_outcomes=self.parameters["max_n_outcomes"],
+                                                                                                  total_outcomes=self.parameters["total_outcomes"])
+
 
         return X
 
@@ -152,21 +155,21 @@ class Multinoulli(Emission):
     def sample(self, class_no, n_samples):
         pis = self.parameters["pis"].T
         n_features = self.get_n_features()
-        feature_weights = pis[:, class_no].reshape(n_features, self.max_n_outcomes)
+        feature_weights = pis[:, class_no].reshape(n_features, self.parameters["max_n_outcomes"])
         X = np.array(
             [
                 self.random_state.multinomial(1, feature_weights[k], size=n_samples)
                 for k in range(n_features)
             ]
         )
-        X = np.reshape(np.swapaxes(X, 0, 1), (n_samples, n_features * self.max_n_outcomes))
+        X = np.reshape(np.swapaxes(X, 0, 1), (n_samples, n_features * self.parameters["max_n_outcomes"]))
         return X
 
     def print_parameters(self, indent=1):
         print_parameters(
             self.parameters["pis"],
             "Multinoulli",
-            n_outcomes=self.max_n_outcomes,
+            n_outcomes=self.parameters["max_n_outcomes"],
             indent=indent,
             np_precision=4,
         )
@@ -176,7 +179,7 @@ class Multinoulli(Emission):
         n_classes = self.parameters["pis"].shape[0]
 
         # Only n_outcomes - 1 free parameters per feature since probabilities sum to 1
-        n_free_parameters_per_class = self.total_outcomes - self.get_n_features()
+        n_free_parameters_per_class = self.parameters["total_outcomes"] - self.get_n_features()
         return n_classes * n_free_parameters_per_class
 
 
