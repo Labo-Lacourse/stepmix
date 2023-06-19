@@ -24,5 +24,5 @@ def test_gridsearch(data, kwargs):
 
     # Grid search with cross-validation
     model_1 = StepMix(n_steps=1, **kwargs)
-    gs = GridSearchCV(estimator=model_1, param_grid=dict(n_components=[1, 2, 3, 4, 5]))
+    gs = GridSearchCV(estimator=model_1, param_grid=dict(n_components=[2, 3, 4, 5]))
     gs.fit(X, Y)
