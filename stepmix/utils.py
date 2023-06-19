@@ -460,7 +460,7 @@ def print_parameters(
                     print(indent_str + f"Class {i + 1} : {p:.2f}")
 
 
-def max_one_hot(array, max_n_outcomes=None):
+def max_one_hot(array, max_n_outcomes=None, total_outcomes=None):
     """Multiple categorical one-hot encoding.
 
     Takes an n_samples x n_features array of integer-encoded categorical features and returns an
@@ -481,7 +481,7 @@ def max_one_hot(array, max_n_outcomes=None):
                 [2, 2],
             ]
         )
-        b, max_n_outcomes = max_one_hot(a)
+        b, max_n_outcomes, total_outcomes = max_one_hot(a)
         print(b)
 
         # Should yield
@@ -494,25 +494,37 @@ def max_one_hot(array, max_n_outcomes=None):
     ----------
     array : ndarray of shape  (n_samples, n_features)
         Integer-encoded categorical data. Will be float due to sklearn casting. We'll cast back to ints.
-    max_n_outcomes : max_n_outcomes, default=None
-        Maximum number of outcomes. Each column will max_n_outcomes associated columns. If None, will be inferred
-        from the data.
+    max_n_outcomes : int, default=None
+        Maximum number of outcomes for a single categorical feature.
+        Each column in the input will have max_n_outcomes associated columns in the output.
+        If None, will be inferred from the data.
+    total_outcomes : int, default=None
+        Total outcomes over all features. E.g., if we provide a categorical variable with two outcomes and another
+        with 4 outcomes, total_outcomes = 6.
+        If None, will be inferred from the data.
 
     Returns
     -------
     one_hot : ndarray of shape (n_samples, n_features * max_n_outcomes)
         One-hot encoded categories.
 
-    max_n_outcomes : max_n_outcomes
-        Maximum number of outcomes. Each column will max_n_outcomes associated columns.
+    max_n_outcomes : int
+        Maximum number of outcomes for a single categorical feature.
+        Each column in the input will have max_n_outcomes associated columns in the output.
+
+    total_outcomes : int
+        Total outcomes over all features. E.g., if we provide a categorical variable with two outcomes and another
+        with 4 outcomes, total_outcomes = 6.
 
     """
     n_samples = array.shape[0]
     n_features = array.shape[1]
 
     # Get maximal number of outcomes
-    if max_n_outcomes is None:
-        max_n_outcomes = int(np.nanmax(array) + 1)
+    if max_n_outcomes is None or total_outcomes is None:
+        outcomes = np.nanmax(array, axis=0) + 1
+        total_outcomes = int(np.sum(outcomes))
+        max_n_outcomes = int(np.nanmax(outcomes))
 
     # Create one-hot encoding
     one_hot = np.zeros((n_samples, array.shape[1] * max_n_outcomes))
@@ -526,7 +538,7 @@ def max_one_hot(array, max_n_outcomes=None):
         # Now reapply NaNs
         one_hot[not_observed, c * max_n_outcomes : (c + 1) * max_n_outcomes] = np.nan
 
-    return one_hot, max_n_outcomes
+    return one_hot, max_n_outcomes, total_outcomes
 
 
 def get_mixed_descriptor(dataframe, **kwargs):

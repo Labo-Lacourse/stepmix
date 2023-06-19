@@ -214,9 +214,10 @@ def test_max_one_hot(data, kwargs):
         ]
     )
 
-    onehot, max_n_outcomes = max_one_hot(a)
+    onehot, max_n_outcomes, total_outcomes = max_one_hot(a)
 
     assert max_n_outcomes == 4
+    assert total_outcomes == 7
     assert np.all(onehot == target)
 
 
@@ -240,9 +241,10 @@ def test_max_one_hot_nan(data, kwargs):
         ]
     )
 
-    onehot, max_n_outcomes = max_one_hot(a)
+    onehot, max_n_outcomes, total_outcomes = max_one_hot(a)
 
     assert max_n_outcomes == 4
+    assert total_outcomes == 7
     assert np.allclose(onehot, target, equal_nan=True)
 
 
@@ -271,18 +273,20 @@ def test_categorical_encoding(kwargs):
     )
 
     # Model on integer codes
+    # In this case, max_n_outcomes and total_outcomes are inferred from the data
     model_1 = StepMix(
         measurement="categorical",
-        measurement_params=dict(integer_codes=True, n_outcomes=None),
+        measurement_params=dict(integer_codes=True, max_n_outcomes=None, total_outcomes=None),
         **kwargs,
     )
     model_1.fit(data_int)
     param_1 = model_1.get_parameters()["measurement"]["pis"]
 
     # Model on one-hot codes
+    # In this case, we need to specify max_n_outcomes and total_outcomes
     model_2 = StepMix(
         measurement="categorical",
-        measurement_params=dict(integer_codes=False, n_outcomes=2),
+        measurement_params=dict(integer_codes=False, max_n_outcomes=4, total_outcomes=7),
         **kwargs,
     )
     model_2.fit(data_one_hot)
@@ -290,6 +294,13 @@ def test_categorical_encoding(kwargs):
 
     # Check if parameters are the same
     assert np.all(param_1 == param_2)
+
+    # Check if n_parameters are the same
+    assert model_1.n_parameters == model_2.n_parameters
+
+    # Check n_parameters
+    n_parameters = (3 - 1) + 3 * (2 + 3)
+    assert model_1.n_parameters == n_parameters
 
 
 def test_categorical_less_categories_in_test():
@@ -335,6 +346,6 @@ def test_categorical_n_parameters_max():
 
     model.fit(data)
 
-    n_parameters = 4 + 4 * (1 + 2 + 3)
+    n_parameters = (4 - 1) + 4 * (1 + 2 + 3)
 
     assert model.n_parameters == n_parameters
