@@ -123,7 +123,7 @@ class StepMix(BaseEstimator):
     n_init : int, default=1
         The number of initializations to perform. The best results are kept.
     save_param_init : bool, default=False
-        Save the estimated parameters of all initializations to self.param_buffer_.
+        Save the estimated parameters of all initializations to self.param_buffer\_.
     init_params : {'kmeans', 'random'}, default='random'
         The method used to initialize the weights, the means and the
         precisions.
@@ -1157,7 +1157,7 @@ class StepMix(BaseEstimator):
             Each row corresponds to a  single data point of the structural model.
         Returns
         -------
-        entropy : float
+        relative_entropy : float
         """
         entropy = self.entropy(X, Y)
         n_samples = X.shape[0]
