@@ -410,7 +410,11 @@ def print_parameters(
         indent_str
         + f"{model_name} model with {n_features} feature"
         + ("s" if n_features > 1 else "")
-        + (f", each with up to {n_outcomes} possible outcomes" if n_outcomes >= 2 else "")
+        + (
+            f", each with up to {n_outcomes} possible outcomes"
+            if n_outcomes >= 2
+            else ""
+        )
         + (" and intercept" if intercept else "")
     )
     print(indent_str + "-" * (80 - indent * 4))

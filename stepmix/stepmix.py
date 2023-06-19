@@ -290,7 +290,9 @@ class StepMix(BaseEstimator):
             max_iter=self.max_iter,
             n_init=self.n_init,
         )
-        utils.check_nonneg(abs_tol=self.abs_tol, rel_tol=self.rel_tol, verbose=self.verbose)
+        utils.check_nonneg(
+            abs_tol=self.abs_tol, rel_tol=self.rel_tol, verbose=self.verbose
+        )
         utils.check_in([1, 2, 3], n_steps=self.n_steps)
         utils.check_in([0, 1, 2], progress_bar=self.progress_bar)
         utils.check_in(["kmeans", "random"], init_params=self.init_params)
@@ -1134,7 +1136,7 @@ class StepMix(BaseEstimator):
 
     def relative_entropy(self, X, Y=None):
         """Scaled Relative Entropy of the posterior over latent classes.
-        
+
         Ramaswamy et al., 1993.
 
         1 - entropy / (n_samples * log(n_components))

@@ -276,7 +276,9 @@ def test_categorical_encoding(kwargs):
     # In this case, max_n_outcomes and total_outcomes are inferred from the data
     model_1 = StepMix(
         measurement="categorical",
-        measurement_params=dict(integer_codes=True, max_n_outcomes=None, total_outcomes=None),
+        measurement_params=dict(
+            integer_codes=True, max_n_outcomes=None, total_outcomes=None
+        ),
         **kwargs,
     )
     model_1.fit(data_int)
@@ -286,7 +288,9 @@ def test_categorical_encoding(kwargs):
     # In this case, we need to specify max_n_outcomes and total_outcomes
     model_2 = StepMix(
         measurement="categorical",
-        measurement_params=dict(integer_codes=False, max_n_outcomes=4, total_outcomes=7),
+        measurement_params=dict(
+            integer_codes=False, max_n_outcomes=4, total_outcomes=7
+        ),
         **kwargs,
     )
     model_2.fit(data_one_hot)
@@ -315,6 +319,7 @@ def test_categorical_less_categories_in_test():
 
     preds = model.predict(test)
 
+
 @pytest.mark.filterwarnings(
     "ignore::sklearn.exceptions.ConvergenceWarning"
 )  # Ignore convergence warnings
@@ -323,12 +328,19 @@ def test_categorical_n_parameters():
     rng = np.random.default_rng(42)
     data = rng.choice(a=[0, 1, 2], size=200).reshape(-1, 1)
 
-    model = StepMix(n_components=3, measurement='categorical', random_state=42, verbose=0, max_iter=5000,
-                            n_init=1)
+    model = StepMix(
+        n_components=3,
+        measurement="categorical",
+        random_state=42,
+        verbose=0,
+        max_iter=5000,
+        n_init=1,
+    )
 
     model.fit(data)
 
     assert model.n_parameters == 8
+
 
 @pytest.mark.filterwarnings(
     "ignore::sklearn.exceptions.ConvergenceWarning"
@@ -341,8 +353,14 @@ def test_categorical_n_parameters_max():
     data_3 = rng.choice(a=[0, 1], size=300).reshape(-1, 1)
     data = np.hstack((data_1, data_2, data_3))
 
-    model = StepMix(n_components=4, measurement='categorical', random_state=42, verbose=0, max_iter=5000,
-                    n_init=1)
+    model = StepMix(
+        n_components=4,
+        measurement="categorical",
+        random_state=42,
+        verbose=0,
+        max_iter=5000,
+        n_init=1,
+    )
 
     model.fit(data)
 
