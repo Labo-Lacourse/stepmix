@@ -152,7 +152,7 @@ class Multinoulli(Emission):
         n_classes = self.parameters["pis"].shape[0]
 
         # Only n-1 free parameters per outcome since probabilities sum to 1
-        n_free_parameters_per_class = (self.get_n_features() - 1) * self.n_outcomes
+        n_free_parameters_per_class = self.get_n_features() * (self.n_outcomes - 1)
         return n_classes * n_free_parameters_per_class
 
 
