@@ -122,6 +122,8 @@ class StepMix(BaseEstimator):
         The number of EM iterations to perform.
     n_init : int, default=1
         The number of initializations to perform. The best results are kept.
+    save_param_init : bool, default=False
+        Save the estimated parameters of all initializations to self.param_buffer_.
     init_params : {'kmeans', 'random'}, default='random'
         The method used to initialize the weights, the means and the
         precisions.
@@ -173,6 +175,11 @@ class StepMix(BaseEstimator):
     lower_bound_ : float
         Lower bound value on the log-likelihood (of the training data with
         respect to the model) of the best fit of EM.
+    lower_bound_buffer_ : float
+        Lower bound values on the log-likelihood (of the training data with
+        respect to the model) of all EM initializations.
+    param_buffer_ : list
+        Final parameters of all initializations. Only updated if save_param_init=True.
 
     Notes
     -----
@@ -225,6 +232,7 @@ class StepMix(BaseEstimator):
         rel_tol=0.00,
         max_iter=1000,
         n_init=1,
+        save_param_init=False,
         init_params="random",
         random_state=None,
         verbose=0,
@@ -238,6 +246,7 @@ class StepMix(BaseEstimator):
         self.rel_tol = rel_tol
         self.max_iter = max_iter
         self.n_init = n_init
+        self.save_param_init = save_param_init
         self.init_params = init_params
         self.random_state = random_state
         self.verbose = verbose
@@ -281,13 +290,13 @@ class StepMix(BaseEstimator):
             max_iter=self.max_iter,
             n_init=self.n_init,
         )
-        utils.check_nonneg(abs_tol=self.abs_tol, verbose=self.verbose)
-        utils.check_nonneg(rel_tol=self.rel_tol, verbose=self.verbose)
+        utils.check_nonneg(abs_tol=self.abs_tol, rel_tol=self.rel_tol, verbose=self.verbose)
         utils.check_in([1, 2, 3], n_steps=self.n_steps)
         utils.check_in([0, 1, 2], progress_bar=self.progress_bar)
         utils.check_in(["kmeans", "random"], init_params=self.init_params)
-        utils.check_in(["modal", "soft"], init_params=self.assignment)
-        utils.check_in([None, "BCH", "ML"], init_params=self.correction)
+        utils.check_in(["modal", "soft"], assignment=self.assignment)
+        utils.check_in([None, "BCH", "ML"], correction=self.correction)
+        utils.check_in([False, True], save_param_init=self.save_param_init)
         utils.check_descriptor(self.measurement, keys=EMISSION_DICT.keys())
         utils.check_descriptor(self.structural, keys=EMISSION_DICT.keys())
         utils.check_type(
@@ -307,6 +316,9 @@ class StepMix(BaseEstimator):
 
         # Buffer to save the likelihoods of different inits for debugging
         self.lower_bound_buffer_ = list()
+
+        # Buffer to save params of different inits
+        self.param_buffer_ = list()
 
         # Covariate models have special constraints. Check them.
         is_covariate = utils.check_covariate(self.measurement, self.structural)
@@ -812,9 +824,6 @@ class StepMix(BaseEstimator):
                 change = lower_bound - prev_lower_bound
                 rel_change = change / lower_bound
 
-                # Save lower bound
-                self.lower_bound_buffer_.append(lower_bound)
-
                 # if both an absolute and a relative tolerance threshold are given, the EM algorithm stops
                 # as soon as one of them is respected
                 if abs(change) < self.abs_tol or abs(rel_change) < self.rel_tol:
@@ -829,14 +838,26 @@ class StepMix(BaseEstimator):
                 )
                 tqdm_iter.set_postfix(avg_LL=lower_bound, LL=ll)
 
+            # Update buffers
+            current_parameters = self.get_parameters()
+
             if (
                 lower_bound > max_lower_bound
                 or max_lower_bound == -np.inf
                 or np.isnan(max_lower_bound)
             ):
                 max_lower_bound = lower_bound
-                best_params = self.get_parameters()
+                best_params = current_parameters
                 best_n_iter = n_iter
+
+            if self.save_param_init:
+                self.param_buffer_.append(copy.deepcopy(current_parameters))
+
+            # Save lower bound
+            ll, _ = self._e_step(
+                X, Y=Y, sample_weight=sample_weight, log_emission_pm=log_emission_pm
+            )
+            self.lower_bound_buffer_.append(ll)
 
             # Ask tqdm to display current max lower bound
             max_ll = (
