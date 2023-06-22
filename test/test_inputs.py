@@ -6,17 +6,21 @@ from stepmix.stepmix import StepMix
 from stepmix.emission.build_emission import EMISSION_DICT
 
 
-def test_dataframe(data, kwargs):
+@pytest.mark.parametrize("n_steps,corr", [(1, None), (2, None), (3, None), (3, "BCH"), (3, "ML")])
+def test_dataframe(data, kwargs, n_steps, corr):
     X, Y = data
     X_df, Y_df = pd.DataFrame(X), pd.DataFrame(Y)
 
+    kwargs["n_steps"] = n_steps
+    kwargs["correction"] = corr
+
     # Test on numpy arrays
-    model_1 = StepMix(n_steps=1, **kwargs)
+    model_1 = StepMix(**kwargs)
     model_1.fit(X, Y)
     ll_1 = model_1.score(X, Y)  # Average log-likelihood
 
     # Test on dataframes
-    model_2 = StepMix(n_steps=1, **kwargs)
+    model_2 = StepMix(**kwargs)
     model_2.fit(X_df, Y_df)
     ll_2 = model_1.score(X_df, Y_df)  # Average log-likelihood
 
