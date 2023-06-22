@@ -1005,10 +1005,11 @@ class StepMix(BaseEstimator):
             If not provided, then each sample is given unit weight.
 
         """
-        sample_weight = _check_sample_weight(sample_weight, Y, dtype=Y.dtype, copy=True)
-
         check_is_fitted(self)
         _, Y = self._check_x_y(None, Y, reset=True)
+
+        sample_weight = _check_sample_weight(sample_weight, Y, dtype=Y.dtype, copy=True)
+
 
         # For the third step of the 3-step approach
         random_state = check_random_state(self.random_state)
