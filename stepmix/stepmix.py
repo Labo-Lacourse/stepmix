@@ -1132,6 +1132,7 @@ class StepMix(BaseEstimator):
         """
         check_is_fitted(self)
         resp = self.predict_proba(X, Y)
+        resp = np.clip(resp, 1e-15, 1-1e-15)
 
         return -1 * np.sum(resp * np.log(resp))
 
