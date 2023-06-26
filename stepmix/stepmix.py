@@ -1010,7 +1010,6 @@ class StepMix(BaseEstimator):
 
         sample_weight = _check_sample_weight(sample_weight, Y, dtype=Y.dtype, copy=True)
 
-
         # For the third step of the 3-step approach
         random_state = check_random_state(self.random_state)
         self._initialize_parameters_structural(Y, random_state=random_state)
@@ -1132,7 +1131,7 @@ class StepMix(BaseEstimator):
         """
         check_is_fitted(self)
         resp = self.predict_proba(X, Y)
-        resp = np.clip(resp, 1e-15, 1-1e-15)
+        resp = np.clip(resp, 1e-15, 1 - 1e-15)
 
         return -1 * np.sum(resp * np.log(resp))
 

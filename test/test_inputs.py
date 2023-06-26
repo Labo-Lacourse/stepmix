@@ -6,7 +6,9 @@ from stepmix.stepmix import StepMix
 from stepmix.emission.build_emission import EMISSION_DICT
 
 
-@pytest.mark.parametrize("n_steps,corr", [(1, None), (2, None), (3, None), (3, "BCH"), (3, "ML")])
+@pytest.mark.parametrize(
+    "n_steps,corr", [(1, None), (2, None), (3, None), (3, "BCH"), (3, "ML")]
+)
 def test_dataframe(data, kwargs, n_steps, corr):
     X, Y = data
     X_df, Y_df = pd.DataFrame(X), pd.DataFrame(Y)
