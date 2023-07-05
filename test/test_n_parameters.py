@@ -143,6 +143,7 @@ def test_covariate_n_parameters(intercept, n_parameters):
 
     assert model.n_parameters == n_parameters
 
+
 @pytest.mark.filterwarnings(
     "ignore::sklearn.exceptions.ConvergenceWarning"
 )  # Ignore convergence warnings
@@ -166,9 +167,8 @@ def test_nested_n_parameters():
         "category": {
             "model": "categorical",
             "n_columns": 1,
-        }
+        },
     }
-
 
     model = StepMix(
         n_components=3,
