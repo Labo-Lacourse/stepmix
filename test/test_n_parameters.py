@@ -26,6 +26,7 @@ def test_binary_n_parameters(model):
 
     assert model.n_parameters == 23
 
+
 @pytest.mark.filterwarnings(
     "ignore::sklearn.exceptions.ConvergenceWarning"
 )  # Ignore convergence warnings
@@ -33,7 +34,7 @@ def test_binary_n_parameters(model):
 def test_categorical_n_parameters(model):
     """Test number of parameters of a simple categorical mixture."""
     rng = np.random.default_rng(42)
-    data = rng.choice(a=[0, 1, 2], size=(200, )).reshape(-1, 1)
+    data = rng.choice(a=[0, 1, 2], size=(200,)).reshape(-1, 1)
 
     model = StepMix(
         n_components=3,
@@ -47,6 +48,8 @@ def test_categorical_n_parameters(model):
     model.fit(data)
 
     assert model.n_parameters == 8
+
+
 @pytest.mark.filterwarnings(
     "ignore::sklearn.exceptions.ConvergenceWarning"
 )  # Ignore convergence warnings
@@ -78,7 +81,19 @@ def test_categorical_n_parameters_max(model):
 @pytest.mark.filterwarnings(
     "ignore::sklearn.exceptions.ConvergenceWarning"
 )  # Ignore convergence warnings
-@pytest.mark.parametrize("model,n_parameters", [("gaussian_unit", 19), ("gaussian_diag", 35), ("gaussian_unit_nan", 19), ("gaussian_diag_nan", 35),("gaussian_spherical", 23), ("gaussian_spherical_nan", 23), ("gaussian_tied", 29), ("gaussian_full", 59)])
+@pytest.mark.parametrize(
+    "model,n_parameters",
+    [
+        ("gaussian_unit", 19),
+        ("gaussian_diag", 35),
+        ("gaussian_unit_nan", 19),
+        ("gaussian_diag_nan", 35),
+        ("gaussian_spherical", 23),
+        ("gaussian_spherical_nan", 23),
+        ("gaussian_tied", 29),
+        ("gaussian_full", 59),
+    ],
+)
 def test_gaussian_n_parameters(model, n_parameters):
     """Test number of parameters of a simple categorical mixture."""
     rng = np.random.default_rng(42)
@@ -97,6 +112,7 @@ def test_gaussian_n_parameters(model, n_parameters):
 
     assert model.n_parameters == n_parameters
 
+
 @pytest.mark.filterwarnings(
     "ignore::sklearn.exceptions.ConvergenceWarning"
 )  # Ignore convergence warnings
@@ -107,9 +123,9 @@ def test_covariate_n_parameters(intercept, n_parameters):
     data = rng.normal(size=(100, 2))
 
     opt_params = {
-        'method': 'newton-raphson',  # Can also be "gradient",
-        'intercept': intercept,
-        'max_iter': 1,  # Number of opt. step each time we update the covariate model
+        "method": "newton-raphson",  # Can also be "gradient",
+        "intercept": intercept,
+        "max_iter": 1,  # Number of opt. step each time we update the covariate model
     }
 
     model = StepMix(

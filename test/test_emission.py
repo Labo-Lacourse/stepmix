@@ -318,5 +318,3 @@ def test_categorical_less_categories_in_test():
     model.fit(train)
 
     preds = model.predict(test)
-
-
