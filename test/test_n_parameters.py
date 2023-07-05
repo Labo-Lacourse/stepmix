@@ -9,7 +9,7 @@ from stepmix import StepMix
 )  # Ignore convergence warnings
 @pytest.mark.parametrize("model", ["binary", "binary_nan"])
 def test_binary_n_parameters(model):
-    """Test number of parameters of a simple categorical mixture."""
+    """Test number of parameters of a simple binary mixture."""
     rng = np.random.default_rng(42)
     data = rng.choice(a=[0, 1], size=(100, 7))
 
@@ -95,7 +95,7 @@ def test_categorical_n_parameters_max(model):
     ],
 )
 def test_gaussian_n_parameters(model, n_parameters):
-    """Test number of parameters of a simple categorical mixture."""
+    """Test number of parameters of a simple gaussian mixture."""
     rng = np.random.default_rng(42)
     data = rng.normal(size=(100, 4))
 
@@ -118,7 +118,7 @@ def test_gaussian_n_parameters(model, n_parameters):
 )  # Ignore convergence warnings
 @pytest.mark.parametrize("intercept,n_parameters", [(False, 10), (True, 12)])
 def test_covariate_n_parameters(intercept, n_parameters):
-    """Test number of parameters of a simple categorical mixture."""
+    """Test number of parameters of a simple covariate mixture."""
     rng = np.random.default_rng(42)
     data = rng.normal(size=(100, 2))
 
@@ -142,3 +142,43 @@ def test_covariate_n_parameters(intercept, n_parameters):
     model.fit(data, data)
 
     assert model.n_parameters == n_parameters
+
+@pytest.mark.filterwarnings(
+    "ignore::sklearn.exceptions.ConvergenceWarning"
+)  # Ignore convergence warnings
+def test_nested_n_parameters():
+    """Test number of parameters of a simple nested model."""
+    rng = np.random.default_rng(42)
+    data_continuous = rng.normal(size=(100, 2))
+    data_binary = rng.choice(a=[0, 1], size=(100, 2))
+    data_categorical = rng.choice(a=[0, 1, 2], size=(100, 2))
+    data = np.hstack((data_continuous, data_binary, data_categorical))
+
+    model_desc = {
+        "continuous": {
+            "model": "gaussian_diag",
+            "n_columns": 2,
+        },
+        "binary": {
+            "model": "binary",
+            "n_columns": 1,
+        },
+        "category": {
+            "model": "categorical",
+            "n_columns": 1,
+        }
+    }
+
+
+    model = StepMix(
+        n_components=3,
+        measurement=model_desc,
+        random_state=42,
+        verbose=0,
+        max_iter=1,
+        n_init=1,
+    )
+
+    model.fit(data)
+
+    assert model.n_parameters == 23
