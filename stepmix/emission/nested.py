@@ -118,7 +118,7 @@ class Nested(Emission):
     def n_parameters(self):
         n = 0
         for m in self.models.values():
-            n = m.n_parameters
+            n += m.n_parameters
         return n
 
     def permute_classes(self, perm, axis=0):

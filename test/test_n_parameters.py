@@ -150,8 +150,8 @@ def test_nested_n_parameters():
     """Test number of parameters of a simple nested model."""
     rng = np.random.default_rng(42)
     data_continuous = rng.normal(size=(100, 2))
-    data_binary = rng.choice(a=[0, 1], size=(100, 2))
-    data_categorical = rng.choice(a=[0, 1, 2], size=(100, 2))
+    data_binary = rng.choice(a=[0, 1], size=(100, 1))
+    data_categorical = rng.choice(a=[0, 1, 2], size=(100, 1))
     data = np.hstack((data_continuous, data_binary, data_categorical))
 
     model_desc = {
