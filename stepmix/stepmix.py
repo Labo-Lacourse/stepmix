@@ -427,7 +427,15 @@ class StepMix(BaseEstimator):
     def n_parameters(self):
         """Get number of free parameters."""
         check_is_fitted(self)
-        n = self.n_components - 1 + self._mm.n_parameters
+
+        # Only include class weights if they are used for likelihood computations
+        # Class weights are not used for covariate models
+        n = (self.n_components - 1) if self._class_weight_likelihood else 0
+
+        # Measurement parameters
+        n += self._mm.n_parameters
+
+        # Optional structural parameters
         if hasattr(self, "_sm"):
             n += self._sm.n_parameters
         return n
