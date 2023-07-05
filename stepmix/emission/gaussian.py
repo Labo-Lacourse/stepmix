@@ -183,6 +183,11 @@ class Gaussian(Emission):
     @property
     def n_parameters(self):
         n = GaussianMixture._n_parameters(self)
+
+        # Remove class weights from the count
+        # We add them back in the main StepMix class
+        n -= self.n_components - 1
+
         return n
 
     def permute_classes(self, perm, axis=0):

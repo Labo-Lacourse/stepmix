@@ -428,8 +428,8 @@ class StepMix(BaseEstimator):
         """Get number of free parameters."""
         check_is_fitted(self)
 
-        # Only include class weights if they are used for likelihood computations
-        # Class weights are not used for covariate models
+        # Only include class weights dof if they are used for likelihood computations
+        # Class weights are not used in the conditional perspective (e.g., covariate models)
         n = (self.n_components - 1) if self._class_weight_likelihood else 0
 
         # Measurement parameters
