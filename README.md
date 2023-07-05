@@ -33,47 +33,25 @@ You can install StepMix with pip, preferably in a virtual environment:
 pip install stepmix
 ``` 
 # Quickstart
-A simple StepMix mixture using the continuous variables of the Iris Dataset:
+A StepMix mixture using categorical variables on a preloaded data matrix. StepMix accepts either `numpy.array`or 
+`pandas.DataFrame`. Categories should be integer-encoded and 0-indexed.
 
 ```python
-import pandas as pd
-from sklearn.datasets import load_iris
-from sklearn.metrics import rand_score
-
 from stepmix.stepmix import StepMix
 
-# Load dataset in a Dataframe
-data_continuous, target = load_iris(return_X_y=True, as_frame=True)
-
-# Continuous StepMix Model with 3 latent classes
-model = StepMix(n_components=3, measurement="continuous", verbose=0, random_state=123)
-
-# Fit model and predict clusters
-model.fit(data_continuous)
-pred_continuous = model.predict(data_continuous)
-
-# A Rand score close to 1 indicates good alignment between clusters and flower types
-print(rand_score(pred_continuous, target))
-```
-StepMix also provides support for categorical mixtures:
-
-```python
-# Create categorical data based on the Iris Dataset quantiles
-data_categorical = data_continuous.copy()
-for col in data_categorical:
-   data_categorical[col] = pd.qcut(data_continuous[col], q=3).cat.codes
-
 # Categorical StepMix Model with 3 latent classes
-model = StepMix(n_components=3, measurement="categorical", verbose=0, random_state=123)
+model = StepMix(n_components=3, measurement="categorical")
+model.fit(data)
 
-# Fit model and predict clusters
-model.fit(data_categorical)
-pred_categorical = model.predict(data_categorical)
-
-# A Rand score close to 1 indicates good alignment between clusters and flower types
-print(rand_score(pred_categorical, target))
+# Allow missing values
+model_nan = StepMix(n_components=3, measurement="categorical_nan")
+model_nan.fit(data_nan)
 ```
-Please refer to the StepMix tutorials to learn how to handle missing values and combine continuous and categorical data in the same model.
+For binary data you can also use `measurement="binary"` or `measurement="binary_nan"`. For continuous data, you can fit a Gaussian Mixture with diagonal covariances using `measurement="continuous"` or `measurement="continuous_nan"`.
+
+Set `verbose=1` for a detailed output.
+
+Please refer to the StepMix tutorials to learn how to combine continuous and categorical data in the same model.
 # Tutorials
 Detailed tutorials are available in notebooks: 
 1. [Generalized Mixture Models with StepMix](https://colab.research.google.com/drive/1KAxcvxjL_vB2lAG9e47we7hrf_2fR1eK?usp=sharing): 

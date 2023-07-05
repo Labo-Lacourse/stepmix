@@ -2,54 +2,23 @@ Tutorials
 =========
 Quickstart
 ----------
-The following shows a simple StepMix mixture using the continuous variables of the Iris Dataset. ``n_components`` controls
-the number of latent classes.::
-
-    import pandas as pd
-    from sklearn.datasets import load_iris
-    from sklearn.metrics import rand_score
+A StepMix mixture using categorical variables on a preloaded data matrix. StepMix accepts either ``numpy.array`` or ``pandas.DataFrame``. Categories should be integer-encoded and 0-indexed. ::
 
     from stepmix.stepmix import StepMix
 
-    # Load dataset in a Dataframe
-    data_continuous, target = load_iris(return_X_y=True, as_frame=True)
-
-    # Continuous StepMix Model with 3 latent classes
-    model = StepMix(n_components=3, measurement="continuous", verbose=1, random_state=123)
-
-    # Fit model and predict clusters
-    model.fit(data_continuous)
-    pred_continuous = model.predict(data_continuous)
-
-    # A Rand score close to 1 indicates good alignment between clusters and flower types
-    print(rand_score(pred_continuous, target))
-
-The API allows to easily predict class memberships or probabilities::
-
-    class_ids = model.predict(X, Y)
-    class_probs = model.predict_proba(X, Y)
-
-StepMix also provides support for categorical mixtures::
-
-    # Create categorical data based on the Iris Dataset quantiles
-    data_categorical = data_continuous.copy()
-    for col in data_categorical:
-       data_categorical[col] = pd.qcut(data_continuous[col], q=3).cat.codes
-
     # Categorical StepMix Model with 3 latent classes
-    model = StepMix(n_components=3, measurement="categorical", verbose=0, random_state=123)
+    model = StepMix(n_components=3, measurement="categorical")
+    model.fit(data)
 
-    # Fit model and predict clusters
-    model.fit(data_categorical)
-    pred_categorical = model.predict(data_categorical)
+    # Allow missing values
+    model_nan = StepMix(n_components=3, measurement="categorical_nan")
+    model_nan.fit(data_nan)
 
-    # A Rand score close to 1 indicates good alignment between clusters and flower types
-    print(rand_score(pred_categorical, target))
+For binary data you can also use ``measurement="binary"`` or ``measurement="binary_nan"``. For continuous data, you can fit a Gaussian Mixture with diagonal covariances using ``measurement="continuous"`` or ``measurement="continuous_nan"``.
 
-Input Data
-----------
-StepMix accepts the ``numpy.array`` and ``pandas.DataFrame`` data types. Additionally, emission models suffixed with
-``_nan`` support missing values denoted by ``np.NaN``.
+Set ``verbose=1`` for a detailed output.
+
+Please refer to the StepMix tutorials to learn how to combine continuous and categorical data in the same model.
 
 Advanced Usage
 --------------
