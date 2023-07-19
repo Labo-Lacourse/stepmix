@@ -327,7 +327,7 @@ class StepMix(BaseEstimator):
 
         # Covariate models use a different conditional likelihood (See Bakk and Kuha, 2018), which should
         # not include the marginal likelihood over the latent classes in the E-step
-        self._class_weight_likelihood = not is_covariate
+        self._conditional_likelihood = is_covariate
 
     def _initialize_parameters(self, X, random_state):
         """Initialize the weights and measurement model parameters.
@@ -430,7 +430,7 @@ class StepMix(BaseEstimator):
 
         # Only include class weights dof if they are used for likelihood computations
         # Class weights are not used in the conditional perspective (e.g., covariate models)
-        n = (self.n_components - 1) if self._class_weight_likelihood else 0
+        n = 0.0 if self._conditional_likelihood else (self.n_components - 1)
 
         # Measurement parameters
         n += self._mm.n_parameters
@@ -931,8 +931,10 @@ class StepMix(BaseEstimator):
             # Standard Measurement Log likelihood
             log_resp = self._mm.log_likelihood(X)
 
-        # Add class prior probabilities
-        if self._class_weight_likelihood:
+        # If Y is not provided, we are only using the MM. Use the full likelihood
+        # Also use the full likelihood if the model is not conditional
+        if Y is None or not self._conditional_likelihood:
+            # Add class prior probabilities
             log_resp += np.log(self.weights_).reshape((1, -1))
 
         # Add structural model likelihood (if structural data is provided)

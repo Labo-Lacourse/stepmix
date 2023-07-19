@@ -140,6 +140,7 @@ def test_sampling_rng():
 
     assert not np.array_equal(X, Y)
 
+
 @pytest.mark.parametrize("structural", ["covariate", "gaussian_unit"])
 def test_mm_1_vs_3(data, kwargs, structural):
     """Fit 1-step estimator then 3-step estimator on the same data.
@@ -156,4 +157,4 @@ def test_mm_1_vs_3(data, kwargs, structural):
     model_2.fit(X, Y)
     param_2 = model_2.get_parameters()["measurement"]["pis"]
 
-    assert(np.all(param_1 == param_2))
+    assert np.all(param_1 == param_2)
