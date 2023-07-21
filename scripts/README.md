@@ -21,7 +21,7 @@ Application example
 -----------------------
 The data come from the combined 1976 and 1977 datasets of the American General Social Survey (GSS) and were obtained using the R package `gssr` (https://github.com/kjhealy/gssr). The dataset is composed of the following 4 variables: 
 
- - `papres`: Father's occupational prestige score:
+ - `papres`: Father's occupational prestige score
     - 0="Low", 1="Medium", 2="High"
  - `madeg`: Mother's highest degree
     - 0="Less than high school", 1="High school", 2="Associate/Junior college", 3="Bachelor", 4="Graduate"
