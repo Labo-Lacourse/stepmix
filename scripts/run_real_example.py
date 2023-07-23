@@ -7,8 +7,7 @@ from stepmix.bootstrap import bootstrap
 from tabulate import tabulate
 from scipy.stats import norm
 
-url = 'https://drive.google.com/file/d/1gxIQimk-iBTbEZwblOmdwY1nyJyMi7YN/view'
-data = pd.read_csv(url)
+data = pd.read_csv('StepMix_Real_Data_GSS.csv')
 
 data_mesure = data.iloc[:, [0, 1, 2]] # The "papres", "madeg" and "padeg" variables are used as items in the measurement model.
 realinc1000_Dist = data['realinc1000'] # The "realinc1000" variable is used as the distal outcome
