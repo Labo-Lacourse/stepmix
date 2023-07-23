@@ -19,7 +19,7 @@ All three commands should output the simulation tables from the paper. You can i
 
 Application example
 -----------------------
-The data come from the combined 1976 and 1977 datasets of the American General Social Survey (GSS) and were obtained using the R package `gssr` (https://github.com/kjhealy/gssr). The dataset can is available [here](https://drive.google.com/file/d/1gxIQimk-iBTbEZwblOmdwY1nyJyMi7YN/view) and is composed of the following 4 variables: 
+The data come from the combined 1976 and 1977 datasets of the American General Social Survey (GSS) and were obtained using the R package `gssr` (https://github.com/kjhealy/gssr). The dataset can be downloaded [here](https://drive.google.com/file/d/1gxIQimk-iBTbEZwblOmdwY1nyJyMi7YN/view) and is composed of the following 4 variables: 
 
  - `papres`: Father's occupational prestige score
     - 0="Low", 1="Medium", 2="High"
