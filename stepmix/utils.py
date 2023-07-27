@@ -319,6 +319,7 @@ def print_report(model, X, Y=None, sample_weight=None):
     aic = model.aic(X, Y)
     entropy = model.entropy(X, Y)
     relative_entropy = model.relative_entropy(X, Y)
+    sabic = model.sabic(X, Y)
 
     print("=" * 80)
     print("MODEL REPORT")
@@ -355,6 +356,7 @@ def print_report(model, X, Y=None, sample_weight=None):
     print(f"    Average LL                    : {avg_ll:.4f}")
     print(f"    AIC                           : {aic:.2f}")
     print(f"    BIC                           : {bic:.2f}")
+    print(f"    Sample-Size Adjusted BIC      : {sabic:.2f}")
     print(f"    Entropy                       : {entropy:.4f}")
     print(f"    Scaled Relative Entropy       : {relative_entropy:.4f}")
 
