@@ -58,10 +58,8 @@ def test_emissions_no_sm(data, kwargs, model):
     # Use gaussians in the structural model, all other models are tested on the measurement data
     if model.startswith("gaussian") or model.startswith("continuous"):
         kwargs["measurement"] = "binary"
-        kwargs["structural"] = model
     else:
         kwargs["measurement"] = model
-        kwargs["structural"] = "gaussian_unit"
 
     model_1 = StepMix(n_steps=1, **kwargs)
     model_1.fit(X)
@@ -183,6 +181,20 @@ def test_nested(data_nested, kwargs_nested):
     model_3.fit(data_nested, data_nested)
     ll_3 = model_3.score(data_nested, data_nested)
     pred_3 = model_3.predict(data_nested, data_nested)
+
+    # Test sampling
+    model_3.sample(100)
+
+def test_nested_no_sm(data_nested, kwargs_nested):
+    """Test verbose output and sampling of nested model with measurement model only."""
+
+    # We use the same measurement and structural models, both nested
+    model_3 = StepMix(**kwargs_nested)
+
+    # Test fit and inference
+    model_3.fit(data_nested)
+    ll_3 = model_3.score(data_nested)
+    pred_3 = model_3.predict(data_nested)
 
     # Test sampling
     model_3.sample(100)
