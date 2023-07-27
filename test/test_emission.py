@@ -42,6 +42,39 @@ def test_emissions(data, kwargs, model):
     else:
         # Test sampling
         model_1.sample(100)
+@pytest.mark.filterwarnings(
+    "ignore::RuntimeWarning"
+)  # Ignore most numerical errors since we do not run the emission models on appropriate data
+@pytest.mark.filterwarnings(
+    "ignore::sklearn.exceptions.ConvergenceWarning"
+)  # Ignore convergence warnings for same reason
+@pytest.mark.parametrize("model", EMISSION_DICT.keys())
+def test_emissions_no_sm(data, kwargs, model):
+    """Fit all emission models with verbose output (to test their print statements).
+
+    Only with a measurement model."""
+    X, _ = data
+
+    # Use gaussians in the structural model, all other models are tested on the measurement data
+    if model.startswith("gaussian") or model.startswith("continuous"):
+        kwargs["measurement"] = "binary"
+        kwargs["structural"] = model
+    else:
+        kwargs["measurement"] = model
+        kwargs["structural"] = "gaussian_unit"
+
+    model_1 = StepMix(n_steps=1, **kwargs)
+    model_1.fit(X)
+    ll_1 = model_1.score(X)  # Average log-likelihood
+    preds_1 = model_1.predict(X)  # Class predictions
+
+    if model == "covariate":
+        # We do not expect covariate to have a sampling method
+        with pytest.raises(NotImplementedError) as e_info:
+            model_1.sample(100)
+    else:
+        # Test sampling
+        model_1.sample(100)
 
 
 @pytest.mark.filterwarnings(
