@@ -1321,10 +1321,13 @@ class StepMix(BaseEstimator):
         else:
             # Shuffle everything
             shuffle_mask = rng.permutation(X.shape[0])
-            X, Y, labels_ret = (
+            X, labels_ret = (
                 X[shuffle_mask],
-                Y[shuffle_mask],
                 labels_ret[shuffle_mask],
             )
+
+            if Y is not None:
+                # Optional structural data
+                Y = Y[shuffle_mask]
 
         return X, Y, labels_ret
