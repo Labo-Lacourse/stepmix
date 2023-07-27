@@ -1206,6 +1206,36 @@ class StepMix(BaseEstimator):
             n * ((n + 2) / 24)
         )
 
+    def caic(self, X, Y=None):
+        """Consistent AIC.
+
+        References
+        ----------
+        Bozdogan, H. 1987. Model selection and Akaike’s information criterion (AIC):
+        The general theory and its analytical extensions. Psychometrika 52: 345–370.
+
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_columns)
+            List of n_features-dimensional data points, where each column corresponds
+            to a feature for univariate variables (n_features=n_columns) and each group
+            of L columns corresponds to a feature for one-hot encoded variables with L
+            possible outcomes (n_features=n_columns/L). Each row corresponds to a single
+            data point of the measurement model.
+        Y : array-like of shape (n_samples, n_columns_structural), default=None
+            List of n_features-dimensional data points, where each column corresponds
+            to a feature for univariate variables (n_features=n_columns_structural)
+            and each group of L columns corresponds to a feature for one-hot encoded
+            variables with L possible outcomes (n_features=n_columns_structural/L).
+            Each row corresponds to a  single data point of the structural model.
+        Returns
+        -------
+        caic : float
+            The lower the better.
+        """
+        n = X.shape[0]
+        return -2 * self.score(X, Y) * n + self.n_parameters * (np.log(n) + 1)
+
     def predict(self, X, Y=None):
         """Predict the labels for the data samples in X using the measurement model.
 
