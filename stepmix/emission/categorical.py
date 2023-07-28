@@ -1,5 +1,6 @@
 """Categorical emission models."""
 import numpy as np
+import pandas as pd
 
 from stepmix.emission.emission import Emission
 from stepmix.utils import print_parameters, max_one_hot
@@ -30,14 +31,17 @@ class Bernoulli(Emission):
         )
         return X
 
-    def print_parameters(self, indent=1):
-        print_parameters(
-            self.parameters["pis"], "Bernoulli", indent=indent, np_precision=4
-        )
+    # def print_parameters(self, indent=1):
+    #     print_parameters(
+    #         self.parameters["pis"], "Bernoulli", indent=indent, np_precision=4
+    #     )
 
     @property
     def n_parameters(self):
         return self.parameters["pis"].shape[0] * self.parameters["pis"].shape[1]
+
+    def get_parameters_df(self, feature_names=None):
+        return self._to_df(keys=["pis"], model_type="binary", model_name="binary", feature_names=feature_names)
 
 
 class BernoulliNan(Bernoulli):
@@ -70,6 +74,9 @@ class BernoulliNan(Bernoulli):
         log_eps = X @ np.log(pis) + ((1 - X) * is_observed) @ np.log(1 - pis)
 
         return log_eps
+
+    def get_parameters_df(self, feature_names=None):
+        return self._to_df(keys=["pis"], model_type="binary_nan", model_name="binary_nan", feature_names=feature_names)
 
 
 class Multinoulli(Emission):

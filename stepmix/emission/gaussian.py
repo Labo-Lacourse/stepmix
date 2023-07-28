@@ -40,18 +40,12 @@ class GaussianUnit(Emission):
         )
         return X
 
-    def print_parameters(self, indent=1):
-        print_parameters(
-            self.parameters["means"],
-            "Gaussian (unit variance)",
-            np_precision=2,
-            indent=indent,
-            print_mean=True,
-        )
-
     @property
     def n_parameters(self):
         return self.parameters["means"].shape[0] * self.parameters["means"].shape[1]
+
+    def get_parameters_df(self, feature_names=None):
+        return self._to_df(keys=["means"], model_type="gaussian_unit", model_name="gaussian_unit", feature_names=feature_names)
 
 
 class Gaussian(Emission):
@@ -221,6 +215,11 @@ class GaussianDiag(Gaussian):
         kwargs.pop("covariance_type", None)
         super().__init__(covariance_type="diag", **kwargs)
 
+    def get_parameters_df(self, feature_names=None):
+        self.parameters = self.get_parameters()  # Save attributes to dict like other emission models
+        return self._to_df(keys=["means", "covariances"], model_type="gaussian_diag", model_name="gaussian_diag",
+                           feature_names=feature_names)
+
 
 class GaussianTied(Gaussian):
     def __init__(self, **kwargs):
@@ -345,18 +344,12 @@ class GaussianUnitNan(GaussianNan):
         """No estimate. Simply return diagonal covariance 1 for all features."""
         return np.ones_like(self.parameters["means"])
 
-    def print_parameters(self, indent=1):
-        print_parameters(
-            self.parameters["means"],
-            f"Gaussian (unit covariance)",
-            np_precision=2,
-            indent=indent,
-            print_mean=True,
-        )
-
     @property
     def n_parameters(self):
         return self.parameters["means"].shape[0] * self.parameters["means"].shape[1]
+
+    def get_parameters_df(self, feature_names=None):
+        return self._to_df(keys=["means"], model_type="gaussian_unit_nan", model_name="gaussian_unit_nan", feature_names=feature_names)
 
 
 class GaussianSphericalNan(GaussianNan):
@@ -427,15 +420,10 @@ class GaussianDiagNan(GaussianNan):
 
         return covs
 
-    def print_parameters(self, indent=1):
-        print_parameters(
-            self.parameters["means"],
-            f"Gaussian (diag covariance)",
-            np_precision=2,
-            indent=indent,
-            print_mean=True,
-            covariances=self.parameters["covariances"],
-        )
+    def get_parameters_df(self, feature_names=None):
+        self.parameters = self.get_parameters()  # Save attributes to dict like other emission models
+        return self._to_df(keys=["means", "covariances"], model_type="gaussian_diag_nan", model_name="gaussian_diag_nan",
+                           feature_names=feature_names)
 
     @property
     def n_parameters(self):

@@ -5,6 +5,7 @@ from abc import ABC, abstractmethod, abstractproperty
 import copy
 
 import numpy as np
+import pandas as pd
 from sklearn.utils.validation import check_random_state
 
 from stepmix.utils import check_int, check_positive
@@ -104,7 +105,7 @@ class Emission(ABC):
 
     @abstractmethod
     def m_step(self, X, resp):
-        """Update model parameters via maximum likelihood using the current responsilities.
+        """Update model parameters via maximum likelihood using the current responsibilities.
 
         Parameters
         ----------
@@ -151,17 +152,6 @@ class Emission(ABC):
         """
         raise NotImplementedError
 
-    # @abstractmethod
-    def print_parameters(self, indent=1):
-        """Print parameters with nice formatting.
-
-        Parameters
-        ----------
-        indent : int
-            Add indent to print.
-        """
-        raise NotImplementedError
-
     @property
     @abstractmethod
     def n_parameters(self):
@@ -184,3 +174,70 @@ class Emission(ABC):
         for key, item in self.parameters.items():
             if isinstance(item, np.ndarray):
                 self.parameters[key] = item[perm]
+
+    def print_parameters(self, indent=1, feature_names=None):
+        """Print parameters with nice formatting.
+
+        This method works well for emission models
+        where self.parameters[key_0] is a ndarray of shape (n_components, n_features) and
+        key_0 is the only key.
+
+        Parameters
+        ----------
+        indent : int
+            Add indent to print.
+        """
+        indent_string = "     " * indent
+        df = self.get_parameters_df(feature_names)
+        df = pd.pivot_table(df, index=["param", "class_no"], columns=["model_name", "variable"], values="value")
+        print(indent_string + df.round(4).to_string().replace("\n", "\n" + indent_string))
+
+    def get_parameters_df(self, feature_names=None):
+        """Return self.parameters into a long dataframe.
+
+        Call self._to_df or implement custom method."""
+        raise NotImplementedError
+
+    def _to_df(self, keys, model_type, model_name, feature_names=None):
+        """Unpack self.parameters into a long dataframe.
+
+        This is a generic method that can be used for all emission models
+        where self.parameters[key_0] is a ndarray of shape (n_components, n_features).
+
+        Other emission models should implement their own method, but still return a dataframe
+        with the same columns.
+
+        Parameters
+        ----------
+        keys : list of str
+            Keys to process in self.parameters.
+        feature_names : list of str, default=None
+            Variable names.
+        model_type: str
+            Type of the model. E.g., "binary" or "continuous"
+        model_name: str
+            String identifier. Useful for nested models to distinguish between different models of the same type.
+
+        Returns
+        -------
+        params : pd.DataFrame
+
+        """
+        n_features = self.parameters[keys[0]].shape[1]
+        if feature_names is None:
+            feature_names = [f"var_{i}" for i in range(n_features)]
+
+        params = list()
+        for key in keys:
+            for k in range(self.n_components):
+                for n_i in range(n_features):
+                    params.append(dict(
+                        model_type=model_type,
+                        model_name=model_name,
+                        param=key,
+                        class_no=k,
+                        variable=feature_names[n_i],
+                        value=self.parameters[key][k, n_i]
+                    ))
+
+        return pd.DataFrame.from_records(params)
