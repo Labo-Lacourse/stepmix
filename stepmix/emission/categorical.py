@@ -125,6 +125,7 @@ class Multinoulli(Emission):
         self.integer_codes = integer_codes
         self.parameters["max_n_outcomes"] = max_n_outcomes
         self.parameters["total_outcomes"] = total_outcomes
+        self.model_type = "categorical"
 
         if max_n_outcomes is None and not integer_codes:
             raise ValueError(
@@ -189,15 +190,6 @@ class Multinoulli(Emission):
         )
         return X
 
-    def print_parameters(self, indent=1):
-        print_parameters(
-            self.parameters["pis"],
-            "Multinoulli",
-            n_outcomes=self.parameters["max_n_outcomes"],
-            indent=indent,
-            np_precision=4,
-        )
-
     @property
     def n_parameters(self):
         n_classes = self.parameters["pis"].shape[0]
@@ -208,9 +200,39 @@ class Multinoulli(Emission):
         )
         return n_classes * n_free_parameters_per_class
 
+    def get_parameters_df(self, feature_names=None):
+        if feature_names is None:
+            n_features = self.get_n_features()
+            feature_names = [f"feature_{i}" for i in range(n_features)]
+
+        # Expand features to account for outcomes
+        feature_names_ex = list()
+        for name in feature_names:
+            feature_names_ex += [f"{name}_{i}" for i in range(self.parameters['max_n_outcomes'])]
+
+        df = self._to_df(keys=["pis"], model_type=self.model_type, model_name=self.model_type,
+                           feature_names=feature_names_ex)
+
+        # Drop columns where probabilities are all <= 1e-15
+        df_p = pd.pivot_table(df, index=["param", "class_no"], columns=["variable"], values="value")
+        keep_vars = df_p.loc[:, (df_p > 1e-15).any(axis=0)].columns
+
+        # Only keep rows in df that are in keep_vars
+        df = df[df.variable.isin(keep_vars)]
+
+        # We should have total_outcomes total variables
+        # What happpends if user sends a categorical with 0, 2 for example? (Skipping 1)
+        # assert(df.variable.nunique() == self.parameters["total_outcomes"])
+
+        return df
+
+
 
 class MultinoulliNan(Multinoulli):
     """Multinoulli (categorical) emission model supporting missing values (Full Information Maximum Likelihood)."""
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.model_type = "categorical_nan"
 
     def m_step(self, X, resp):
         X = self.encode_features(X)
