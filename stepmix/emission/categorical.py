@@ -8,6 +8,9 @@ from stepmix.utils import print_parameters, max_one_hot
 
 class Bernoulli(Emission):
     """Bernoulli (binary) emission model."""
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.model_str = "binary"
 
     def m_step(self, X, resp):
         pis = X.T @ resp
@@ -31,21 +34,16 @@ class Bernoulli(Emission):
         )
         return X
 
-    # def print_parameters(self, indent=1):
-    #     print_parameters(
-    #         self.parameters["pis"], "Bernoulli", indent=indent, np_precision=4
-    #     )
-
     @property
     def n_parameters(self):
         return self.parameters["pis"].shape[0] * self.parameters["pis"].shape[1]
 
-    def get_parameters_df(self, feature_names=None):
-        return self._to_df(keys=["pis"], model_type="binary", model_name="binary", feature_names=feature_names)
-
 
 class BernoulliNan(Bernoulli):
     """Bernoulli (binary) emission model supporting missing values (Full Information Maximum Likelihood)."""
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.model_str = "binary_nan"
 
     def m_step(self, X, resp):
         is_observed = ~np.isnan(X)
@@ -74,9 +72,6 @@ class BernoulliNan(Bernoulli):
         log_eps = X @ np.log(pis) + ((1 - X) * is_observed) @ np.log(1 - pis)
 
         return log_eps
-
-    def get_parameters_df(self, feature_names=None):
-        return self._to_df(keys=["pis"], model_type="binary_nan", model_name="binary_nan", feature_names=feature_names)
 
 
 class Multinoulli(Emission):
@@ -125,7 +120,7 @@ class Multinoulli(Emission):
         self.integer_codes = integer_codes
         self.parameters["max_n_outcomes"] = max_n_outcomes
         self.parameters["total_outcomes"] = total_outcomes
-        self.model_type = "categorical"
+        self.model_str = "categorical"
 
         if max_n_outcomes is None and not integer_codes:
             raise ValueError(
@@ -201,6 +196,7 @@ class Multinoulli(Emission):
         return n_classes * n_free_parameters_per_class
 
     def get_parameters_df(self, feature_names=None):
+        """Expand the feature names since each feature may have up to max_n_outcomes outcomes."""
         if feature_names is None:
             n_features = self.get_n_features()
             feature_names = [f"feature_{i}" for i in range(n_features)]
@@ -210,8 +206,7 @@ class Multinoulli(Emission):
         for name in feature_names:
             feature_names_ex += [f"{name}_{i}" for i in range(self.parameters['max_n_outcomes'])]
 
-        df = self._to_df(keys=["pis"], model_type=self.model_type, model_name=self.model_type,
-                           feature_names=feature_names_ex)
+        df = self._to_df(keys=["pis"], feature_names=feature_names_ex)
 
         # Drop columns where probabilities are all <= 1e-15
         df_p = pd.pivot_table(df, index=["param", "class_no"], columns=["variable"], values="value")
@@ -232,7 +227,7 @@ class MultinoulliNan(Multinoulli):
     """Multinoulli (categorical) emission model supporting missing values (Full Information Maximum Likelihood)."""
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.model_type = "categorical_nan"
+        self.model_str = "categorical_nan"
 
     def m_step(self, X, resp):
         X = self.encode_features(X)

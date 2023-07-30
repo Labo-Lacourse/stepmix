@@ -55,6 +55,9 @@ class Emission(ABC):
         # Dict including all parameters for estimation
         self.parameters = dict()
 
+        # String describing model
+        self.model_str = "emission"
+
     def check_parameters(self):
         """Validate class attributes."""
         check_int(n_components=self.n_components)
@@ -196,9 +199,9 @@ class Emission(ABC):
         """Return self.parameters into a long dataframe.
 
         Call self._to_df or implement custom method."""
-        raise NotImplementedError
+        return self._to_df(keys=list(self.parameters.keys()), feature_names=feature_names)
 
-    def _to_df(self, keys, model_type, model_name, feature_names=None):
+    def _to_df(self, keys, feature_names=None):
         """Unpack self.parameters into a long dataframe.
 
         This is a generic method that can be used for all emission models
@@ -213,10 +216,6 @@ class Emission(ABC):
             Keys to process in self.parameters.
         feature_names : list of str, default=None
             Variable names.
-        model_type: str
-            Type of the model. E.g., "binary" or "continuous"
-        model_name: str
-            String identifier. Useful for nested models to distinguish between different models of the same type.
 
         Returns
         -------
@@ -232,8 +231,8 @@ class Emission(ABC):
             for k in range(self.n_components):
                 for n_i in range(n_features):
                     params.append(dict(
-                        model_type=model_type,
-                        model_name=model_name,
+                        model_type=self.model_str,
+                        model_name=self.model_str,
                         param=key,
                         class_no=k,
                         variable=feature_names[n_i],

@@ -16,6 +16,9 @@ class GaussianUnit(Emission):
 
     sklearn.mixture.GaussianMixture does not have an implementation for fixed unit variance, so we provide one.
     """
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.model_str = "gaussian_unit"
 
     def m_step(self, X, resp):
         self.parameters["means"] = (resp[..., np.newaxis] * X[:, np.newaxis, :]).sum(
@@ -43,10 +46,6 @@ class GaussianUnit(Emission):
     @property
     def n_parameters(self):
         return self.parameters["means"].shape[0] * self.parameters["means"].shape[1]
-
-    def get_parameters_df(self, feature_names=None):
-        return self._to_df(keys=["means"], model_type="gaussian_unit", model_name="gaussian_unit", feature_names=feature_names)
-
 
 class Gaussian(Emission):
     """Gaussian emission model with various covariance options.
@@ -118,6 +117,9 @@ class Gaussian(Emission):
             self.covariances_, self.covariance_type
         )
 
+        # Save attributes to dict for compatible api with other stepmix models
+        self.parameters = self.get_parameters()
+
     def log_likelihood(self, X):
         return GaussianMixture._estimate_log_prob(self, X)
 
@@ -163,6 +165,9 @@ class Gaussian(Emission):
             ),
         )
 
+        # Save attributes to dict for compatible api with other stepmix models
+        self.parameters = self.get_parameters()
+
     def print_parameters(self, indent=1):
         print_parameters(
             self.means_,
@@ -200,6 +205,7 @@ class GaussianFull(Gaussian):
         # Make sure no other covariance_type is specified
         kwargs.pop("covariance_type", None)
         super().__init__(covariance_type="full", **kwargs)
+        self.model_str = "gaussian_full"
 
 
 class GaussianSpherical(Gaussian):
@@ -207,6 +213,7 @@ class GaussianSpherical(Gaussian):
         # Make sure no other covariance_type is specified
         kwargs.pop("covariance_type", None)
         super().__init__(covariance_type="spherical", **kwargs)
+        self.model_str = "gaussian_spherical"
 
 
 class GaussianDiag(Gaussian):
@@ -214,18 +221,14 @@ class GaussianDiag(Gaussian):
         # Make sure no other covariance_type is specified
         kwargs.pop("covariance_type", None)
         super().__init__(covariance_type="diag", **kwargs)
-
-    def get_parameters_df(self, feature_names=None):
-        self.parameters = self.get_parameters()  # Save attributes to dict like other emission models
-        return self._to_df(keys=["means", "covariances"], model_type="gaussian_diag", model_name="gaussian_diag",
-                           feature_names=feature_names)
-
+        self.model_str = "gaussian_diag"
 
 class GaussianTied(Gaussian):
     def __init__(self, **kwargs):
         # Make sure no other covariance_type is specified
         kwargs.pop("covariance_type", None)
         super().__init__(covariance_type="tied", **kwargs)
+        self.model_str = "gaussian_tied"
 
 
 class GaussianNan(Emission):
@@ -339,6 +342,9 @@ class GaussianNan(Emission):
 class GaussianUnitNan(GaussianNan):
     """Gaussian emission model with unit covariance supporting missing values (Full Information Maximum
     Likelihood)"""
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.model_str = "gaussian_unit_nan"
 
     def _compute_cov(self, X, resp, resp_sums):
         """No estimate. Simply return diagonal covariance 1 for all features."""
@@ -348,13 +354,13 @@ class GaussianUnitNan(GaussianNan):
     def n_parameters(self):
         return self.parameters["means"].shape[0] * self.parameters["means"].shape[1]
 
-    def get_parameters_df(self, feature_names=None):
-        return self._to_df(keys=["means"], model_type="gaussian_unit_nan", model_name="gaussian_unit_nan", feature_names=feature_names)
-
 
 class GaussianSphericalNan(GaussianNan):
     """Gaussian emission model with spherical covariance supporting missing values (Full Information Maximum
     Likelihood)"""
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.model_str = "gaussian_spherical_nan"
 
     def _compute_cov(self, X, resp, resp_sums):
         """One covariance parameter per component."""
@@ -402,6 +408,9 @@ class GaussianSphericalNan(GaussianNan):
 class GaussianDiagNan(GaussianNan):
     """Gaussian emission model with diagonal covariance supporting missing values (Full Information Maximum
     Likelihood)"""
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.model_str = "gaussian_diag_nan"
 
     def _compute_cov(self, X, resp, resp_sums):
         """One covariance parameter per column."""
@@ -419,11 +428,6 @@ class GaussianDiagNan(GaussianNan):
             covs[:, i] /= resp_sums[i]
 
         return covs
-
-    def get_parameters_df(self, feature_names=None):
-        self.parameters = self.get_parameters()  # Save attributes to dict like other emission models
-        return self._to_df(keys=["means", "covariances"], model_type="gaussian_diag_nan", model_name="gaussian_diag_nan",
-                           feature_names=feature_names)
 
     @property
     def n_parameters(self):
