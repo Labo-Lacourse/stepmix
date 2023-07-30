@@ -225,7 +225,7 @@ class Emission(ABC):
         """
         n_features = self.parameters[keys[0]].shape[1]
         if feature_names is None:
-            feature_names = [f"var_{i}" for i in range(n_features)]
+            feature_names = [f"feature_{i}" for i in range(n_features)]
 
         params = list()
         for key in keys:
