@@ -2,6 +2,7 @@
 import copy
 
 import numpy as np
+import pandas as pd
 
 from .emission import Emission
 
@@ -111,8 +112,8 @@ class Nested(Emission):
             self.models[key].set_parameters(item)
 
     def print_parameters(self, indent=1):
-        for m in self.models.values():
-            m.print_parameters(indent)
+        for name, m in self.models.items():
+            m.print_parameters(indent, model_name=name)
 
     @property
     def n_parameters(self):
@@ -124,3 +125,21 @@ class Nested(Emission):
     def permute_classes(self, perm, axis=0):
         for key, item in self.models.items():
             self.models[key].permute_classes(perm)
+
+    def get_parameters_df(self, feature_names=None):
+        df_list = list()
+        if feature_names is None:
+            n_columns = sum(self.columns_per_model)
+            feature_names = self.get_default_feature_names(n_columns)
+
+        i = 0
+        for name, m, range_ in zip(self.models.keys(), self.models.values(), self.columns_per_model):
+            # Slice columns to compute the log-likelihood only on the appropriate columns
+            f_i = feature_names[i : i + range_]
+            df_i = m.get_parameters_df(f_i)
+            df_i["model_name"] = name
+            df_list.append(df_i)
+            i += range_
+
+        return pd.concat(df_list)
+

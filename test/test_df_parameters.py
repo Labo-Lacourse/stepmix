@@ -37,7 +37,7 @@ def test_emissions_df(data, kwargs, model):
     "ignore::sklearn.exceptions.ConvergenceWarning"
 )  # Ignore convergence warnings for same reason
 def test_nested_df():
-    """Fit a mixed features model with different datasets for training and prediction."""
+    """Test parameter df of a nested model."""
     df = pd.DataFrame(
         {
             # continuous
@@ -114,7 +114,7 @@ def test_df_names():
     "ignore::sklearn.exceptions.ConvergenceWarning"
 )  # Ignore convergence warnings for same reason
 def test_series_names():
-    """Check that feature names in param df are the same as in input df."""
+    """Check that feature names in param series are the same as in input series."""
     df = pd.DataFrame(
         {
             # continuous
@@ -139,3 +139,37 @@ def test_series_names():
 
     assert cols == input_cols
 
+@pytest.mark.filterwarnings(
+    "ignore::RuntimeWarning"
+)  # Ignore most numerical errors since we do not run the emission models on appropriate data
+@pytest.mark.filterwarnings(
+    "ignore::sklearn.exceptions.ConvergenceWarning"
+)  # Ignore convergence warnings for same reason
+def test_nested_df_model_names():
+    """Fit nested model with different model names but same model type."""
+    desc = {
+        "binary_1": {"model": "binary", "n_columns": 1},
+        "binary_2": {"model": "binary", "n_columns": 1},
+        "binary_3": {"model": "binary", "n_columns": 1},
+    }
+
+    data = pd.DataFrame(
+        np.random.randint(0, 2, size=(100, 3)),
+        columns=[f"col_{i}" for i in range(3)],
+    )
+
+
+    model = StepMix(
+        n_components=3, measurement=desc, verbose=1, random_state=123
+    )
+
+    model.fit(data)
+
+    df = model.get_parameters_df()
+    model_names_input = list(desc.keys())
+    model_names_input.sort()
+    model_names_output = list(df.reset_index()["model_name"].unique())
+    model_names_output.remove("nan")
+    model_names_output.sort()
+
+    assert model_names_input == model_names_output
