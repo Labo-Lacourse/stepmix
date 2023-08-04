@@ -168,17 +168,6 @@ class Gaussian(Emission):
         # Save attributes to dict for compatible api with other stepmix models
         self.parameters = self.get_parameters()
 
-    def print_parameters(self, indent=1):
-        print_parameters(
-            self.means_,
-            f"Gaussian ({self.covariance_type} covariance)",
-            np_precision=2,
-            indent=indent,
-            print_mean=True,
-            covariances=self.covariances_,
-            tied=self.covariance_type == "tied",
-        )
-
     @property
     def n_parameters(self):
         n = GaussianMixture._n_parameters(self)
@@ -214,6 +203,12 @@ class GaussianSpherical(Gaussian):
         kwargs.pop("covariance_type", None)
         super().__init__(covariance_type="spherical", **kwargs)
         self.model_str = "gaussian_spherical"
+
+    def get_parameters_df(self, feature_names=None):
+        params = self.get_parameters()
+        n_features = params["means"].shape[1]
+        params["covariances"] = np.tile(params["covariances"], (n_features, 1)).T
+        return self._to_df(param_dict=params,keys=["means", "covariances"], feature_names=feature_names)
 
 
 class GaussianDiag(Gaussian):
@@ -381,17 +376,6 @@ class GaussianSphericalNan(GaussianNan):
         result = np.ones_like(self.parameters["means"]) * covs.reshape((-1, 1))
 
         return result
-
-    def print_parameters(self, indent=1):
-        # Only print first column, since covariance is shared across dimensions
-        print_parameters(
-            self.parameters["means"],
-            f"Gaussian (spherical covariance)",
-            np_precision=2,
-            indent=indent,
-            print_mean=True,
-            covariances=self.parameters["covariances"][:, 0],
-        )
 
     @property
     def n_parameters(self):
