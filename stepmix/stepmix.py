@@ -180,6 +180,10 @@ class StepMix(BaseEstimator):
         respect to the model) of all EM initializations.
     param_buffer_ : list
         Final parameters of all initializations. Only updated if save_param_init=True.
+    x_names_ : list
+        If input is a DataFrame, column names of X.
+    y_names_: list
+        If input is a DataFrame, column names of Y.
 
     Notes
     -----
@@ -473,6 +477,7 @@ class StepMix(BaseEstimator):
         """
         # We use reset True since we take care of dimensions in this class (and not in the parent)
         if X is not None:
+            X_names = utils.extract_column_names(X)
             X = self._validate_data(
                 X,
                 dtype=[np.float64, np.float32],
@@ -481,6 +486,7 @@ class StepMix(BaseEstimator):
             )
         if Y is not None:
             # Handle 1D Y array
+            Y_names = utils.extract_column_names(Y)
             Y = self._validate_data(
                 Y,
                 dtype=[np.float64, np.float32],
@@ -497,8 +503,10 @@ class StepMix(BaseEstimator):
             if X is not None:
                 self.measurement_in_ = X.shape[1]
                 self.n_features_in_ = self.measurement_in_  # Keep sklearn happy
+                self.x_names_ = X_names
             if Y is not None:
                 self.structural_in_ = Y.shape[1]
+                self.y_names_ = Y_names
         else:
             if X is not None and X.shape[1] != self.measurement_in_:
                 raise ValueError(
@@ -541,6 +549,40 @@ class StepMix(BaseEstimator):
             params["structural"] = self._sm.get_parameters()
             params["structural_in"] = self.structural_in_
         return params
+    def get_parameters_df(self):
+        """Get model parameters as a long-form DataFrame.
+
+        Returns
+        -------
+        params: pd.DataFrame
+        """
+        check_is_fitted(self)
+
+        # Create a dataframe for class weights
+        df_class = list()
+        for class_no, w in enumerate(self.weights_):
+            df_class.append(dict(
+                model="class_weights",
+                model_type="nan",
+                model_name="nan",
+                param="class_weights",
+                class_no=class_no,
+                variable="nan",
+                value=w
+            ))
+
+        df_class =  pd.DataFrame.from_records(df_class)
+
+        df_mm = self._mm.get_parameters_df(self.x_names_)
+        df_mm["model"] = "measurement"
+        if hasattr(self, "_sm"):
+            df_sm = self._sm.get_parameters_df(self.y_names_)
+            df_sm["model"] = "structural"
+            df = pd.concat([df_mm, df_sm, df_class])
+        else:
+            df = pd.concat([df_mm, df_class])
+
+        return df.set_index(["model", "model_name", "model_type", "class_no"])
 
     def set_parameters(self, params):
         """Set parameters.

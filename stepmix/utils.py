@@ -495,3 +495,13 @@ def cov_np_to_df(cov, feature_names, model_str):
                 ))
 
     return pd.DataFrame.from_records(params)
+
+
+def extract_column_names(X):
+    """Extract variable names based on X type."""
+    if isinstance(X, pd.DataFrame):
+        return list(X.columns)
+    elif isinstance(X, pd.Series):
+        return [X.name]
+    else:
+        return None
