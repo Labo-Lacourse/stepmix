@@ -206,7 +206,7 @@ class Multinoulli(Emission):
         for name in feature_names:
             feature_names_ex += [f"{name}_{i}" for i in range(self.parameters['max_n_outcomes'])]
 
-        df = self._to_df(keys=["pis"], feature_names=feature_names_ex)
+        df = self._to_df(param_dict=self.parameters, keys=["pis"], feature_names=feature_names_ex)
 
         # Drop columns where probabilities are all <= 1e-15
         df_p = pd.pivot_table(df, index=["param", "class_no"], columns=["variable"], values="value")

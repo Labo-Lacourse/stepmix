@@ -199,19 +199,21 @@ class Emission(ABC):
         """Return self.parameters into a long dataframe.
 
         Call self._to_df or implement custom method."""
-        return self._to_df(keys=list(self.parameters.keys()), feature_names=feature_names)
+        return self._to_df(param_dict=self.parameters,keys=list(self.parameters.keys()), feature_names=feature_names)
 
-    def _to_df(self, keys, feature_names=None):
-        """Unpack self.parameters into a long dataframe.
+    def _to_df(self, param_dict, keys, feature_names=None):
+        """Unpack param_dict into a long dataframe.
 
         This is a generic method that can be used for all emission models
-        where self.parameters[key_0] is a ndarray of shape (n_components, n_features).
+        where the values in param_dict are ndarrays of shape (n_components, n_features).
 
         Other emission models should implement their own method, but still return a dataframe
         with the same columns.
 
         Parameters
         ----------
+        param_dict: dict
+            Dict of parameters as structured in self.parameters.
         keys : list of str
             Keys to process in self.parameters.
         feature_names : list of str, default=None
@@ -222,7 +224,7 @@ class Emission(ABC):
         params : pd.DataFrame
 
         """
-        n_features = self.parameters[keys[0]].shape[1]
+        n_features = param_dict[keys[0]].shape[1]
         if feature_names is None:
             feature_names = [f"feature_{i}" for i in range(n_features)]
 
@@ -236,7 +238,7 @@ class Emission(ABC):
                         param=key,
                         class_no=k,
                         variable=feature_names[n_i],
-                        value=self.parameters[key][k, n_i]
+                        value=param_dict[key][k, n_i]
                     ))
 
         return pd.DataFrame.from_records(params)
