@@ -201,6 +201,10 @@ class Emission(ABC):
         Call self._to_df or implement custom method."""
         return self._to_df(param_dict=self.parameters,keys=list(self.parameters.keys()), feature_names=feature_names)
 
+    def get_default_feature_names(self, n_features):
+        feature_names = [f"feature_{i}" for i in range(n_features)]
+        return feature_names
+
     def _to_df(self, param_dict, keys, feature_names=None):
         """Unpack param_dict into a long dataframe.
 
@@ -226,7 +230,7 @@ class Emission(ABC):
         """
         n_features = param_dict[keys[0]].shape[1]
         if feature_names is None:
-            feature_names = [f"feature_{i}" for i in range(n_features)]
+            feature_names = self.get_default_feature_names(n_features)
 
         params = list()
         for key in keys:

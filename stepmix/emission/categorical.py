@@ -199,7 +199,7 @@ class Multinoulli(Emission):
         """Expand the feature names since each feature may have up to max_n_outcomes outcomes."""
         if feature_names is None:
             n_features = self.get_n_features()
-            feature_names = [f"feature_{i}" for i in range(n_features)]
+            feature_names = self.get_default_feature_names(n_features)
 
         # Expand features to account for outcomes
         feature_names_ex = list()

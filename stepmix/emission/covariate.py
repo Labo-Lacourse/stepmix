@@ -127,16 +127,18 @@ class Covariate(Emission):
     def sample(self, class_no, n_samples):
         raise NotImplementedError
 
-    def print_parameters(self, indent=1):
-        print_parameters(
-            self.parameters["beta"],
-            "Covariate",
-            np_precision=2,
-            indent=indent,
-            intercept=True,
-        )
-
     @property
     def n_parameters(self):
         # Remove one degree of freedom in the classes, since the probabilities over classes sum to 1
         return (self.parameters["beta"].shape[0] - 1) * self.parameters["beta"].shape[1]
+
+    def get_parameters_df(self, feature_names=None):
+        """Return self.parameters into a long dataframe.
+
+        Call self._to_df or implement custom method."""
+        if feature_names is None:
+            n_features = self.parameters["beta"].shape[1] - self.intercept
+            feature_names = self.get_default_feature_names(n_features)
+        if self.intercept:
+            feature_names =  ["intercept"]  + list(feature_names)
+        return self._to_df(param_dict=self.parameters,keys=list(self.parameters.keys()), feature_names=feature_names)
