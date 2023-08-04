@@ -236,6 +236,10 @@ class GaussianDiag(Gaussian):
         super().__init__(covariance_type="diag", **kwargs)
         self.model_str = "gaussian_diag"
 
+    def get_parameters_df(self, feature_names=None):
+        params = self.get_parameters()
+        return self._to_df(param_dict=params,keys=["means", "covariances"], feature_names=feature_names)
+
 class GaussianTied(Gaussian):
     def __init__(self, **kwargs):
         # Make sure no other covariance_type is specified
