@@ -1,6 +1,7 @@
 """Utils."""
 import numbers
 import numpy as np
+import pandas as pd
 
 from sklearn.utils.validation import check_is_fitted
 
@@ -585,3 +586,22 @@ def get_mixed_descriptor(dataframe, **kwargs):
     data = dataframe[columns]
 
     return data, descriptor
+
+
+def cov_np_to_df(cov, feature_names, model_str):
+    """Unpack an ndarray of covariances into a long form dataframe."""
+    feature_names_cov = ["cov_" + f for f in feature_names]
+    params = list()
+    for class_no in range(cov.shape[0]):
+        for row, param_name in enumerate(feature_names_cov):
+            for col, var_name in enumerate(feature_names):
+                params.append(dict(
+                    model_type=model_str,
+                    model_name=model_str,
+                    param=param_name,
+                    class_no=class_no,
+                    variable=var_name,
+                    value=cov[class_no, row, col]
+                ))
+
+    return pd.DataFrame.from_records(params)

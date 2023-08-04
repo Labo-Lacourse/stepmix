@@ -1,5 +1,6 @@
 """Gaussian emission models."""
 import numpy as np
+import pandas as pd
 from scipy.stats import multivariate_normal
 from sklearn.mixture import GaussianMixture
 from sklearn.mixture._gaussian_mixture import (
@@ -8,7 +9,7 @@ from sklearn.mixture._gaussian_mixture import (
 )
 
 from stepmix.emission.emission import Emission
-from stepmix.utils import check_in, check_nonneg, print_parameters
+from stepmix.utils import check_in, check_nonneg, cov_np_to_df
 
 
 class GaussianUnit(Emission):
@@ -196,6 +197,23 @@ class GaussianFull(Gaussian):
         super().__init__(covariance_type="full", **kwargs)
         self.model_str = "gaussian_full"
 
+    def print_parameters(self, indent=1, feature_names=None, index=["class_no", "param"]):
+        """Flipping class_no and index is nicer for full covariances."""
+        super().print_parameters(indent=indent, feature_names=feature_names, index=index)
+
+    def get_parameters_df(self, feature_names=None):
+        """Return self.parameters into a long dataframe.
+
+        Call self._to_df or implement custom method."""
+        if feature_names is None:
+            n_features = self.parameters["means"].shape[1]
+            feature_names = self.get_default_feature_names(n_features)
+
+        means = self._to_df(param_dict=self.parameters,keys=["means"], feature_names=feature_names)
+        cov = cov_np_to_df(self.parameters["covariances"], feature_names, self.model_str)
+
+        return pd.concat([means, cov])
+
 
 class GaussianSpherical(Gaussian):
     def __init__(self, **kwargs):
@@ -224,6 +242,24 @@ class GaussianTied(Gaussian):
         kwargs.pop("covariance_type", None)
         super().__init__(covariance_type="tied", **kwargs)
         self.model_str = "gaussian_tied"
+
+    def print_parameters(self, indent=1, feature_names=None, index=["class_no", "param"]):
+        """Flipping class_no and index is nicer for full covariances."""
+        super().print_parameters(indent=indent, feature_names=feature_names, index=index)
+
+    def get_parameters_df(self, feature_names=None):
+        """Return self.parameters into a long dataframe.
+
+        Call self._to_df or implement custom method."""
+        if feature_names is None:
+            n_features = self.parameters["means"].shape[1]
+            feature_names = self.get_default_feature_names(n_features)
+
+        means = self._to_df(param_dict=self.parameters,keys=["means"], feature_names=feature_names)
+        cov = np.tile(self.parameters["covariances"], (self.n_components, 1, 1))
+        cov = cov_np_to_df(cov, feature_names, self.model_str)
+
+        return pd.concat([means, cov])
 
 
 class GaussianNan(Emission):

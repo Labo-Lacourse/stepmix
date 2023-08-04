@@ -178,7 +178,7 @@ class Emission(ABC):
             if isinstance(item, np.ndarray):
                 self.parameters[key] = item[perm]
 
-    def print_parameters(self, indent=1, feature_names=None):
+    def print_parameters(self, indent=1, feature_names=None, index=["param", "class_no"]):
         """Print parameters with nice formatting.
 
         This method works well for emission models
@@ -189,10 +189,14 @@ class Emission(ABC):
         ----------
         indent : int
             Add indent to print.
+        features_names: List of str
+            Variable names.
+        names: List of str
+            Column names in self.get_parameters_df to use as index in the displayed dataframe.
         """
         indent_string = "     " * indent
         df = self.get_parameters_df(feature_names)
-        df = pd.pivot_table(df, index=["param", "class_no"], columns=["model_name", "variable"], values="value")
+        df = pd.pivot_table(df, index=index, columns=["model_name", "variable"], values="value")
         print(indent_string + df.round(4).to_string().replace("\n", "\n" + indent_string))
 
     def get_parameters_df(self, feature_names=None):
