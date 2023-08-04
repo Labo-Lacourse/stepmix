@@ -2,6 +2,7 @@
 import copy
 import itertools
 import math
+import pandas as pd
 
 import numpy as np
 import matplotlib
@@ -43,37 +44,8 @@ def find_best_permutation(reference, target, criterion=mse):
 
     return np.array(best_perm)
 
-
-def stack_stepmix_parameters(params):
-    """Transforms a list of StepMix parameters dict into a single StepMix parameters dict.
-
-    Parameters are aggregated along a new axis."""
-    base = copy.deepcopy(params[0])
-
-    base_keys = ["measurement"]
-    if "structural" in params[0]:
-        base_keys.append("structural")
-
-    for key_i in base_keys:
-        for key_j in params[0][key_i].keys():
-            is_nested = isinstance(base[key_i][key_j], dict)
-            if is_nested:
-                # Nested parameters have another level of dictionaries
-                for key_k in params[0][key_i][key_j].keys():
-                    if isinstance(base[key_i][key_j][key_k], np.ndarray):
-                        base[key_i][key_j][key_k] = np.stack(
-                            [p[key_i][key_j][key_k] for p in params]
-                        )
-            elif isinstance(base[key_i][key_j], np.ndarray):
-                base[key_i][key_j] = np.stack([p[key_i][key_j] for p in params])
-
-    base["weights"] = np.stack([p["weights"] for p in params])
-
-    return base
-
-
 def bootstrap(
-    estimator, X, Y=None, sample_weight=None, n_repetitions=1000, progress_bar=True
+        estimator, X, Y=None, n_repetitions=1000, sample_weight=None, progress_bar=True
 ):
     """Non-parametric boostrap of StepMix estimator.
 
@@ -84,36 +56,38 @@ def bootstrap(
     Parameters
     ----------
     estimator : StepMix instance
-        Estimator to use for bootstrapping.
+        A fitted StepMix estimator. Used as a template to clone bootstrap estimator.
     X : array-like of shape (n_samples, n_columns)
         Measurement data.
     Y : array-like of shape (n_samples, n_columns_structural), default=None
         Structural data.
+    n_repetitions: int
+        Number of repetitions to fit.
     sample_weight : array-like of shape(n_samples,), default=None
         Array of weights that are assigned to individual samples.
         If not provided, then each sample is given unit weight.
-    n_repetitions: int
-        Number of repetitions to fit.
     progress_bar : bool, default=True
         Display a tqdm progress bar for repetitions.
     Returns
     ----------
-    estimator: StepMix
-        Fitted instance of the estimator.
-    parameters: Dict
-        StepMix parameter dictionary. Follows the same convention as the parameters of the StepMix
-        object. An additional axis of size (n_repetitions,) is added at position 0 of each parameter array.
-        Additional "LL" and "avg_LL" keys contain the likelihood and average likelihood of different repetitions.
+    parameters: DataFrame
+        DataFrame of all repetitions. Follows the convention of StepMix.get_parameters_df() with an additional
+        'rep' index.
+    stats: DataFrame
+        Various statistics of bootstrapped estimators.
     """
     n_samples = X.shape[0]
+    x_names = estimator.x_names_
+    y_names = estimator.y_names_ if hasattr(estimator, "y_names") else None
+
 
     # Use the estimator built-in method to check the input
     # This will ensure that X and Y are numpy arrays for the rest of the bootstrap procedure
-    estimator._check_initial_parameters(X)
-    X, Y = estimator._check_x_y(X, Y, reset=True)
+    X, Y = estimator._check_x_y(X, Y, reset=False)
 
     # First fit the base estimator and get class probabilities
     estimator.fit(X, Y, sample_weight=sample_weight)
+    # Get class probabilities of main estimator as reference
     ref_class_probabilities = estimator.predict_proba(X, Y)
 
     # Now fit n_repetitions estimator with resampling and save parameters
@@ -128,7 +102,7 @@ def bootstrap(
     tqdm_rep = tqdm.trange(
         n_repetitions, disable=not progress_bar, desc="Bootstrap Repetitions    "
     )
-    for _ in tqdm_rep:
+    for rep in tqdm_rep:
         # Resample data
         rep_samples = rng.choice(n_samples, size=(n_samples,), replace=True)
         X_rep = X[rep_samples]
@@ -153,7 +127,9 @@ def bootstrap(
         estimator_rep.permute_classes(perm)
 
         # Save parameters
-        parameters.append(estimator_rep.get_parameters())
+        df_i = estimator_rep.get_parameters_df(x_names, y_names)
+        df_i["rep"] = rep
+        parameters.append(df_i)
 
         # Save likelihood
         avg_ll = estimator_rep.score(X_rep, Y_rep, sample_weight=sample_weight_rep)
@@ -174,14 +150,20 @@ def bootstrap(
             max_LL=np.max(ll_buffer),
         )
 
-    return_dict = stack_stepmix_parameters(parameters)
+    return_df = pd.concat(parameters)
+    return_df.sort_index(inplace=True)
 
     # Add likelihoods statistics
-    return_dict["LL"] = np.array(ll_buffer)
-    return_dict["avg_LL"] = np.array(avg_ll_buffer)
+    stats = {
+        "LL" : np.array(ll_buffer),
+        "avg_LL" : np.array(avg_ll_buffer)
+    }
 
-    return estimator, return_dict
+    return return_df, pd.DataFrame.from_dict(stats)
 
+def groupby_bootstrap(df):
+    df = df.drop(columns="rep")
+    return df.groupby(["model", "model_name", "model_type", "class_no", "param", "variable"])
 
 def plot_CI(bottom, estimate, top, ax):
     """Adapted from https://stackoverflow.com/questions/59747313/how-can-i-plot-a-confidence-interval-in-python."""

@@ -28,6 +28,7 @@ import tqdm
 from . import utils
 from .corrections import compute_bch_matrix, compute_log_emission_pm
 from .emission.build_emission import EMISSION_DICT, build_emission
+from .bootstrap import bootstrap
 
 
 class StepMix(BaseEstimator):
@@ -549,8 +550,15 @@ class StepMix(BaseEstimator):
             params["structural"] = self._sm.get_parameters()
             params["structural_in"] = self.structural_in_
         return params
-    def get_parameters_df(self):
+    def get_parameters_df(self, x_names=None, y_names=None):
         """Get model parameters as a long-form DataFrame.
+
+        Parameters
+        ----------
+        x_names : List of str.
+            Column names of X.
+        y_names : List of str.
+            Column names of Y.
 
         Returns
         -------
@@ -573,16 +581,21 @@ class StepMix(BaseEstimator):
 
         df_class =  pd.DataFrame.from_records(df_class)
 
-        df_mm = self._mm.get_parameters_df(self.x_names_)
+        if x_names is None:
+            x_names = self.x_names_
+
+        df_mm = self._mm.get_parameters_df(x_names)
         df_mm["model"] = "measurement"
         if hasattr(self, "_sm"):
-            df_sm = self._sm.get_parameters_df(self.y_names_)
+            if y_names is None:
+                y_names = self.y_names_
+            df_sm = self._sm.get_parameters_df(y_names)
             df_sm["model"] = "structural"
             df = pd.concat([df_mm, df_sm, df_class])
         else:
             df = pd.concat([df_mm, df_class])
 
-        return df.set_index(["model", "model_name", "model_type", "class_no"])
+        return df.set_index(["model", "model_name", "model_type", "class_no", "param", "variable"])
 
     def set_parameters(self, params):
         """Set parameters.
@@ -1066,6 +1079,38 @@ class StepMix(BaseEstimator):
         random_state = check_random_state(self.random_state)
         self._initialize_parameters_structural(Y, random_state=random_state)
         self._sm.m_step(Y, resp * sample_weight[:, np.newaxis])
+        
+    def bootstrap(self, X, Y=None, n_repetitions=1000, sample_weight=None, progress_bar=True):
+        """Non-parametric boostrap of StepMix estimator.
+
+        Fit the estimator on X,Y then fit n_repetitions on resampled datasets.
+
+        Repetition parameters are aligned with the class order of the main estimator.
+
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_columns)
+            Measurement data.
+        Y : array-like of shape (n_samples, n_columns_structural), default=None
+            Structural data.
+        n_repetitions: int
+            Number of repetitions to fit.
+        sample_weight : array-like of shape(n_samples,), default=None
+            Array of weights that are assigned to individual samples.
+            If not provided, then each sample is given unit weight.
+        progress_bar : bool, default=True
+            Display a tqdm progress bar for repetitions.
+        Returns
+        ----------
+        parameters: DataFrame
+            Parameter DataFrame for all repetitions. Follows the convention of StepMix.get_parameters_df() with an additional
+            'rep' index.
+        stats: DataFrame
+            Various statistics of bootstrapped estimators.
+        """
+        check_is_fitted(self)
+        
+        return bootstrap(self, X, Y, n_repetitions, sample_weight, progress_bar)
 
     ########################################################################################################################
     # INFERENCE
