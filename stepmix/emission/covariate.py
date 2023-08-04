@@ -5,7 +5,7 @@ from scipy.special import softmax
 from sklearn.utils.validation import check_random_state
 
 from stepmix.emission.emission import Emission
-from stepmix.utils import check_in, print_parameters
+from stepmix.utils import check_in
 
 
 class Covariate(Emission):

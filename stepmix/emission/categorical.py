@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 
 from stepmix.emission.emission import Emission
-from stepmix.utils import print_parameters, max_one_hot
+from stepmix.utils import max_one_hot
 
 
 class Bernoulli(Emission):
