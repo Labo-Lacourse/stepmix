@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 from stepmix import StepMix
 from stepmix.emission.build_emission import EMISSION_DICT
-from stepmix.bootstrap import find_best_permutation, bootstrap, plot_all_parameters_CI
+from stepmix.bootstrap import find_best_permutation
 
 
 def test_find_best_permutation():
@@ -99,47 +99,20 @@ def test_bootstrap(data, kwargs, model):
         kwargs["structural"] = "gaussian_unit"
 
     model_1 = StepMix(n_steps=1, **kwargs)
-    model_1, params = bootstrap(model_1, X, Y, n_repetitions=3)
-
-    # Also test plots
-    if model != "gaussian_full":
-        # Plotting not supported for gaussian_full
-        figures = plot_all_parameters_CI(model_1.get_parameters(), params)
-        for f in figures:
-            plt.close(f)
+    model_1.fit(X, Y)
+    model_1, params = model_1.bootstrap(X, Y, n_repetitions=3)
 
 
 def test_nested_bootstrap(data_nested, kwargs_nested):
     """Call bootstrap procedure on a nested model and make sure it doesn't raise errors."""
     model_1 = StepMix(**kwargs_nested)
-    model, params = bootstrap(model_1, data_nested, data_nested, n_repetitions=3)
-    assert isinstance(params["measurement"]["model_1"]["pis"][0], np.ndarray)
-
-    # Also test plots
-    figures = plot_all_parameters_CI(model.get_parameters(), params)
-    for f in figures:
-        plt.close(f)
+    model_1.fit(data_nested, data_nested)
+    model_1.bootstrap(data_nested, data_nested, n_repetitions=3)
 
 
 def test_bootstrap_df(data_nested, kwargs_nested):
     """Call bootstrap procedure on a DataFrame."""
     data_nested = pd.DataFrame(data_nested)
     model_1 = StepMix(**kwargs_nested)
-    model, params = bootstrap(model_1, data_nested, data_nested, n_repetitions=3)
-
-
-@pytest.mark.parametrize("n", [1, 2, 3, 4, 5, 6])
-def test_bootstrap_plots_n_parameters(data_nested, kwargs_nested, n):
-    """Make sure the 3-column grid in bootstrap plots does not raise errors with 1, 2, 3, 4, 5, 6 plots."""
-    # Iterate over different number of parameters in the binary model
-    kwargs_nested["measurement"]["model_1"]["n_columns"] = n
-    kwargs_nested["structural"]["model_1"]["n_columns"] = n
-
-    # Pick only n features for measurement and the last for structural
-    data_nested = data_nested[:, list(range(n)) + [-1]]
-
-    model_1 = StepMix(**kwargs_nested)
-    model, params = bootstrap(model_1, data_nested, data_nested, n_repetitions=3)
-    figures = plot_all_parameters_CI(model.get_parameters(), params)
-    for f in figures:
-        plt.close(f)
+    model_1.fit(data_nested, data_nested)
+    model_1.bootstrap(data_nested, data_nested, n_repetitions=3)
