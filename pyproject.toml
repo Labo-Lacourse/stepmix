@@ -30,7 +30,6 @@ dependencies = [
     "pandas",
     "scikit-learn >= 1.0.0",
     "scipy",
-    "matplotlib",
     "tqdm",
 ]
 requires-python = ">=3.7"
