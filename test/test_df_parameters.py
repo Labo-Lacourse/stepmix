@@ -97,7 +97,7 @@ def test_df_names():
 
     model.fit(df, df)
 
-    params = model.get_parameters_df()
+    params = model.get_parameters_df().reset_index()
     cols = list(params["variable"].unique())
     cols.remove("nan")
     cols.sort()
@@ -129,7 +129,7 @@ def test_series_names():
 
     model.fit(df[["A"]], df["A"])
 
-    params = model.get_parameters_df()
+    params = model.get_parameters_df().reset_index()
     cols = list(params["variable"].unique())
     cols.remove("nan")
     cols.sort()
