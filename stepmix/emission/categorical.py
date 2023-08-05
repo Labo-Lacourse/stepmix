@@ -8,6 +8,7 @@ from stepmix.utils import max_one_hot
 
 class Bernoulli(Emission):
     """Bernoulli (binary) emission model."""
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.model_str = "binary"
@@ -41,6 +42,7 @@ class Bernoulli(Emission):
 
 class BernoulliNan(Bernoulli):
     """Bernoulli (binary) emission model supporting missing values (Full Information Maximum Likelihood)."""
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.model_str = "binary_nan"
@@ -204,12 +206,18 @@ class Multinoulli(Emission):
         # Expand features to account for outcomes
         feature_names_ex = list()
         for name in feature_names:
-            feature_names_ex += [f"{name}_{i}" for i in range(self.parameters['max_n_outcomes'])]
+            feature_names_ex += [
+                f"{name}_{i}" for i in range(self.parameters["max_n_outcomes"])
+            ]
 
-        df = self._to_df(param_dict=self.parameters, keys=["pis"], feature_names=feature_names_ex)
+        df = self._to_df(
+            param_dict=self.parameters, keys=["pis"], feature_names=feature_names_ex
+        )
 
         # Drop columns where probabilities are all <= 1e-15
-        df_p = pd.pivot_table(df, index=["param", "class_no"], columns=["variable"], values="value")
+        df_p = pd.pivot_table(
+            df, index=["param", "class_no"], columns=["variable"], values="value"
+        )
         keep_vars = df_p.loc[:, (df_p > 1e-15).any(axis=0)].columns
 
         # Only keep rows in df that are in keep_vars
@@ -222,9 +230,9 @@ class Multinoulli(Emission):
         return df
 
 
-
 class MultinoulliNan(Multinoulli):
     """Multinoulli (categorical) emission model supporting missing values (Full Information Maximum Likelihood)."""
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.model_str = "categorical_nan"

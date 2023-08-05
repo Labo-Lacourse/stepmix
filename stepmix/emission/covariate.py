@@ -140,5 +140,9 @@ class Covariate(Emission):
             n_features = self.parameters["beta"].shape[1] - self.intercept
             feature_names = self.get_default_feature_names(n_features)
         if self.intercept:
-            feature_names =  ["intercept"]  + list(feature_names)
-        return self._to_df(param_dict=self.parameters,keys=list(self.parameters.keys()), feature_names=feature_names)
+            feature_names = ["intercept"] + list(feature_names)
+        return self._to_df(
+            param_dict=self.parameters,
+            keys=list(self.parameters.keys()),
+            feature_names=feature_names,
+        )

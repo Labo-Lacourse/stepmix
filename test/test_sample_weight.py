@@ -71,5 +71,4 @@ def test_different_weights_bootstrap(data, kwargs):
     model_2.bootstrap(X, Y, sample_weight=sample_weight, n_repetitions=3)
     ll_2 = model_2.score(X, Y)
 
-
     assert ll_1 != ll_2

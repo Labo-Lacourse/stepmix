@@ -1,7 +1,6 @@
 import numpy as np
 import pandas as pd
 import pytest
-import matplotlib.pyplot as plt
 
 from stepmix import StepMix
 from stepmix.emission.build_emission import EMISSION_DICT

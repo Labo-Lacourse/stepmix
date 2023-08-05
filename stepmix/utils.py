@@ -363,6 +363,7 @@ def print_report(model, X, Y=None, sample_weight=None):
     print(f"    Entropy                       : {entropy:.4f}")
     print(f"    Scaled Relative Entropy       : {relative_entropy:.4f}")
 
+
 def max_one_hot(array, max_n_outcomes=None, total_outcomes=None):
     """Multiple categorical one-hot encoding.
 
@@ -485,14 +486,16 @@ def cov_np_to_df(cov, feature_names, model_str):
     for class_no in range(cov.shape[0]):
         for row, param_name in enumerate(feature_names_cov):
             for col, var_name in enumerate(feature_names):
-                params.append(dict(
-                    model_type=model_str,
-                    model_name=model_str,
-                    param=param_name,
-                    class_no=class_no,
-                    variable=var_name,
-                    value=cov[class_no, row, col]
-                ))
+                params.append(
+                    dict(
+                        model_type=model_str,
+                        model_name=model_str,
+                        param=param_name,
+                        class_no=class_no,
+                        variable=var_name,
+                        value=cov[class_no, row, col],
+                    )
+                )
 
     return pd.DataFrame.from_records(params)
 

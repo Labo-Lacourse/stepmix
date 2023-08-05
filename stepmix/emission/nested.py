@@ -133,7 +133,9 @@ class Nested(Emission):
             feature_names = self.get_default_feature_names(n_columns)
 
         i = 0
-        for name, m, range_ in zip(self.models.keys(), self.models.values(), self.columns_per_model):
+        for name, m, range_ in zip(
+            self.models.keys(), self.models.values(), self.columns_per_model
+        ):
             # Slice columns to compute the log-likelihood only on the appropriate columns
             f_i = feature_names[i : i + range_]
             df_i = m.get_parameters_df(f_i)
@@ -142,4 +144,3 @@ class Nested(Emission):
             i += range_
 
         return pd.concat(df_list)
-

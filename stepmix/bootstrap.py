@@ -40,8 +40,9 @@ def find_best_permutation(reference, target, criterion=mse):
 
     return np.array(best_perm)
 
+
 def bootstrap(
-        estimator, X, Y=None, n_repetitions=1000, sample_weight=None, progress_bar=True
+    estimator, X, Y=None, n_repetitions=1000, sample_weight=None, progress_bar=True
 ):
     """Non-parametric boostrap of StepMix estimator.
 
@@ -75,7 +76,6 @@ def bootstrap(
     n_samples = X.shape[0]
     x_names = estimator.x_names_
     y_names = estimator.y_names_ if hasattr(estimator, "y_names") else None
-
 
     # Use the estimator built-in method to check the input
     # This will ensure that X and Y are numpy arrays for the rest of the bootstrap procedure
@@ -150,13 +150,13 @@ def bootstrap(
     return_df.sort_index(inplace=True)
 
     # Add likelihoods statistics
-    stats = {
-        "LL" : np.array(ll_buffer),
-        "avg_LL" : np.array(avg_ll_buffer)
-    }
+    stats = {"LL": np.array(ll_buffer), "avg_LL": np.array(avg_ll_buffer)}
 
     return return_df, pd.DataFrame.from_dict(stats)
 
+
 def groupby_bootstrap(df):
     df = df.drop(columns="rep")
-    return df.groupby(["model", "model_name", "model_type", "class_no", "param", "variable"])
+    return df.groupby(
+        ["model", "model_name", "model_type", "class_no", "param", "variable"]
+    )

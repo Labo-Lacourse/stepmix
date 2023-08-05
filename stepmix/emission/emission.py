@@ -178,7 +178,9 @@ class Emission(ABC):
             if isinstance(item, np.ndarray):
                 self.parameters[key] = item[perm]
 
-    def print_parameters(self, indent=1, feature_names=None, index=["param", "class_no"], model_name=None):
+    def print_parameters(
+        self, indent=1, feature_names=None, index=["param", "class_no"], model_name=None
+    ):
         """Print parameters with nice formatting.
 
         This method works well for emission models
@@ -200,14 +202,22 @@ class Emission(ABC):
         df = self.get_parameters_df(feature_names)
         if model_name is not None:
             df["model_name"] = model_name
-        df = pd.pivot_table(df, index=index, columns=["model_name", "variable"], values="value")
-        print(indent_string + df.round(4).to_string().replace("\n", "\n" + indent_string))
+        df = pd.pivot_table(
+            df, index=index, columns=["model_name", "variable"], values="value"
+        )
+        print(
+            indent_string + df.round(4).to_string().replace("\n", "\n" + indent_string)
+        )
 
     def get_parameters_df(self, feature_names=None):
         """Return self.parameters into a long dataframe.
 
         Call self._to_df or implement custom method."""
-        return self._to_df(param_dict=self.parameters,keys=list(self.parameters.keys()), feature_names=feature_names)
+        return self._to_df(
+            param_dict=self.parameters,
+            keys=list(self.parameters.keys()),
+            feature_names=feature_names,
+        )
 
     def get_default_feature_names(self, n_features):
         feature_names = [f"feature_{i}" for i in range(n_features)]
@@ -244,13 +254,15 @@ class Emission(ABC):
         for key in keys:
             for k in range(self.n_components):
                 for n_i in range(n_features):
-                    params.append(dict(
-                        model_type=self.model_str,
-                        model_name=self.model_str,
-                        param=key,
-                        class_no=k,
-                        variable=feature_names[n_i],
-                        value=param_dict[key][k, n_i]
-                    ))
+                    params.append(
+                        dict(
+                            model_type=self.model_str,
+                            model_name=self.model_str,
+                            param=key,
+                            class_no=k,
+                            variable=feature_names[n_i],
+                            value=param_dict[key][k, n_i],
+                        )
+                    )
 
         return pd.DataFrame.from_records(params)

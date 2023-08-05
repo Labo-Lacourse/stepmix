@@ -550,6 +550,7 @@ class StepMix(BaseEstimator):
             params["structural"] = self._sm.get_parameters()
             params["structural_in"] = self.structural_in_
         return params
+
     def get_parameters_df(self, x_names=None, y_names=None):
         """Get model parameters as a long-form DataFrame.
 
@@ -569,17 +570,19 @@ class StepMix(BaseEstimator):
         # Create a dataframe for class weights
         df_class = list()
         for class_no, w in enumerate(self.weights_):
-            df_class.append(dict(
-                model="class_weights",
-                model_type="nan",
-                model_name="nan",
-                param="class_weights",
-                class_no=class_no,
-                variable="nan",
-                value=w
-            ))
+            df_class.append(
+                dict(
+                    model="class_weights",
+                    model_type="nan",
+                    model_name="nan",
+                    param="class_weights",
+                    class_no=class_no,
+                    variable="nan",
+                    value=w,
+                )
+            )
 
-        df_class =  pd.DataFrame.from_records(df_class)
+        df_class = pd.DataFrame.from_records(df_class)
 
         if x_names is None:
             x_names = self.x_names_
@@ -595,7 +598,9 @@ class StepMix(BaseEstimator):
         else:
             df = pd.concat([df_mm, df_class])
 
-        return df.set_index(["model", "model_name", "model_type", "param", "class_no", "variable"])
+        return df.set_index(
+            ["model", "model_name", "model_type", "param", "class_no", "variable"]
+        )
 
     def set_parameters(self, params):
         """Set parameters.
@@ -1079,8 +1084,10 @@ class StepMix(BaseEstimator):
         random_state = check_random_state(self.random_state)
         self._initialize_parameters_structural(Y, random_state=random_state)
         self._sm.m_step(Y, resp * sample_weight[:, np.newaxis])
-        
-    def bootstrap(self, X, Y=None, n_repetitions=1000, sample_weight=None, progress_bar=True):
+
+    def bootstrap(
+        self, X, Y=None, n_repetitions=1000, sample_weight=None, progress_bar=True
+    ):
         """Non-parametric boostrap of StepMix estimator.
 
         Fit the estimator on X,Y then fit n_repetitions on resampled datasets.
@@ -1109,7 +1116,7 @@ class StepMix(BaseEstimator):
             Various statistics of bootstrapped estimators.
         """
         check_is_fitted(self)
-        
+
         return bootstrap(self, X, Y, n_repetitions, sample_weight, progress_bar)
 
     ########################################################################################################################
@@ -1264,7 +1271,7 @@ class StepMix(BaseEstimator):
 
     def sabic(self, X, Y=None):
         """Sample-Sized Adjusted BIC.
-        
+
         References
         ----------
         Sclove SL. Application of model-selection criteria to some problems in multivariate analysis. Psychometrika. 1987;52(3):333–343.

@@ -42,6 +42,8 @@ def test_emissions(data, kwargs, model):
     else:
         # Test sampling
         model_1.sample(100)
+
+
 @pytest.mark.filterwarnings(
     "ignore::RuntimeWarning"
 )  # Ignore most numerical errors since we do not run the emission models on appropriate data
@@ -184,6 +186,7 @@ def test_nested(data_nested, kwargs_nested):
 
     # Test sampling
     model_3.sample(100)
+
 
 def test_nested_no_sm(data_nested, kwargs_nested):
     """Test verbose output and sampling of nested model with measurement model only."""

@@ -30,6 +30,7 @@ def test_emissions_df(data, kwargs, model):
     model_1.fit(X, Y)
     df = model_1.get_parameters_df()
 
+
 @pytest.mark.filterwarnings(
     "ignore::RuntimeWarning"
 )  # Ignore most numerical errors since we do not run the emission models on appropriate data
@@ -56,7 +57,6 @@ def test_nested_df():
         binary=["C"],
     )
 
-
     model = StepMix(
         n_components=3, measurement=mixed_descriptor, verbose=1, random_state=123
     )
@@ -66,12 +66,17 @@ def test_nested_df():
     df = model.get_parameters_df()
 
     model2 = StepMix(
-        n_components=3, measurement=mixed_descriptor, structural=mixed_descriptor, verbose=1, random_state=123
+        n_components=3,
+        measurement=mixed_descriptor,
+        structural=mixed_descriptor,
+        verbose=1,
+        random_state=123,
     )
 
     model2.fit(mixed_data, mixed_data)
 
     df2 = model2.get_parameters_df()
+
 
 @pytest.mark.filterwarnings(
     "ignore::RuntimeWarning"
@@ -90,9 +95,12 @@ def test_df_names():
         }
     )
 
-
     model = StepMix(
-        n_components=3, measurement="gaussian_unit", structural="gaussian_unit", verbose=1, random_state=123
+        n_components=3,
+        measurement="gaussian_unit",
+        structural="gaussian_unit",
+        verbose=1,
+        random_state=123,
     )
 
     model.fit(df, df)
@@ -106,6 +114,7 @@ def test_df_names():
     input_cols.sort()
 
     assert cols == input_cols
+
 
 @pytest.mark.filterwarnings(
     "ignore::RuntimeWarning"
@@ -122,9 +131,12 @@ def test_series_names():
         }
     )
 
-
     model = StepMix(
-        n_components=3, measurement="gaussian_unit", structural="gaussian_unit", verbose=1, random_state=123
+        n_components=3,
+        measurement="gaussian_unit",
+        structural="gaussian_unit",
+        verbose=1,
+        random_state=123,
     )
 
     model.fit(df[["A"]], df["A"])
@@ -138,6 +150,7 @@ def test_series_names():
     input_cols.sort()
 
     assert cols == input_cols
+
 
 @pytest.mark.filterwarnings(
     "ignore::RuntimeWarning"
@@ -158,10 +171,7 @@ def test_nested_df_model_names():
         columns=[f"col_{i}" for i in range(3)],
     )
 
-
-    model = StepMix(
-        n_components=3, measurement=desc, verbose=1, random_state=123
-    )
+    model = StepMix(n_components=3, measurement=desc, verbose=1, random_state=123)
 
     model.fit(data)
 
