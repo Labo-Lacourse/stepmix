@@ -595,7 +595,7 @@ class StepMix(BaseEstimator):
         else:
             df = pd.concat([df_mm, df_class])
 
-        return df.set_index(["model", "model_name", "model_type", "class_no", "param", "variable"])
+        return df.set_index(["model", "model_name", "model_type", "param", "class_no", "variable"])
 
     def set_parameters(self, params):
         """Set parameters.
