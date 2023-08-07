@@ -756,7 +756,9 @@ class StepMix(BaseEstimator):
         Y : array-like of shape (n_samples, n_features_structural), default=None
         sample_weight : array-like of shape(n_samples,), default=None
         """
-        utils.print_report(self, X, Y, sample_weight, self.x_names_, self.y_names_)
+        x_names = self.x_names_ if hasattr(self, "x_names_") else None
+        y_names = self.y_names_ if hasattr(self, "y_names_") else None
+        utils.print_report(self, X, Y, sample_weight, x_names, y_names)
 
     def em(
         self,

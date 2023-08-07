@@ -111,9 +111,19 @@ class Nested(Emission):
         for key, item in parameters.items():
             self.models[key].set_parameters(item)
 
-    def print_parameters(self, indent=1):
-        for name, m in self.models.items():
-            m.print_parameters(indent, model_name=name)
+    def print_parameters(self, indent=1, feature_names=None):
+        if feature_names is None:
+            n_columns = sum(self.columns_per_model)
+            feature_names = self.get_default_feature_names(n_columns)
+
+        i = 0
+        for name, m, range_ in zip(
+                self.models.keys(), self.models.values(), self.columns_per_model
+        ):
+            # Slice parameter names to get the right column names for this submodel
+            f_i = feature_names[i : i + range_]
+            m.print_parameters(indent, model_name=name, feature_names=f_i)
+            i += range_
 
     @property
     def n_parameters(self):
