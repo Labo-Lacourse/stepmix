@@ -56,18 +56,18 @@ def test_default_weights_bootstrap(data, kwargs):
 
 
 def test_different_weights_bootstrap(data, kwargs):
-    """Running StepMix with different sample weights should result in a different likelihood."""
+    """Running StepMix with different sample weights should result in a different likelihoods."""
     X, Y = data
 
     model_1 = StepMix(**kwargs)
-    model_1.fit(X, Y, 3)
-    model_1.bootstrap(X, Y, n_repetitions=3)
+    sample_weight = np.ones(X.shape[0])
+    model_1.fit(X, Y, sample_weight=sample_weight)
+    model_1.bootstrap(X, Y, sample_weight=sample_weight, n_repetitions=3)
     ll_1 = model_1.score(X, Y)
 
     model_2 = StepMix(**kwargs)
-    sample_weight = np.ones(X.shape[0])
     sample_weight[0] = 100
-    model_2.fit(X, Y, sample_weight=3)
+    model_2.fit(X, Y, sample_weight=sample_weight)
     model_2.bootstrap(X, Y, sample_weight=sample_weight, n_repetitions=3)
     ll_2 = model_2.score(X, Y)
 
