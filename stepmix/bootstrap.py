@@ -55,22 +55,18 @@ def bootstrap(
     ----------
     estimator : StepMix instance
         A fitted StepMix estimator. Used as a template to clone bootstrap estimator.
-    X : array-like of shape (n_samples, n_columns)
-        Measurement data.
-    Y : array-like of shape (n_samples, n_columns_structural), default=None
-        Structural data.
+    X : array-like of shape (n_samples, n_features)
+    Y : array-like of shape (n_samples, n_features_structural), default=None
     n_repetitions: int
         Number of repetitions to fit.
     sample_weight : array-like of shape(n_samples,), default=None
-        Array of weights that are assigned to individual samples.
-        If not provided, then each sample is given unit weight.
     progress_bar : bool, default=True
         Display a tqdm progress bar for repetitions.
     Returns
     ----------
     parameters: DataFrame
         DataFrame of all repetitions. Follows the convention of StepMix.get_parameters_df() with an additional
-        'rep' index.
+        'rep' column.
     stats: DataFrame
         Various statistics of bootstrapped estimators.
     """

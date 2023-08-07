@@ -70,7 +70,7 @@ class Emission(ABC):
 
         Parameters
         ----------
-        X : ndarray of shape (n_samples, n_columns)
+        X : ndarray of shape (n_samples, n_features)
             Input data for this emission model.
         resp : ndarray of shape (n_samples, n_components)
             Responsibilities, i.e., posterior probabilities over the latent classes.
@@ -112,7 +112,7 @@ class Emission(ABC):
 
         Parameters
         ----------
-        X : ndarray of shape (n_samples, n_columns)
+        X : ndarray of shape (n_samples, n_features)
             Input data for this emission model.
         resp : ndarray of shape (n_samples, n_components)
             Responsibilities, i.e., posterior probabilities over the latent classes of each point in X.
@@ -211,6 +211,8 @@ class Emission(ABC):
 
     def get_parameters_df(self, feature_names=None):
         """Return self.parameters into a long dataframe.
+
+        Columns should be ["model_name", "param", "class_no", "variable", "value"].
 
         Call self._to_df or implement custom method."""
         return self._to_df(

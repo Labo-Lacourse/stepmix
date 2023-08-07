@@ -288,21 +288,9 @@ def print_report(model, X, Y=None, sample_weight=None):
     ----------
     model: stepmix.StepMix
         Fitted StepMix instance.
-    X : array-like of shape (n_samples, n_columns)
-            List of n_features-dimensional data points, where each column corresponds
-            to a feature for univariate variables (n_features=n_columns) and each group
-            of L columns corresponds to a feature for one-hot encoded variables with L
-            possible outcomes (n_features=n_columns/L). Each row corresponds to a single
-            data point of the measurement model.
-    Y : array-like of shape (n_samples, n_columns_structural), default=None
-        List of n_features-dimensional data points, where each column corresponds
-        to a feature for univariate variables (n_features=n_columns_structural)
-        and each group of L columns corresponds to a feature for one-hot encoded
-        variables with L possible outcomes (n_features=n_columns_structural/L).
-        Each row corresponds to a  single data point of the structural model.
+    X : array-like of shape (n_samples, n_features)
+    Y : array-like of shape (n_samples, n_features_structural), default=None
     sample_weight : array-like of shape(n_samples,), default=None
-        Array of weights that are assigned to individual samples.
-        If not provided, then each sample is given unit weight.
     """
     check_is_fitted(model)
     n_classes = model.n_components
