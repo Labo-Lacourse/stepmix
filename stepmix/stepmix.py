@@ -567,35 +567,40 @@ class StepMix(BaseEstimator):
         """
         check_is_fitted(self)
 
-        # Create a dataframe for class weights
-        df_class = list()
-        for class_no, w in enumerate(self.weights_):
-            df_class.append(
-                dict(
-                    model="class_weights",
-                    model_name="nan",
-                    param="class_weights",
-                    class_no=class_no,
-                    variable="nan",
-                    value=w,
-                )
-            )
-
-        df_class = pd.DataFrame.from_records(df_class)
-
+        # Dataframe of the measurement model
         if x_names is None:
             x_names = self.x_names_
-
         df_mm = self._mm.get_parameters_df(x_names)
         df_mm["model"] = "measurement"
+        list_df = [df_mm]
+
+        if not self._conditional_likelihood:
+            # No class weights if we are using the conditional perspective
+            # Create a dataframe for class weights
+            df_class = list()
+            for class_no, w in enumerate(self.weights_):
+                df_class.append(
+                    dict(
+                        model="measurement",
+                        model_name="class_weights",
+                        param="class_weights",
+                        class_no=class_no,
+                        variable="nan",
+                        value=w,
+                    )
+                )
+
+            df_class = pd.DataFrame.from_records(df_class)
+            list_df.append(df_class)
+
         if hasattr(self, "_sm"):
             if y_names is None:
                 y_names = self.y_names_
             df_sm = self._sm.get_parameters_df(y_names)
             df_sm["model"] = "structural"
-            df = pd.concat([df_mm, df_sm, df_class])
-        else:
-            df = pd.concat([df_mm, df_class])
+            list_df.append(df_sm)
+
+        df = pd.concat(list_df)
 
         return df.set_index(
             ["model", "model_name", "param", "class_no", "variable"]
