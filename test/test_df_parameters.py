@@ -179,7 +179,7 @@ def test_nested_df_model_names():
     model_names_input = list(desc.keys())
     model_names_input.sort()
     model_names_output = list(df.reset_index()["model_name"].unique())
-    model_names_output.remove("nan")
+    model_names_output.remove("class_weights")
     model_names_output.sort()
 
     assert model_names_input == model_names_output
