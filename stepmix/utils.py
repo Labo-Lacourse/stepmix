@@ -281,7 +281,7 @@ def modal(resp, clip=False):
     return modal_resp
 
 
-def print_report(model, X, Y=None, sample_weight=None):
+def print_report(model, X, Y=None, sample_weight=None, x_names=None, y_names=None):
     """Print detailed output for the model.
 
     Parameters
@@ -291,6 +291,10 @@ def print_report(model, X, Y=None, sample_weight=None):
     X : array-like of shape (n_samples, n_features)
     Y : array-like of shape (n_samples, n_features_structural), default=None
     sample_weight : array-like of shape(n_samples,), default=None
+    x_names : List of str, default=None
+        Column names of X.
+    y_names : List of str, default=None
+        Column names of Y.
     """
     check_is_fitted(model)
     n_classes = model.n_components
@@ -317,13 +321,13 @@ def print_report(model, X, Y=None, sample_weight=None):
     print("    " + "=" * 76)
     print(f"    Measurement model parameters")
     print("    " + "=" * 76)
-    model._mm.print_parameters(indent=2)
+    model._mm.print_parameters(indent=2, feature_names=x_names)
 
     if hasattr(model, "_sm"):
         print("    " + "=" * 76)
         print(f"    Structural model parameters")
         print("    " + "=" * 76)
-        model._sm.print_parameters(indent=2)
+        model._sm.print_parameters(indent=2, feature_names=y_names)
 
     print("    " + "=" * 76)
     print(f"    Class weights")

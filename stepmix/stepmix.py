@@ -756,7 +756,7 @@ class StepMix(BaseEstimator):
         Y : array-like of shape (n_samples, n_features_structural), default=None
         sample_weight : array-like of shape(n_samples,), default=None
         """
-        utils.print_report(self, X, Y, sample_weight)
+        utils.print_report(self, X, Y, sample_weight, self.x_names_, self.y_names_)
 
     def em(
         self,
@@ -1237,7 +1237,7 @@ class StepMix(BaseEstimator):
             List of n_features-dimensional data points to fit the structural model. Each row
             corresponds to a single data point. If the data is categorical, by default it should be
             0-indexed and integer encoded (not one-hot encoded).
-            
+
         Returns
         -------
         resp : array, shape (n_samples, n_components)
