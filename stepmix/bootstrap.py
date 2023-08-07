@@ -153,10 +153,3 @@ def bootstrap(
     stats = {"LL": np.array(ll_buffer), "avg_LL": np.array(avg_ll_buffer)}
 
     return return_df, pd.DataFrame.from_dict(stats)
-
-
-def groupby_bootstrap(df):
-    df = df.drop(columns="rep")
-    return df.groupby(
-        ["model", "model_name", "class_no", "param", "variable"]
-    )
