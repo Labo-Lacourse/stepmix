@@ -7,7 +7,7 @@ import numpy as np
 import tqdm
 
 from sklearn.base import clone
-from sklearn.utils.validation import check_random_state
+from sklearn.utils.validation import check_random_state, check_is_fitted
 
 
 def mse(x, y):
@@ -70,6 +70,7 @@ def bootstrap(
     stats: DataFrame
         Various statistics of bootstrapped estimators.
     """
+    check_is_fitted(estimator)
     n_samples = X.shape[0]
     x_names = estimator.x_names_
     y_names = estimator.y_names_ if hasattr(estimator, "y_names") else None
@@ -78,8 +79,6 @@ def bootstrap(
     # This will ensure that X and Y are numpy arrays for the rest of the bootstrap procedure
     X, Y = estimator._check_x_y(X, Y, reset=False)
 
-    # First fit the base estimator and get class probabilities
-    estimator.fit(X, Y, sample_weight=sample_weight)
     # Get class probabilities of main estimator as reference
     ref_class_probabilities = estimator.predict_proba(X, Y)
 
