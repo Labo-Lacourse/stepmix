@@ -1,6 +1,7 @@
 """Utility functions for model bootstrapping and confidence intervals."""
 import itertools
 import pandas as pd
+import warnings
 
 import numpy as np
 import tqdm
@@ -85,6 +86,10 @@ def bootstrap(
     estimator.fit(X, Y, sample_weight=sample_weight)
     # Get class probabilities of main estimator as reference
     ref_class_probabilities = estimator.predict_proba(X, Y)
+
+    # Raise warning if trying to permute too many columns
+    if estimator.n_components > 6:
+        warnings.warn("Bootstrapping requires permuting latent classes. Permuting latent classes with n_components > 6 may be slow.")
 
     # Now fit n_repetitions estimator with resampling and save parameters
     rng = check_random_state(estimator.random_state)
