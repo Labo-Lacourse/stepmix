@@ -573,7 +573,6 @@ class StepMix(BaseEstimator):
             df_class.append(
                 dict(
                     model="class_weights",
-                    model_type="nan",
                     model_name="nan",
                     param="class_weights",
                     class_no=class_no,
@@ -599,7 +598,7 @@ class StepMix(BaseEstimator):
             df = pd.concat([df_mm, df_class])
 
         return df.set_index(
-            ["model", "model_name", "model_type", "param", "class_no", "variable"]
+            ["model", "model_name", "param", "class_no", "variable"]
         )
 
     def set_parameters(self, params):

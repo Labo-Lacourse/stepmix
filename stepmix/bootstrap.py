@@ -158,5 +158,5 @@ def bootstrap(
 def groupby_bootstrap(df):
     df = df.drop(columns="rep")
     return df.groupby(
-        ["model", "model_name", "model_type", "class_no", "param", "variable"]
+        ["model", "model_name", "class_no", "param", "variable"]
     )

@@ -256,7 +256,6 @@ class Emission(ABC):
                 for n_i in range(n_features):
                     params.append(
                         dict(
-                            model_type=self.model_str,
                             model_name=self.model_str,
                             param=key,
                             class_no=k,

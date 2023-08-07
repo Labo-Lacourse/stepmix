@@ -488,7 +488,6 @@ def cov_np_to_df(cov, feature_names, model_str):
             for col, var_name in enumerate(feature_names):
                 params.append(
                     dict(
-                        model_type=model_str,
                         model_name=model_str,
                         param=param_name,
                         class_no=class_no,

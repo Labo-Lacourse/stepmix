@@ -136,7 +136,7 @@ class Nested(Emission):
         for name, m, range_ in zip(
             self.models.keys(), self.models.values(), self.columns_per_model
         ):
-            # Slice columns to compute the log-likelihood only on the appropriate columns
+            # Slice parameter names to get the right column names for this submodel
             f_i = feature_names[i : i + range_]
             df_i = m.get_parameters_df(f_i)
             df_i["model_name"] = name
