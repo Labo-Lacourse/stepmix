@@ -170,7 +170,7 @@ def bootstrap(
         parameters.append(df_i)
 
         # Save likelihood
-        avg_ll = estimator_rep.score(X, Y, sample_weight=sample_weight_rep)
+        avg_ll = estimator_rep.score(X_rep, Y_rep, sample_weight=sample_weight_rep)
         ll = (
             avg_ll * np.sum(sample_weight)
             if sample_weight is not None
