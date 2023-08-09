@@ -2,6 +2,7 @@
 import itertools
 import pandas as pd
 import warnings
+import copy
 
 import numpy as np
 import tqdm
@@ -93,9 +94,11 @@ def bootstrap(
         Various statistics of bootstrapped estimators.
     """
     check_is_fitted(estimator)
+    estimator = copy.deepcopy(estimator)
     estimator.set_params(random_state=random_state)
     if sampler is not None:
         check_is_fitted(sampler)
+        sampler = copy.deepcopy(sampler)
         sampler.set_params(random_state=random_state)
 
     n_samples = X.shape[0]
