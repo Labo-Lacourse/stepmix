@@ -170,7 +170,7 @@ def bootstrap(
         parameters.append(df_i)
 
         # Save likelihood
-        avg_ll = estimator_rep.score(X_rep, Y_rep, sample_weight=sample_weight_rep)
+        avg_ll = estimator_rep.score(X, Y, sample_weight=sample_weight_rep)
         ll = (
             avg_ll * np.sum(sample_weight)
             if sample_weight is not None
@@ -199,3 +199,39 @@ def bootstrap(
     stats = {"LL": np.array(ll_buffer), "avg_LL": np.array(avg_ll_buffer)}
 
     return return_df, pd.DataFrame.from_dict(stats)
+
+
+def blrt(null_model, alternative_model, X, Y=None, n_repetitions=30, random_state=42):
+    n_samples = X.shape[0]
+
+    # Fit both models on real data
+    null_model.fit(X, Y)
+    alternative_model.fit(X, Y)
+    real_stat = 2 * (alternative_model.score(X, Y) - null_model.score(X, Y)) * n_samples
+
+    # Bootstrap null model
+    print("Bootstrapping null model...")
+    _, stats_null = bootstrap(
+        null_model,
+        X,
+        Y,
+        n_repetitions=n_repetitions,
+        identify_classes=False,
+        sampler=null_model,
+        random_state=random_state,
+    )
+    print("\nBootstrapping alternative model...")
+    _, stats_alternative = bootstrap(
+        alternative_model,
+        X,
+        Y,
+        n_repetitions=n_repetitions,
+        identify_classes=False,
+        sampler=null_model,
+        random_state=random_state,
+    )
+    gen_stats = 2 * (stats_alternative["LL"] - stats_null["LL"])
+    b = np.sum(gen_stats > real_stat)
+
+    return b/n_repetitions
+    # return gen_stats

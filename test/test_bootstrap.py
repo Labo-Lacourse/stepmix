@@ -130,11 +130,19 @@ def test_bootstrap_seed(data_nested, kwargs_nested, parametric):
     model_1.fit(data_nested, data_nested)
 
     _, stats = model_1.bootstrap(
-        data_nested, data_nested, n_repetitions=10, parametric=parametric, identify_classes=True
+        data_nested,
+        data_nested,
+        n_repetitions=10,
+        parametric=parametric,
+        identify_classes=True,
     )
 
     _, stats2 = model_1.bootstrap(
-        data_nested, data_nested, n_repetitions=10, parametric=parametric, identify_classes=False
+        data_nested,
+        data_nested,
+        n_repetitions=10,
+        parametric=parametric,
+        identify_classes=False,
     )
 
     assert np.all(stats == stats2)
