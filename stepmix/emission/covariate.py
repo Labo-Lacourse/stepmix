@@ -41,6 +41,7 @@ class Covariate(Emission):
         self.lr = lr
         self.intercept = intercept
         self.method = method
+        self.model_str = "covariate"
 
     def check_parameters(self):
         super().check_parameters()
