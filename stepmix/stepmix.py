@@ -590,9 +590,7 @@ class StepMix(BaseEstimator):
 
         df = pd.concat(list_df)
 
-        return df.set_index(
-            ["model", "model_name", "param", "class_no", "variable"]
-        )
+        return df.set_index(["model", "model_name", "param", "class_no", "variable"])
 
     def set_parameters(self, params):
         """Set parameters.
@@ -654,11 +652,11 @@ class StepMix(BaseEstimator):
         ----------
         X : array-like of shape (n_samples, n_features)
             List of n_features-dimensional data points to fit the measurement model. Each row
-            corresponds to a single data point. If the data is categorical, by default it should be 
+            corresponds to a single data point. If the data is categorical, by default it should be
             0-indexed and integer encoded (not one-hot encoded).
         Y : array-like of shape (n_samples, n_features_structural), default=None
             List of n_features-dimensional data points to fit the structural model. Each row
-            corresponds to a single data point. If the data is categorical, by default it should be 
+            corresponds to a single data point. If the data is categorical, by default it should be
             0-indexed and integer encoded (not one-hot encoded).
         y: array-like of shape (n_samples, n_features), default=None
             Alias for Y. Ignored if Y is provided.

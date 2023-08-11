@@ -118,7 +118,7 @@ class Nested(Emission):
 
         i = 0
         for name, m, range_ in zip(
-                self.models.keys(), self.models.values(), self.columns_per_model
+            self.models.keys(), self.models.values(), self.columns_per_model
         ):
             # Slice parameter names to get the right column names for this submodel
             f_i = feature_names[i : i + range_]
