@@ -34,13 +34,7 @@ The `papres`, `madeg`, and `padeg` variables are used as items for the measureme
 used as the distal outcome, was obtained by dividing each value of the original variable `realinc` 
 (respondent’s family income in constant dollars) by 1000. Please refer to the article for more information.
 
-First [download the dataset](https://drive.google.com/file/d/1gxIQimk-iBTbEZwblOmdwY1nyJyMi7YN/view), then install the additional package `tabulate`
-
-```bash
-pip install tabulate
-```
-
-and run the following command:
+First [download the dataset](https://drive.google.com/file/d/1gxIQimk-iBTbEZwblOmdwY1nyJyMi7YN/view), then run the following command:
 ```bash
 python3 run_real_example.py
 ```
