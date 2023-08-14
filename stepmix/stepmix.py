@@ -609,8 +609,7 @@ class StepMix(BaseEstimator):
         if self._conditional_likelihood:
             raise ValueError("Class weights are not defined when using the conditional likelihood perspective (covariates).")
         df = self.get_parameters_df(x_names, y_names).loc["measurement", "class_weights"]
-        df = pd.pivot_table(df, columns="class_no", values="value", index=["param"])
-        return df
+        return self._pivot_cw(df, aggfunc=np.mean)  # Mean of one value is okay
 
     def get_mm_df(self, x_names=None, y_names=None):
         """Get measurement model parameters as DataFrame with classes as columns.
@@ -627,8 +626,7 @@ class StepMix(BaseEstimator):
         params: pd.DataFrame
         """
         df = self.get_parameters_df(x_names, y_names).loc["measurement"].drop("class_weights", level=0, errors="ignore")
-        df = pd.pivot_table(df, columns="class_no", values="value", index=["param", "variable"])
-        return df
+        return self._pivot_param(df, aggfunc=np.mean)  # Mean of one value is okay
 
     def get_sm_df(self, x_names=None, y_names=None):
         """Get structural model parameters as DataFrame with classes as columns.
@@ -647,8 +645,7 @@ class StepMix(BaseEstimator):
         if not hasattr(self, "_sm"):
             raise ValueError("No structural model fitted.")
         df = self.get_parameters_df(x_names, y_names).loc["structural"]
-        df = pd.pivot_table(df, columns="class_no", values="value", index=["param", "variable"])
-        return df
+        return self._pivot_param(df, aggfunc=np.mean)  # Mean of one value if okay
 
     def set_parameters(self, params):
         """Set parameters.
@@ -1144,22 +1141,28 @@ class StepMix(BaseEstimator):
         result = dict()
         result["parameters"] = bootstrap_df
         result["rep_stats"] = bootstrap_stats
-        result["mm_means"] = pd.pivot_table(mm_data, columns="class_no", values="value", index=["model_name", "param", "variable"],
-                                            aggfunc=np.mean)
-        result["mm_std"] = pd.pivot_table(mm_data, columns="class_no", values="value", index=["model_name", "param", "variable"],
-                                          aggfunc=np.std)
+        result["mm_means"] = self._pivot_param(mm_data, np.mean)
+        result["mm_std"] = self._pivot_param(mm_data, np.std)
 
         if hasattr(self, "_sm"):
             sm_data = bootstrap_df.loc["structural"]
-            result["sm_means"] = pd.pivot_table(sm_data, columns="class_no", values="value", index=["model_name", "param", "variable"], aggfunc=np.mean)
-            result["sm_std"] = pd.pivot_table(sm_data, columns="class_no", values="value", index=["model_name", "param", "variable"], aggfunc=np.std)
+            result["sm_means"] = self._pivot_param(sm_data, np.mean)
+            result["sm_std"] = self._pivot_param(sm_data, np.std)
 
         if not self._conditional_likelihood:
             cw_data = bootstrap_df.loc["measurement", "class_weights"]
-            result["cw_means"] = pd.pivot_table(cw_data, columns="class_no", values="value", index=["param"], aggfunc=np.mean)
-            result["cw_std"] = pd.pivot_table(cw_data, columns="class_no", values="value", index=["param"], aggfunc=np.std)
+            result["cw_means"] = self._pivot_cw(cw_data, np.mean)
+            result["cw_std"] = self._pivot_cw(cw_data, np.std)
 
         return result
+
+    def _pivot_param(self, df, aggfunc=np.mean):
+        # Standard pivot function that we reuse for bootstrapping
+        return  pd.pivot_table(df, columns="class_no", values="value", index=["model_name", "param", "variable"], aggfunc=aggfunc)
+
+    def _pivot_cw(self, df, aggfunc=np.std):
+        # Standard pivot function that we reuse for bootstrapping
+        return  pd.pivot_table(df, columns="class_no", values="value", index=["param"], aggfunc=aggfunc)
 
     ########################################################################################################################
     # INFERENCE
