@@ -28,7 +28,16 @@ def test_emissions_df(data, kwargs, model):
 
     model_1 = StepMix(n_steps=1, **kwargs)
     model_1.fit(X, Y)
-    df = model_1.get_parameters_df()
+    model_1.get_parameters_df()
+    model_1.get_mm_df()
+    model_1.get_sm_df()
+
+    # Test class weights
+    if model == "covariate":
+        with pytest.raises(ValueError) as e_info:
+            model_1.get_cw_df()
+    else:
+        model_1.get_cw_df()
 
 
 @pytest.mark.filterwarnings(

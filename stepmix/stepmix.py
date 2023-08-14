@@ -592,6 +592,64 @@ class StepMix(BaseEstimator):
 
         return df.set_index(["model", "model_name", "param", "class_no", "variable"])
 
+    def get_cw_df(self, x_names=None, y_names=None):
+        """Get class weights as DataFrame with classes as columns.
+
+        Parameters
+        ----------
+        x_names : List of str
+            Column names of X.
+        y_names : List of str
+            Column names of Y.
+
+        Returns
+        -------
+        params: pd.DataFrame
+        """
+        if self._conditional_likelihood:
+            raise ValueError("Class weights are not defined when using the conditional likelihood perspective (covariates).")
+        df = self.get_parameters_df(x_names, y_names).loc["measurement", "class_weights"]
+        df = pd.pivot_table(df, columns="class_no", values="value", index=["param"])
+        return df
+
+    def get_mm_df(self, x_names=None, y_names=None):
+        """Get measurement model parameters as DataFrame with classes as columns.
+
+        Parameters
+        ----------
+        x_names : List of str
+            Column names of X.
+        y_names : List of str
+            Column names of Y.
+
+        Returns
+        -------
+        params: pd.DataFrame
+        """
+        df = self.get_parameters_df(x_names, y_names).loc["measurement"].drop("class_weights", level=0, errors="ignore")
+        df = pd.pivot_table(df, columns="class_no", values="value", index=["param", "variable"])
+        return df
+
+    def get_sm_df(self, x_names=None, y_names=None):
+        """Get structural model parameters as DataFrame with classes as columns.
+
+        Parameters
+        ----------
+        x_names : List of str
+            Column names of X.
+        y_names : List of str
+            Column names of Y.
+
+        Returns
+        -------
+        params: pd.DataFrame
+        """
+        if not hasattr(self, "_sm"):
+            raise ValueError("No structural model fitted.")
+        df = self.get_parameters_df(x_names, y_names).loc["structural"]
+        df = pd.pivot_table(df, columns="class_no", values="value", index=["param", "variable"])
+        return df
+
     def set_parameters(self, params):
         """Set parameters.
 
@@ -1040,7 +1098,7 @@ class StepMix(BaseEstimator):
         ----------
         parameters: DataFrame
             Parameter DataFrame for all repetitions. Follows the convention of StepMix.get_parameters_df() with an additional
-            'rep' index.
+            'rep' column.
         stats: DataFrame
             Various statistics of bootstrapped estimators.
         """
