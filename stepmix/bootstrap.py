@@ -67,8 +67,8 @@ def bootstrap(
     parameters: DataFrame
         DataFrame of all repetitions. Follows the convention of StepMix.get_parameters_df() with an additional
         'rep' column.
-    stats: DataFrame
-        Various statistics of bootstrapped estimators.
+    rep_stats: DataFrame
+        Likelihood statistics of each repetition.
     """
     check_is_fitted(estimator)
     n_samples = X.shape[0]

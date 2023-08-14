@@ -1099,12 +1099,67 @@ class StepMix(BaseEstimator):
         parameters: DataFrame
             Parameter DataFrame for all repetitions. Follows the convention of StepMix.get_parameters_df() with an additional
             'rep' column.
-        stats: DataFrame
-            Various statistics of bootstrapped estimators.
+        rep_stats: DataFrame
+            Likelihood statistics of each repetition.
         """
         check_is_fitted(self)
 
         return bootstrap(self, X, Y, n_repetitions, sample_weight, progress_bar)
+
+    def bootstrap_stats(
+            self, X, Y=None, n_repetitions=1000, sample_weight=None, progress_bar=True
+    ):
+        """Non-parametric boostrap of StepMix estimator. Obtain boostrapped parameters and some statistics
+        (mean and standard deviation).
+
+        If a covariate model is used in the structural model, the output keys "cw_mean" and "cw_std" are omitted.
+
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
+        Y : array-like of shape (n_samples, n_features_structural), default=None
+        sample_weight : array-like of shape(n_samples,), default=None
+        n_repetitions: int
+            Number of repetitions to fit.
+        progress_bar : bool, default=True
+            Display a tqdm progress bar for repetitions.
+        Returns
+        ----------
+        bootstrap_and_stats: dict,
+            Dictionary of dataframes {
+            'params': Parameters provided by self.boostrap,\
+            'rep_stats': Likelihood statistics of each repetition provided by self.boostrap,\
+            'cw_mean': Bootstrapped means of the class weights,\
+            'cw_std': Bootstrapped standard deviations of the class weights,\
+            'mm_mean': Bootstrapped means of the measurement model parameters,\
+            'mm_std': Bootstrapped standard deviations of the measurement model parameters,\
+            'sm_mean': Bootstrapped means of the structural model parameters,\
+            'sm_std': Bootstrapped standard deviations of the structural model parameters,\
+            }.
+        """
+        bootstrap_df, bootstrap_stats = self.bootstrap(X, Y, n_repetitions, sample_weight, progress_bar)
+
+        mm_data = bootstrap_df.loc["measurement"].drop(index="class_weights", level=0, errors="ignore")
+
+        result = dict()
+        result["parameters"] = bootstrap_df
+        result["rep_stats"] = bootstrap_stats
+        result["mm_means"] = pd.pivot_table(mm_data, columns="class_no", values="value", index=["model_name", "param", "variable"],
+                                            aggfunc=np.mean)
+        result["mm_std"] = pd.pivot_table(mm_data, columns="class_no", values="value", index=["model_name", "param", "variable"],
+                                          aggfunc=np.std)
+
+        if hasattr(self, "_sm"):
+            sm_data = bootstrap_df.loc["structural"]
+            result["sm_means"] = pd.pivot_table(sm_data, columns="class_no", values="value", index=["model_name", "param", "variable"], aggfunc=np.mean)
+            result["sm_std"] = pd.pivot_table(sm_data, columns="class_no", values="value", index=["model_name", "param", "variable"], aggfunc=np.std)
+
+        if not self._conditional_likelihood:
+            cw_data = bootstrap_df.loc["measurement", "class_weights"]
+            result["cw_means"] = pd.pivot_table(cw_data, columns="class_no", values="value", index=["param"], aggfunc=np.mean)
+            result["cw_std"] = pd.pivot_table(cw_data, columns="class_no", values="value", index=["param"], aggfunc=np.std)
+
+        return result
 
     ########################################################################################################################
     # INFERENCE
