@@ -73,7 +73,7 @@ def bootstrap(
     check_is_fitted(estimator)
     n_samples = X.shape[0]
     x_names = estimator.x_names_
-    y_names = estimator.y_names_ if hasattr(estimator, "y_names") else None
+    y_names = estimator.y_names_ if hasattr(estimator, "y_names_") else None
 
     # Use the estimator built-in method to check the input
     # This will ensure that X and Y are numpy arrays for the rest of the bootstrap procedure
