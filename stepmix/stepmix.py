@@ -1101,7 +1101,7 @@ class StepMix(BaseEstimator):
             Display a tqdm progress bar for repetitions.
         Returns
         ----------
-        parameters: DataFrame
+        samples: DataFrame
             Parameter DataFrame for all repetitions. Follows the convention of StepMix.get_parameters_df() with an additional
             'rep' column.
         rep_stats: DataFrame

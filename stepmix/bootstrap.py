@@ -64,7 +64,7 @@ def bootstrap(
         Display a tqdm progress bar for repetitions.
     Returns
     ----------
-    parameters: DataFrame
+    samples: DataFrame
         DataFrame of all repetitions. Follows the convention of StepMix.get_parameters_df() with an additional
         'rep' column.
     rep_stats: DataFrame
