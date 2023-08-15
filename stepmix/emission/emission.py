@@ -179,7 +179,12 @@ class Emission(ABC):
                 self.parameters[key] = item[perm]
 
     def print_parameters(
-        self, indent=1, feature_names=None, index=["param", "variable"], columns=["model_name", "class_no"], model_name=None
+        self,
+        indent=1,
+        feature_names=None,
+        index=["param", "variable"],
+        columns=["model_name", "class_no"],
+        model_name=None,
     ):
         """Print parameters with nice formatting.
 
@@ -204,9 +209,7 @@ class Emission(ABC):
         df = self.get_parameters_df(feature_names)
         if model_name is not None:
             df["model_name"] = model_name
-        df = pd.pivot_table(
-            df, index=index, columns=columns, values="value"
-        )
+        df = pd.pivot_table(df, index=index, columns=columns, values="value")
         print(
             indent_string + df.round(4).to_string().replace("\n", "\n" + indent_string)
         )

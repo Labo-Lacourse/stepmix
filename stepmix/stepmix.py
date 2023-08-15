@@ -607,8 +607,12 @@ class StepMix(BaseEstimator):
         params: pd.DataFrame
         """
         if self._conditional_likelihood:
-            raise ValueError("Class weights are not defined when using the conditional likelihood perspective (covariates).")
-        df = self.get_parameters_df(x_names, y_names).loc["measurement", "class_weights"]
+            raise ValueError(
+                "Class weights are not defined when using the conditional likelihood perspective (covariates)."
+            )
+        df = self.get_parameters_df(x_names, y_names).loc[
+            "measurement", "class_weights"
+        ]
         return self._pivot_cw(df, aggfunc=np.mean)  # Mean of one value is okay
 
     def get_mm_df(self, x_names=None, y_names=None):
@@ -625,7 +629,11 @@ class StepMix(BaseEstimator):
         -------
         params: pd.DataFrame
         """
-        df = self.get_parameters_df(x_names, y_names).loc["measurement"].drop("class_weights", level=0, errors="ignore")
+        df = (
+            self.get_parameters_df(x_names, y_names)
+            .loc["measurement"]
+            .drop("class_weights", level=0, errors="ignore")
+        )
         return self._pivot_param(df, aggfunc=np.mean)  # Mean of one value is okay
 
     def get_sm_df(self, x_names=None, y_names=None):
@@ -1104,7 +1112,7 @@ class StepMix(BaseEstimator):
         return bootstrap(self, X, Y, n_repetitions, sample_weight, progress_bar)
 
     def bootstrap_stats(
-            self, X, Y=None, n_repetitions=1000, sample_weight=None, progress_bar=True
+        self, X, Y=None, n_repetitions=1000, sample_weight=None, progress_bar=True
     ):
         """Non-parametric boostrap of StepMix estimator. Obtain boostrapped parameters and some statistics
         (mean and standard deviation).
@@ -1134,9 +1142,13 @@ class StepMix(BaseEstimator):
             'sm_std': Bootstrapped standard deviations of the structural model parameters,\
             }.
         """
-        bootstrap_df, bootstrap_stats = self.bootstrap(X, Y, n_repetitions, sample_weight, progress_bar)
+        bootstrap_df, bootstrap_stats = self.bootstrap(
+            X, Y, n_repetitions, sample_weight, progress_bar
+        )
 
-        mm_data = bootstrap_df.loc["measurement"].drop(index="class_weights", level=0, errors="ignore")
+        mm_data = bootstrap_df.loc["measurement"].drop(
+            index="class_weights", level=0, errors="ignore"
+        )
 
         result = dict()
         result["samples"] = bootstrap_df
@@ -1158,11 +1170,19 @@ class StepMix(BaseEstimator):
 
     def _pivot_param(self, df, aggfunc=np.mean):
         # Standard pivot function that we reuse for bootstrapping
-        return  pd.pivot_table(df, columns="class_no", values="value", index=["model_name", "param", "variable"], aggfunc=aggfunc)
+        return pd.pivot_table(
+            df,
+            columns="class_no",
+            values="value",
+            index=["model_name", "param", "variable"],
+            aggfunc=aggfunc,
+        )
 
     def _pivot_cw(self, df, aggfunc=np.std):
         # Standard pivot function that we reuse for bootstrapping
-        return  pd.pivot_table(df, columns="class_no", values="value", index=["param"], aggfunc=aggfunc)
+        return pd.pivot_table(
+            df, columns="class_no", values="value", index=["param"], aggfunc=aggfunc
+        )
 
     ########################################################################################################################
     # INFERENCE
