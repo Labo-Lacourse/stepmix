@@ -1141,17 +1141,17 @@ class StepMix(BaseEstimator):
         result = dict()
         result["parameters"] = bootstrap_df
         result["rep_stats"] = bootstrap_stats
-        result["mm_means"] = self._pivot_param(mm_data, np.mean)
+        result["mm_mean"] = self._pivot_param(mm_data, np.mean)
         result["mm_std"] = self._pivot_param(mm_data, np.std)
 
         if hasattr(self, "_sm"):
             sm_data = bootstrap_df.loc["structural"]
-            result["sm_means"] = self._pivot_param(sm_data, np.mean)
+            result["sm_mean"] = self._pivot_param(sm_data, np.mean)
             result["sm_std"] = self._pivot_param(sm_data, np.std)
 
         if not self._conditional_likelihood:
             cw_data = bootstrap_df.loc["measurement", "class_weights"]
-            result["cw_means"] = self._pivot_cw(cw_data, np.mean)
+            result["cw_mean"] = self._pivot_cw(cw_data, np.mean)
             result["cw_std"] = self._pivot_cw(cw_data, np.std)
 
         return result
