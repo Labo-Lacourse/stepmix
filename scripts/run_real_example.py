@@ -4,15 +4,7 @@ import pandas as pd
 import numpy as np
 from stepmix.stepmix import StepMix
 
-from sklearn.base import clone
 from scipy.stats import norm
-
-
-# Define print_table function that we can reuse
-def print_table(df, title):
-    print(f"\n{title}")
-    print(df.round(2).to_string())
-
 
 # Load data
 data = pd.read_csv('StepMix_Real_Data_GSS.csv')
@@ -44,101 +36,112 @@ model_simple = StepMix(
 
 # Fit and print parameters of main model
 model_simple.fit(data_mm)
+model_simple.permute_classes([0, 2, 1]) # Permute classes to ensure that 0, 1, 2 is Low, Medium, High
 
 # Table 8 : Estimated MM parameters
-params_mm = model_simple.get_parameters_df().loc["measurement"]
+params_mm = model_simple.get_mm_df()
+params_mm = params_mm.rename(columns={0: "Low", 1: "Middle", 2: "High"})  # Rename classes
 
-params_mm_pivot = pd.pivot_table(
-    params_mm, columns="class_no", values="value", index=["model_name", "variable"]
-).reindex()
+print("Table 8 : Estimated MM parameters")
+print(params_mm.round(2))  # Round parameters
 
-# Rename and reorder class columns
-params_mm_pivot = params_mm_pivot.rename(columns={0: "Low", 1: "High", 2: "Middle"})[
-    ["Low", "Middle", "High"]
-]
-print_table(params_mm_pivot, "Table 8 : Estimated MM parameters")
-
-
-### Multi-Step Approaches
-model_base = StepMix(
-    n_components=3,
-    measurement="categorical_nan",
-    structural="gaussian_diag_nan",
-    random_state=123,
-    max_iter=10000,
-    verbose=0,
-    n_steps=1,
-    progress_bar=False,
-)
-
-params = list()
-
-# Define model as n_steps, correction and permutation to apply to classes
-# None means no correction
-model_params = [
-    (1, None, [0, 1, 2]),  # (n_steps, correction, permutation)
-    (2, None, [0, 2, 1]),
-    (3, None, [0, 2, 1]),
-    (3, "BCH", [0, 2, 1]),
-    (3, "ML", [0, 2, 1]),
-]
-
-for n_steps, correction, perm in model_params:
-    # Clone base model and set n_steps and correction
-    model = clone(model_base).set_params(n_steps=n_steps, correction=correction)
-    model.fit(data_mm, data_sm)
-    model.permute_classes(perm)
-
-    bootstrap_params, _ = model.bootstrap(
-        data_mm, data_sm, n_repetitions=100, progress_bar=False
-    )
-
-    # Add column with model descriptor
-    bootstrap_params["Method"] = (
-        f"{n_steps}-step" + ("" if correction is None else f" ({correction})")
-    )
-
-    # Save parameters to main list
-    means = bootstrap_params.loc["structural", "gaussian_diag_nan", "means"]
-    params.append(means)
-
-# Concat all bootstrapped parameters in one dataframe
-params = (
-    pd.concat(params, axis=0)
-    .reset_index()
-    .set_index(["class_no", "Method", "variable", "rep"])
-)
+class_weights = model_simple.get_cw_df()
+class_weights = class_weights.rename(columns={0: "Low", 1: "Middle", 2: "High"}) # Rename classes
+print("\nTable 8 : Class weights")
+print(class_weights.round(2))  # Round parameters
 
 # Table 9 : Bootstrapped SM parameters
-params_pivot = pd.pivot_table(
-    params,
-    index="Method",
-    columns="class_no",
-    values="value",
-    aggfunc=[np.mean, np.std],
-).reindex()
-params_pivot = params_pivot.rename(columns={0: "Low", 1: "Middle", 2: "High"})
-print_table(params_pivot, "Table 9 : Estimated SM parameters")
+# Define a function that we will call for all 5 multi-step estimators
+def fit_and_bootstrap(n_steps, correction, permutation, method_str):
+    model = StepMix(
+        n_steps=n_steps,
+        correction=correction,
+        n_components=3,
+        measurement="categorical_nan",
+        structural="gaussian_diag_nan",
+        random_state=123,
+        max_iter=10000,
+        verbose=0,
+        progress_bar=False,
+    )
+
+    # 1-step
+    model.fit(data_mm, data_sm)
+    model.permute_classes(permutation)  # Permute classes to ensure that 0, 1, 2 is Low, Medium, High
+    stats_dict = model.bootstrap_stats(data_mm, data_sm, n_repetitions=10, progress_bar=False)
+
+    # Look at the means and standard deviations of the structural model.
+    means = stats_dict["sm_mean"].loc["gaussian_diag_nan", "means"].copy()  # Means of the mean paramater
+    errors = stats_dict["sm_std"].loc["gaussian_diag_nan", "means"].copy() # STD of the mean parameter
+
+    # Also get raw bootsrapped samples for Table 10
+    samples = stats_dict["samples"].loc["structural", "gaussian_diag_nan", "means"].copy() # Raw samples
+
+    # Add column with model descriptor
+    means["method"] = method_str
+    errors["method"] = method_str
+    samples["method"] = method_str
+
+    # Check the class prevalence of all models
+    print(f"\nClass prevalence for {method_str}:")
+    print(model.get_cw_df().round(3))
+
+    return means, errors, samples
+
+# Apply function to all 5 multi-step estimators
+means_1_step, errors_1_step, samples_1_step = fit_and_bootstrap(n_steps=1, correction=None, method_str="1-step", permutation=[0, 1, 2])
+means_2_step, errors_2_step, samples_2_step = fit_and_bootstrap(n_steps=2, correction=None, method_str="2-step", permutation=[0, 2, 1])
+means_3_step, errors_3_step, samples_3_step = fit_and_bootstrap(n_steps=3, correction=None, method_str="3-step", permutation=[0, 2, 1])
+means_3_step_bch, errors_3_step_bch, samples_3_step_bch = fit_and_bootstrap(n_steps=3, correction="BCH", method_str="3-step (BCH)", permutation=[0, 2, 1])
+means_3_step_ml, errors_3_step_ml, samples_3_step_ml = fit_and_bootstrap(n_steps=3, correction="ML", method_str="3-step (ML)", permutation=[0, 2, 1])
+
+# Concat all results
+means_sm = pd.concat([means_1_step, means_2_step, means_3_step, means_3_step_bch, means_3_step_ml])
+stds_sm = pd.concat([errors_1_step, errors_2_step, errors_3_step, errors_3_step_bch, errors_3_step_ml])
+
+# Reindex and rename for nicer tables
+means_sm = means_sm.reset_index().set_index(["variable", "method"]).sort_index()
+means_sm = means_sm.rename(columns={0: "Low", 1: "Middle", 2: "High"}) # Rename classes
+stds_sm = stds_sm.reset_index().set_index(["variable", "method"]).sort_index()
+stds_sm = stds_sm.rename(columns={0: "Low", 1: "Middle", 2: "High"}) # Rename classes
+
+print("\nTable 9 : Estimated SM parameters (means)")
+print(means_sm.round(2))
+
+print("\nTable 9 : Estimated SM parameters (errors)")
+print(stds_sm.round(2))
 
 
 # Table 10 : Z-scores
-params_diff = params - params.loc[0]  # Remove means of class 0 from all classes
-params_diff_pivot = (
-    pd.pivot_table(
-        params_diff,
-        index=["Method", "class_no"],
-        values="value",
-        aggfunc=[np.mean, np.std],
-    )
-    .reindex()
-    .droplevel(1, axis=1)
-)
+# Here we need to manually compute the differences High - Low and Middle - Low over all repetitions
+# First collect all bootstrap samples in a single dataframe
+samples = pd.concat([samples_1_step, samples_2_step, samples_3_step, samples_3_step_bch, samples_3_step_ml])
 
-params_diff_pivot = params_diff_pivot.rename(index={0: "Low", 1: "Middle", 2: "High"})
-params_diff_pivot = params_diff_pivot.drop(index="Low", level="class_no")
-params_diff_pivot["Z"] = params_diff_pivot["mean"] / params_diff_pivot["std"]
-params_diff_pivot["P(<|t|)"] = 2 * norm.cdf(-np.abs(params_diff_pivot["Z"]))
-print_table(
-    params_diff_pivot,
-    "Table 10 : Family’s income differences between classes for each method.",
-)
+# Send repetition to index (rows) and class_no to columns
+samples = pd.pivot_table(samples, index=["method", "variable", "rep"], columns="class_no", values="value")
+samples = samples.rename(columns={0: "Low", 1: "Middle", 2: "High"}) # Rename classes
+
+# Remove Low column from the Middle and High Columns
+samples["Middle"] = samples["Middle"] - samples["Low"]
+samples["High"] = samples["High"] - samples["Low"]
+
+# We no longer need the Low class
+samples = samples.drop("Low", axis=1)
+
+# Send back the class to index ("Rows")
+samples = samples.stack()
+
+# Now group by everything except the rep
+# This means we will be computing statistics over the repetitions
+stats = samples.groupby(["variable", "method", "class_no"]).agg(["mean", "std"])
+
+# Z-score
+stats["Z"] = stats["mean"] / stats["std"]
+
+# P-value
+stats["P(<|t|)"] = 2 * norm.cdf(-np.abs(stats["Z"]))
+
+stats[["mean", "std", "Z"]] = stats[["mean", "std", "Z"]].round(2)
+stats["P(<|t|)"] = stats["P(<|t|)"].round(3)
+print("\nTable 10 : Family’s income differences between classes for each method.")
+print(stats)
