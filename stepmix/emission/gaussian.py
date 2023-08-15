@@ -200,11 +200,11 @@ class GaussianFull(Gaussian):
         self.model_str = "gaussian_full"
 
     def print_parameters(
-        self, indent=1, feature_names=None, index=["class_no", "param"]
+        self, indent=1, feature_names=None, index=["class_no", "param"], columns=["model_name", "variable"]
     ):
-        """Flipping class_no and index is nicer for full covariances."""
+        """Flipping class_no and variable is nicer for full covariances."""
         super().print_parameters(
-            indent=indent, feature_names=feature_names, index=index
+            indent=indent, feature_names=feature_names, index=index, columns=columns
         )
 
     def get_parameters_df(self, feature_names=None):
@@ -267,11 +267,11 @@ class GaussianTied(Gaussian):
         self.model_str = "gaussian_tied"
 
     def print_parameters(
-        self, indent=1, feature_names=None, index=["class_no", "param"]
+            self, indent=1, feature_names=None, index=["class_no", "param"], columns=["model_name", "variable"]
     ):
-        """Flipping class_no and index is nicer for full covariances."""
+        """Flipping class_no and variable is nicer for full covariances."""
         super().print_parameters(
-            indent=indent, feature_names=feature_names, index=index
+            indent=indent, feature_names=feature_names, index=index, columns=columns
         )
 
     def get_parameters_df(self, feature_names=None):
