@@ -77,7 +77,7 @@ def fit_and_bootstrap(n_steps, correction, permutation, method_str):
         permutation
     )  # Permute classes to ensure that 0, 1, 2 is Low, Medium, High
     stats_dict = model.bootstrap_stats(
-        data_mm, data_sm, n_repetitions=10, progress_bar=False
+        data_mm, data_sm, n_repetitions=100, progress_bar=False
     )
 
     # Look at the means and standard deviations of the structural model.
