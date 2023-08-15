@@ -1124,7 +1124,7 @@ class StepMix(BaseEstimator):
         ----------
         bootstrap_and_stats: dict,
             Dictionary of dataframes {
-            'params': Parameters provided by self.boostrap,\
+            'samples': Parameters estimated by self.boostrap in a long-form DataFrame,\
             'rep_stats': Likelihood statistics of each repetition provided by self.boostrap,\
             'cw_mean': Bootstrapped means of the class weights,\
             'cw_std': Bootstrapped standard deviations of the class weights,\
@@ -1139,7 +1139,7 @@ class StepMix(BaseEstimator):
         mm_data = bootstrap_df.loc["measurement"].drop(index="class_weights", level=0, errors="ignore")
 
         result = dict()
-        result["parameters"] = bootstrap_df
+        result["samples"] = bootstrap_df
         result["rep_stats"] = bootstrap_stats
         result["mm_mean"] = self._pivot_param(mm_data, np.mean)
         result["mm_std"] = self._pivot_param(mm_data, np.std)
