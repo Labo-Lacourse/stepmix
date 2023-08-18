@@ -19,6 +19,7 @@ def main(n_simulations=10, latex=False, covariate=False):
         n_init=1,
         max_iter=500,
         abs_tol=1e-8,
+        progress_bar=0,
     )
 
     # Model specific arguments

@@ -193,10 +193,10 @@ def main(n_repetitions, max_iter):
     stats["Z"] = stats["mean"] / stats["std"]
 
     # P-value
-    stats["P(<|t|)"] = 2 * norm.cdf(-np.abs(stats["Z"]))
+    stats["P(>|z|)"] = 2 * norm.cdf(-np.abs(stats["Z"]))
 
     stats[["mean", "std", "Z"]] = stats[["mean", "std", "Z"]].round(2)
-    stats["P(<|t|)"] = stats["P(<|t|)"].round(3)
+    stats["P(>|z|)"] = stats["P(>|z|)"].round(3)
     print("\nTable 10 : Family’s income differences between classes for each method.")
     print(stats)
 

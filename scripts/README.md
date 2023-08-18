@@ -14,7 +14,7 @@ python3 run_bakk_simulation.py -s 500 -c
 # Complete simulation
 python3 run_bakk_simulation_complete.py -s 500
 ```
-All three commands should output the simulation tables from the paper. You can ignore the UserWarnings.
+All three commands should output the simulation tables from the paper. You can ignore  ConvergenceWarnings and UserWarnings.
 
 
 Real-Data Example
@@ -39,4 +39,4 @@ First [download the dataset](https://drive.google.com/file/d/1vdSzzBe7tPxfQ_X-hU
 python3 run_real_example.py --n_repetitions 100 --max_iter 10000
 ```
 
-Running the above may take a while. You can the lower the number of bootstrap repetitions for faster results.
+Running the above may take a while (15 minutes on a Macbook Pro M2 Pro). You can lower the number of bootstrap repetitions for faster results.
