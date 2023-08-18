@@ -11,7 +11,7 @@ copyright = "2022, Labo-Lacourse"
 author = "Sacha Morin, Robin Legault"
 
 release = "0.0"
-version = "2.1.0"
+version = "2.1.1"
 
 
 # -- General configuration
