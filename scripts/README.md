@@ -36,5 +36,7 @@ used as the distal outcome, was obtained by dividing each value of the original 
 
 First [download the dataset](https://drive.google.com/file/d/1vdSzzBe7tPxfQ_X-hUuF3qidDd6CWFiL/view?usp=drive_link), then run the following command:
 ```bash
-python3 run_real_example.py
+python3 run_real_example.py --n_repetitions 100 --max_iter 10000
 ```
+
+Running the above may take a while. You can the lower the number of bootstrap repetitions for faster results.
