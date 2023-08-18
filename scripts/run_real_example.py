@@ -7,6 +7,7 @@ from stepmix.stepmix import StepMix
 
 from scipy.stats import norm
 
+
 def main(n_repetitions, max_iter):
     # Load data
     data = pd.read_csv("StepMix_Real_Data_GSS.csv")
@@ -106,7 +107,6 @@ def main(n_repetitions, max_iter):
 
         return means, errors, samples
 
-
     # Apply function to all 5 multi-step estimators
     means_1_step, errors_1_step, samples_1_step = fit_and_bootstrap(
         n_steps=1, correction=None, method_str="1-step", permutation=[0, 1, 2]
@@ -129,21 +129,30 @@ def main(n_repetitions, max_iter):
         [means_1_step, means_2_step, means_3_step, means_3_step_bch, means_3_step_ml]
     )
     stds_sm = pd.concat(
-        [errors_1_step, errors_2_step, errors_3_step, errors_3_step_bch, errors_3_step_ml]
+        [
+            errors_1_step,
+            errors_2_step,
+            errors_3_step,
+            errors_3_step_bch,
+            errors_3_step_ml,
+        ]
     )
 
     # Reindex and rename for nicer tables
     means_sm = means_sm.reset_index().set_index(["variable", "method"]).sort_index()
-    means_sm = means_sm.rename(columns={0: "Low", 1: "Middle", 2: "High"})  # Rename classes
+    means_sm = means_sm.rename(
+        columns={0: "Low", 1: "Middle", 2: "High"}
+    )  # Rename classes
     stds_sm = stds_sm.reset_index().set_index(["variable", "method"]).sort_index()
-    stds_sm = stds_sm.rename(columns={0: "Low", 1: "Middle", 2: "High"})  # Rename classes
+    stds_sm = stds_sm.rename(
+        columns={0: "Low", 1: "Middle", 2: "High"}
+    )  # Rename classes
 
     print("\nTable 9 : Estimated SM parameters (means)")
     print(means_sm.round(2))
 
     print("\nTable 9 : Estimated SM parameters (errors)")
     print(stds_sm.round(2))
-
 
     # Table 10 : Z-scores
     # Here we need to manually compute the differences High - Low and Middle - Low over all repetitions
@@ -162,7 +171,9 @@ def main(n_repetitions, max_iter):
     samples = pd.pivot_table(
         samples, index=["method", "variable", "rep"], columns="class_no", values="value"
     )
-    samples = samples.rename(columns={0: "Low", 1: "Middle", 2: "High"})  # Rename classes
+    samples = samples.rename(
+        columns={0: "Low", 1: "Middle", 2: "High"}
+    )  # Rename classes
 
     # Remove Low column from the Middle and High Columns
     samples["Middle"] = samples["Middle"] - samples["Low"]
@@ -188,6 +199,7 @@ def main(n_repetitions, max_iter):
     stats["P(<|t|)"] = stats["P(<|t|)"].round(3)
     print("\nTable 10 : Family’s income differences between classes for each method.")
     print(stats)
+
 
 if __name__ == "__main__":
     # Parser
