@@ -8,7 +8,15 @@ import numpy as np
 
 from stepmix.stepmix import StepMix
 from stepmix.datasets import data_bakk_complete
-from stepmix.utils import identify_coef
+
+from warnings import simplefilter
+from sklearn.exceptions import ConvergenceWarning
+
+# Original simulation parameters from Bakk 2018 do not technically converge
+# but the results make sense. Ignore warnings
+# You should normally tune the tolerance to avoid ConvergenceWarnings
+simplefilter("ignore", category=ConvergenceWarning)
+simplefilter("ignore", category=UserWarning)  # Because of NaN sampling
 
 
 def main(n_simulations=10, latex=False, covariate=False):

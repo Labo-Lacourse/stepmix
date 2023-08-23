@@ -18,7 +18,7 @@ python3 run_bakk_simulation.py -s 500 -c
 # Complete simulation
 python3 run_bakk_simulation_complete.py -s 500
 ```
-All three commands should output the simulation tables from the paper. You can ignore  ConvergenceWarnings and UserWarnings.
+All three commands should output the simulation tables from the paper.
 
 
 Real-Data Example
