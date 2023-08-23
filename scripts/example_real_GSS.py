@@ -34,6 +34,5 @@ model = StepMix(
     progress_bar=True,
 )
 model.fit(data_mm, data_sm)
-model.permute_classes([0, 2, 1]) # For classes to align with Low, Medium, High
-model.report(data_mm, data_sm) # Manually print report
-
+model.permute_classes([0, 2, 1])  # For classes to align with Low, Medium, High
+model.report(data_mm, data_sm)  # Manually print report
