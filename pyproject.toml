@@ -35,7 +35,7 @@ dependencies = [
 requires-python = ">=3.7"
 
 [project.optional-dependencies]
-dev = ["black", "bumpver", "flit", "pytest", "sphinx", "sphinx-rtd-theme"]
+dev = ["black", "bumpver", "flit", "pytest", "sphinx == 5.3.0", "sphinx-rtd-theme == 1.1.1"]
 
 [project.urls]
 Homepage = "https://stepmix.readthedocs.io/en/latest/"
