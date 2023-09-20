@@ -5,7 +5,11 @@ print("Printing verbose output and mean parameters of the distal outcome\n")
 from stepmix.datasets import data_bakk_response
 from stepmix.stepmix import StepMix
 
-Y, Z_o, _ = data_bakk_response(n_samples=2000, sep_level=0.9, random_state=42)
+Y, Z_o, _ = data_bakk_response(
+    n_samples=2000,
+    sep_level=0.9,
+    random_state=42,
+)
 
 model = StepMix(
     n_components=3,
@@ -27,9 +31,17 @@ print("Printing beta parameters of the covariate model\n")
 from stepmix.datasets import data_bakk_covariate
 from stepmix.stepmix import StepMix
 
-Y, Z_p, _ = data_bakk_covariate(n_samples=2000, sep_level=0.9, random_state=42)
+Y, Z_p, _ = data_bakk_covariate(
+    n_samples=2000,
+    sep_level=0.9,
+    random_state=42,
+)
 
-covariate_params = {"method": "newton-raphson", "max_iter": 1, "intercept": True}
+covariate_params = {
+    "method": "newton-raphson",
+    "max_iter": 1,
+    "intercept": True,
+}
 
 model = StepMix(
     n_components=3,
@@ -53,7 +65,12 @@ print("Printing mean parameters of the distal outcome\n")
 from stepmix.datasets import data_bakk_complete
 from stepmix import StepMix
 
-Y, Z, labels = data_bakk_complete(2000, sep_level=0.8, nan_ratio=0.25, random_state=42)
+Y, Z, _ = data_bakk_complete(
+    n_samples=2000,
+    sep_level=0.8,
+    nan_ratio=0.25,
+    random_state=42,
+)
 
 structural_descriptor = {
     "covariate": {
@@ -62,7 +79,10 @@ structural_descriptor = {
         "method": "newton-raphson",
         "max_iter": 1,
     },
-    "response": {"model": "gaussian_unit_nan", "n_columns": 1},
+    "response": {
+        "model": "gaussian_unit_nan",
+        "n_columns": 1,
+    },
 }
 
 model = StepMix(
