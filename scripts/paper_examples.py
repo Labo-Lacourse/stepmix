@@ -1,3 +1,5 @@
+"""All examples from Section 6 of the paper."""
+
 ######### SUBSECTION 6.1: SINGLE OUTCOME SIMULATION #########
 print("SUBSECTION 6.1: SINGLE OUTCOME SIMULATION")
 print("Printing verbose output and mean parameters of the distal outcome\n")
