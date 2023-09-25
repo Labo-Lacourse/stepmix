@@ -4,7 +4,7 @@ printf "SECTIONS 5 and 6: PAPER EXAMPLES\n"
 python3 paper_examples.py
 
 printf "\n\n\nNOW REPRODUCING TABLE RESULTS\n"
-printf "CHANGE ARGUMENTS IN THE SCRIPT IF YOU WANT TO REPRODUCE FULL RESULTS\n"
+
 # Outcome Simulation
 printf "\n\n\nSUBSECTION 6.1: FULL OUTCOME SIMULATION\n"
 python3 run_bakk_simulation.py -s $1  # Replace 5 with 500 for the full simulation
