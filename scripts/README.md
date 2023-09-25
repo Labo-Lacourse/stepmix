@@ -2,11 +2,29 @@ Simulation and Real-Data Examples
 ==============================================
 This directory provides the scripts to reproduce the simulations and tables from the Computational examples section of the StepMix paper. The script to reproduce the application example is also accessible here.
 
-The code blocks in the paper are included in a single executable file `paper_examples.py`. 
-
-The full table results can be reproduced by running the `run_*.py` files.
-
 You will need to download the [GSS dataset](https://drive.google.com/file/d/1vdSzzBe7tPxfQ_X-hUuF3qidDd6CWFiL/view?usp=drive_link) and save it in the `scripts`directory.
+
+Running Everything
+--------------------------
+The `run_all.sh` file allows you to run all the scripts at once. The first argument controls the number of simulations 
+in the simulation examples, and the second argument controls the number of bootstrap repetitions in the real data 
+example. To quickly run everything, simply run
+```bash
+./run_all.sh 5 5
+```
+
+To reproduce full results (this may take a while), run
+```bash
+./run_all.sh 500 100
+```
+
+
+Paper Examples
+--------------------------
+You can run all the code blocks in the paper with
+```bash
+python3 paper_examples.py
+```
 
 Simulation Examples
 --------------------------
@@ -24,7 +42,7 @@ All three commands should output the simulation tables from the paper. You can g
 the number of simulations (e.g., `-s 50`).
 
 
-Real-Data Example
+Real Data Example
 -----------------------
 The data come from the combined 1976 and 1977 datasets of the American General Social Survey (GSS) and were obtained 
 using the R package `gssr` (https://github.com/kjhealy/gssr). The dataset is composed of the following 4 variables: 
