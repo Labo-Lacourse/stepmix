@@ -20,7 +20,7 @@ If you find StepMix useful, please consider citing our [arXiv preprint](https://
 ```
 @article{morin2023stepmix,
   title={StepMix: A Python Package for Pseudo-Likelihood Estimation of Generalized Mixture Models with External Variables},
-  author={Morin, Sacha and Legault, Robin and Bakk, Zsuzsa and Gigu{\`e}re, Charles-{\'E}douard and de la Sablonni{\`e}re, Roxane and Lacourse, {\'E}ric},
+  author={Morin, Sacha and Legault, Robin and Lalibert{\'e}, F{\'e}lix and Bakk, Zsuzsa and Gigu{\`e}re, Charles-{\'E}douard and de la Sablonni{\`e}re, Roxane and Lacourse, {\'E}ric},
   journal={arXiv preprint arXiv:2304.03853},
   year={2023}
 }
