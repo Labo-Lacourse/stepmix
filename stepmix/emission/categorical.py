@@ -181,11 +181,8 @@ class Multinoulli(Emission):
                 for k in range(n_features)
             ]
         )
-        X = np.reshape(
-            np.swapaxes(X, 0, 1),
-            (n_samples, n_features * self.parameters["max_n_outcomes"]),
-        )
-        return X
+        X = np.argmax(X, axis=2) # Convert to integers
+        return X.T
 
     @property
     def n_parameters(self):
