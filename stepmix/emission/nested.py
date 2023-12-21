@@ -124,6 +124,7 @@ class Nested(Emission):
             f_i = feature_names[i : i + range_]
             m.print_parameters(indent, model_name=name, feature_names=f_i)
             i += range_
+            print("\n")
 
     @property
     def n_parameters(self):

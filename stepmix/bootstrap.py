@@ -87,8 +87,11 @@ def bootstrap(
     random_state : int, default=None
     Returns
     ----------
-    parameters: DataFrame
+    samples: DataFrame
         DataFrame of all repetitions. Follows the convention of StepMix.get_parameters_df() with an additional
+        'rep' column.
+    rep_stats: DataFrame
+        Likelihood statistics of each repetition.
         'rep' column. None if identy_classes=False.
     stats: DataFrame
         Various statistics of bootstrapped estimators.
@@ -103,7 +106,7 @@ def bootstrap(
 
     n_samples = X.shape[0]
     x_names = estimator.x_names_
-    y_names = estimator.y_names_ if hasattr(estimator, "y_names") else None
+    y_names = estimator.y_names_ if hasattr(estimator, "y_names_") else None
 
     # Use the estimator built-in method to check the input
     # This will ensure that X and Y are numpy arrays for the rest of the bootstrap procedure

@@ -1,570 +1,225 @@
 ### Real data example ###
 
+import argparse
 import pandas as pd
 import numpy as np
 from stepmix.stepmix import StepMix
-from stepmix.bootstrap import bootstrap
-from tabulate import tabulate
+
 from scipy.stats import norm
 
-data = pd.read_csv("StepMix_Real_Data_GSS.csv")
 
-data_mesure = data.iloc[
-    :, [0, 1, 2]
-]  # The "papres", "madeg" and "padeg" variables are used as items in the measurement model.
-realinc1000_Dist = data[
-    "realinc1000"
-]  # The "realinc1000" variable is used as the distal outcome
+def main(n_repetitions, max_iter):
+    # Load data
+    data = pd.read_csv("StepMix_Real_Data_GSS.csv")
+    data = data.rename(
+        columns={
+            "realinc1000": "Income (1000)",
+            "papres": "Father's job prestige",
+            "madeg": "Mother's education",
+            "padeg": "Father's education",
+        }
+    )
 
+    # The "papres", "madeg" and "padeg" variables are used as items in the measurement model.
+    # The "realinc1000" variable is used as the distal outcome
+    data_mm, data_sm = (
+        data[["Father's job prestige", "Mother's education", "Father's education"]],
+        data[["Income (1000)"]],
+    )
 
-### Simple LCA model
-model_simple = StepMix(
-    n_components=3,
-    measurement="categorical_nan",
-    random_state=123,
-    max_iter=10000,  # Not strictly required, but used for consistency with bootstrap structural models
-    verbose=1,
-)
+    ### Simple LCA model
+    model_simple = StepMix(
+        n_components=3,
+        measurement="categorical_nan",
+        random_state=123,
+        max_iter=max_iter,  # Not strictly required, but used for consistency with bootstrap structural models
+        verbose=0,
+        progress_bar=False,
+    )
 
-model_simple.fit(data_mesure)
+    # Fit and print parameters of main model
+    model_simple.fit(data_mm)
+    model_simple.permute_classes(
+        [0, 2, 1]
+    )  # Permute classes to ensure that 0, 1, 2 is Low, Medium, High
 
-# Table 8
-params_model_simple = model_simple.get_parameters()
+    # Table 8 : Estimated MM parameters
+    params_mm = model_simple.get_mm_df()
+    params_mm = params_mm.rename(
+        columns={0: "Low", 1: "Middle", 2: "High"}
+    )  # Rename classes
 
-headers_Table8 = ["", "Low", " Middle", "High"]
+    print("Table 8 : Estimated MM parameters")
+    print(params_mm.round(2))  # Round parameters
 
-Data_Table8 = [
-    [
-        "Class size",
-        params_model_simple["weights"][0],
-        params_model_simple["weights"][2],
-        params_model_simple["weights"][1],
-    ],
-    ["Father's job prestige", "", "", ""],
-    [
-        "Low",
-        params_model_simple["measurement"]["pis"][0][0],
-        params_model_simple["measurement"]["pis"][2][0],
-        params_model_simple["measurement"]["pis"][1][0],
-    ],
-    [
-        "Middle",
-        params_model_simple["measurement"]["pis"][0][1],
-        params_model_simple["measurement"]["pis"][2][1],
-        params_model_simple["measurement"]["pis"][1][1],
-    ],
-    [
-        "High",
-        params_model_simple["measurement"]["pis"][0][2],
-        params_model_simple["measurement"]["pis"][2][2],
-        params_model_simple["measurement"]["pis"][1][2],
-    ],
-    ["Mother’s education", "", "", ""],
-    [
-        "Below high school",
-        params_model_simple["measurement"]["pis"][0][5],
-        params_model_simple["measurement"]["pis"][2][5],
-        params_model_simple["measurement"]["pis"][1][5],
-    ],
-    [
-        "High school",
-        params_model_simple["measurement"]["pis"][0][6],
-        params_model_simple["measurement"]["pis"][2][6],
-        params_model_simple["measurement"]["pis"][1][6],
-    ],
-    [
-        "Junior college",
-        params_model_simple["measurement"]["pis"][0][7],
-        params_model_simple["measurement"]["pis"][2][7],
-        params_model_simple["measurement"]["pis"][1][7],
-    ],
-    [
-        "Bachelor",
-        params_model_simple["measurement"]["pis"][0][8],
-        params_model_simple["measurement"]["pis"][2][8],
-        params_model_simple["measurement"]["pis"][1][8],
-    ],
-    [
-        "Graduate",
-        params_model_simple["measurement"]["pis"][0][9],
-        params_model_simple["measurement"]["pis"][2][9],
-        params_model_simple["measurement"]["pis"][1][9],
-    ],
-    ["Father’s education", "", "", ""],
-    [
-        "Below high school",
-        params_model_simple["measurement"]["pis"][0][10],
-        params_model_simple["measurement"]["pis"][2][10],
-        params_model_simple["measurement"]["pis"][1][10],
-    ],
-    [
-        "High school",
-        params_model_simple["measurement"]["pis"][0][11],
-        params_model_simple["measurement"]["pis"][2][11],
-        params_model_simple["measurement"]["pis"][1][11],
-    ],
-    [
-        "Junior college",
-        params_model_simple["measurement"]["pis"][0][12],
-        params_model_simple["measurement"]["pis"][2][12],
-        params_model_simple["measurement"]["pis"][1][12],
-    ],
-    [
-        "Bachelor",
-        params_model_simple["measurement"]["pis"][0][13],
-        params_model_simple["measurement"]["pis"][2][13],
-        params_model_simple["measurement"]["pis"][1][13],
-    ],
-    [
-        "Graduate",
-        params_model_simple["measurement"]["pis"][0][14],
-        params_model_simple["measurement"]["pis"][2][14],
-        params_model_simple["measurement"]["pis"][1][14],
-    ],
-]
+    class_weights = model_simple.get_cw_df()
+    class_weights = class_weights.rename(
+        columns={0: "Low", 1: "Middle", 2: "High"}
+    )  # Rename classes
+    print("\nTable 8 : Class weights")
+    print(class_weights.round(2))  # Round parameters
 
-Data_Table8_rounded = [
-    [item if isinstance(item, str) else round(item, 2) for item in row]
-    for row in Data_Table8
-]
+    # Table 9 : Bootstrapped SM parameters
+    # Define a function that we will call for all 5 multi-step estimators
+    def fit_and_bootstrap(n_steps, correction, permutation, method_str):
+        model = StepMix(
+            n_steps=n_steps,
+            correction=correction,
+            n_components=3,
+            measurement="categorical_nan",
+            structural="gaussian_diag_nan",
+            random_state=123,
+            max_iter=max_iter,
+            verbose=0,
+            progress_bar=False,
+        )
 
-Table8 = tabulate(Data_Table8_rounded, headers_Table8, tablefmt="fancy_grid")
-print(Table8)
+        # 1-step
+        model.fit(data_mm, data_sm)
+        model.permute_classes(
+            permutation
+        )  # Permute classes to ensure that 0, 1, 2 is Low, Medium, High
+        stats_dict = model.bootstrap_stats(
+            data_mm, data_sm, n_repetitions=n_repetitions, progress_bar=True
+        )
 
+        # Look at the means and standard deviations of the structural model.
+        means = (
+            stats_dict["sm_mean"].loc["gaussian_diag_nan", "means"].copy()
+        )  # Means of the mean paramater
+        errors = (
+            stats_dict["sm_std"].loc["gaussian_diag_nan", "means"].copy()
+        )  # STD of the mean parameter
 
-### LCA with distal outcome
+        # Also get raw bootsrapped samples for Table 10
+        samples = (
+            stats_dict["samples"].loc["structural", "gaussian_diag_nan", "means"].copy()
+        )  # Raw samples
 
-# One-step approach
-model_Dist_1step = StepMix(
-    n_components=3,
-    measurement="categorical_nan",
-    structural="continuous_nan",
-    random_state=123,
-    max_iter=10000,
-    verbose=0,
-    n_steps=1,
-)
+        # Add column with model descriptor
+        means["method"] = method_str
+        errors["method"] = method_str
+        samples["method"] = method_str
 
-model_Dist_1step, bootstrapped_params_1step = bootstrap(
-    model_Dist_1step, data_mesure, realinc1000_Dist, n_repetitions=100
-)
+        # Check the class prevalence of all models
+        print(f"\nClass prevalence for {method_str}:")
+        print(model.get_cw_df().round(3))
 
-# Two-step approach
-model_Dist_2steps = StepMix(
-    n_components=3,
-    measurement="categorical_nan",
-    structural="continuous_nan",
-    random_state=123,
-    max_iter=10000,
-    verbose=0,
-    n_steps=2,
-)
+        return means, errors, samples
 
-model_Dist_2steps, bootstrapped_params_2steps = bootstrap(
-    model_Dist_2steps, data_mesure, realinc1000_Dist, n_repetitions=100
-)
+    # Apply function to all 5 multi-step estimators
+    means_1_step, errors_1_step, samples_1_step = fit_and_bootstrap(
+        n_steps=1, correction=None, method_str="1-step", permutation=[0, 1, 2]
+    )
+    means_2_step, errors_2_step, samples_2_step = fit_and_bootstrap(
+        n_steps=2, correction=None, method_str="2-step", permutation=[0, 2, 1]
+    )
+    means_3_step, errors_3_step, samples_3_step = fit_and_bootstrap(
+        n_steps=3, correction=None, method_str="3-step", permutation=[0, 2, 1]
+    )
+    means_3_step_bch, errors_3_step_bch, samples_3_step_bch = fit_and_bootstrap(
+        n_steps=3, correction="BCH", method_str="3-step (BCH)", permutation=[0, 2, 1]
+    )
+    means_3_step_ml, errors_3_step_ml, samples_3_step_ml = fit_and_bootstrap(
+        n_steps=3, correction="ML", method_str="3-step (ML)", permutation=[0, 2, 1]
+    )
 
-# Naive three-step approach
-model_Dist_3steps_Naive = StepMix(
-    n_components=3,
-    measurement="categorical_nan",
-    structural="continuous_nan",
-    random_state=123,
-    max_iter=10000,
-    verbose=0,
-    n_steps=3,
-)
+    # Concat all results
+    means_sm = pd.concat(
+        [means_1_step, means_2_step, means_3_step, means_3_step_bch, means_3_step_ml]
+    )
+    stds_sm = pd.concat(
+        [
+            errors_1_step,
+            errors_2_step,
+            errors_3_step,
+            errors_3_step_bch,
+            errors_3_step_ml,
+        ]
+    )
 
-model_Dist_3steps_Naive, bootstrapped_params_3steps_Naive = bootstrap(
-    model_Dist_3steps_Naive, data_mesure, realinc1000_Dist, n_repetitions=100
-)
+    # Reindex and rename for nicer tables
+    means_sm = means_sm.reset_index().set_index(["variable", "method"]).sort_index()
+    means_sm = means_sm.rename(
+        columns={0: "Low", 1: "Middle", 2: "High"}
+    )  # Rename classes
+    stds_sm = stds_sm.reset_index().set_index(["variable", "method"]).sort_index()
+    stds_sm = stds_sm.rename(
+        columns={0: "Low", 1: "Middle", 2: "High"}
+    )  # Rename classes
 
-# Three-step BCH
-model_Dist_3steps_BCH = StepMix(
-    n_components=3,
-    measurement="categorical_nan",
-    structural="continuous_nan",
-    random_state=123,
-    max_iter=10000,
-    verbose=0,
-    n_steps=3,
-    correction="BCH",
-)
+    print("\nTable 9 : Estimated SM parameters (means)")
+    print(means_sm.round(2))
 
-model_Dist_3steps_BCH, bootstrapped_params_3steps_BCH = bootstrap(
-    model_Dist_3steps_BCH, data_mesure, realinc1000_Dist, n_repetitions=100
-)
+    print("\nTable 9 : Estimated SM parameters (errors)")
+    print(stds_sm.round(2))
 
-# Three-step ML
-model_Dist_3steps_ML = StepMix(
-    n_components=3,
-    measurement="categorical_nan",
-    structural="continuous_nan",
-    random_state=123,
-    max_iter=10000,
-    verbose=0,
-    n_steps=3,
-    correction="ML",
-)
+    # Table 10 : Z-scores
+    # Here we need to manually compute the differences High - Low and Middle - Low over all repetitions
+    # First collect all bootstrap samples in a single dataframe
+    samples = pd.concat(
+        [
+            samples_1_step,
+            samples_2_step,
+            samples_3_step,
+            samples_3_step_bch,
+            samples_3_step_ml,
+        ]
+    )
 
-model_Dist_3steps_ML, bootstrapped_params_3steps_ML = bootstrap(
-    model_Dist_3steps_ML, data_mesure, realinc1000_Dist, n_repetitions=100
-)
+    # Send repetition to index (rows) and class_no to columns
+    samples = pd.pivot_table(
+        samples, index=["method", "variable", "rep"], columns="class_no", values="value"
+    )
+    samples = samples.rename(
+        columns={0: "Low", 1: "Middle", 2: "High"}
+    )  # Rename classes
+
+    # Remove Low column from the Middle and High Columns
+    samples["Middle"] = samples["Middle"] - samples["Low"]
+    samples["High"] = samples["High"] - samples["Low"]
+
+    # We no longer need the Low class
+    samples = samples.drop("Low", axis=1)
+
+    # Send back the class to index ("Rows")
+    samples = samples.stack()
+
+    # Now group by everything except the rep
+    # This means we will be computing statistics over the repetitions
+    stats = samples.groupby(["variable", "method", "class_no"]).agg(["mean", "std"])
+
+    # Z-score
+    stats["Z"] = stats["mean"] / stats["std"]
+
+    # P-value
+    stats["P(>|z|)"] = 2 * norm.cdf(-np.abs(stats["Z"]))
+
+    stats[["mean", "std", "Z"]] = stats[["mean", "std", "Z"]].round(2)
+    stats["P(>|z|)"] = stats["P(>|z|)"].round(3)
+    print("\nTable 10 : Family’s income differences between classes for each method.")
+    print(stats)
 
 
-# Weights
-print("Class prevalence one-step model. LCA model distorted")
-params_1step = model_Dist_1step.get_parameters()
-print(params_1step["weights"])
+if __name__ == "__main__":
+    # Parser
+    parser = argparse.ArgumentParser(
+        description="Run StepMix example on real GSS data."
+    )
+    parser.add_argument(
+        "--n_repetitions",
+        "-r",
+        help="Number of bootstrap repetitions.",
+        type=int,
+        default=100,
+    )
+    parser.add_argument(
+        "--max_iter",
+        "-m",
+        help="Max number of EM iterations.",
+        type=int,
+        default=10000,
+    )
 
-print("    ")
-
-print("Class prevalence two-step model")
-params_2steps = model_Dist_2steps.get_parameters()
-print(params_2steps["weights"])
-
-print("    ")
-
-print("Class prevalence naive three-step model")
-params_3steps_Naive = model_Dist_3steps_Naive.get_parameters()
-print(params_3steps_Naive["weights"])
-
-print("    ")
-
-print("Class prevalence three-step BCH model")
-params_3steps_BCH = model_Dist_3steps_BCH.get_parameters()
-print(params_3steps_BCH["weights"])
-
-print("    ")
-
-print("Class prevalence three-step ML model")
-params_3steps_ML = model_Dist_3steps_ML.get_parameters()
-print(params_3steps_ML["weights"])
-
-
-# Table 9
-# One-step parameters
-param_c0_response_1step = bootstrapped_params_1step["structural"]["means"][
-    :, 0, 0
-]  # average income by class
-param_c1_response_1step = bootstrapped_params_1step["structural"]["means"][:, 1, 0]
-param_c2_response_1step = bootstrapped_params_1step["structural"]["means"][:, 2, 0]
-
-# Two-step parameters
-param_c0_response_2steps = bootstrapped_params_2steps["structural"]["means"][:, 0, 0]
-param_c1_response_2steps = bootstrapped_params_2steps["structural"]["means"][:, 1, 0]
-param_c2_response_2steps = bootstrapped_params_2steps["structural"]["means"][:, 2, 0]
-
-# Naive three-step parameters
-param_c0_response_3steps_Naive = bootstrapped_params_3steps_Naive["structural"][
-    "means"
-][:, 0, 0]
-param_c1_response_3steps_Naive = bootstrapped_params_3steps_Naive["structural"][
-    "means"
-][:, 1, 0]
-param_c2_response_3steps_Naive = bootstrapped_params_3steps_Naive["structural"][
-    "means"
-][:, 2, 0]
-
-# Three-step BCH parameters
-param_c0_response_3steps_BCH = bootstrapped_params_3steps_BCH["structural"]["means"][
-    :, 0, 0
-]
-param_c1_response_3steps_BCH = bootstrapped_params_3steps_BCH["structural"]["means"][
-    :, 1, 0
-]
-param_c2_response_3steps_BCH = bootstrapped_params_3steps_BCH["structural"]["means"][
-    :, 2, 0
-]
-
-# Three-step ML parameters
-param_c0_response_3steps_ML = bootstrapped_params_3steps_ML["structural"]["means"][
-    :, 0, 0
-]
-param_c1_response_3steps_ML = bootstrapped_params_3steps_ML["structural"]["means"][
-    :, 1, 0
-]
-param_c2_response_3steps_ML = bootstrapped_params_3steps_ML["structural"]["means"][
-    :, 2, 0
-]
-
-headers_Table9 = [
-    "",
-    "Low class income",
-    "SE",
-    " Middle class income",
-    "SE",
-    "High class income",
-    "SE",
-]
-Data_Table9 = [
-    [
-        "One-step",
-        np.mean(param_c0_response_1step),
-        np.std(bootstrapped_params_1step["structural"]["means"][:, 0]),
-        np.mean(param_c1_response_1step),
-        np.std(bootstrapped_params_1step["structural"]["means"][:, 1]),
-        np.mean(param_c2_response_1step),
-        np.std(bootstrapped_params_1step["structural"]["means"][:, 2]),
-    ],
-    [
-        "Two-step",
-        np.mean(param_c0_response_2steps),
-        np.std(bootstrapped_params_2steps["structural"]["means"][:, 0]),
-        np.mean(param_c2_response_2steps),
-        np.std(bootstrapped_params_2steps["structural"]["means"][:, 2]),
-        np.mean(param_c1_response_2steps),
-        np.std(bootstrapped_params_2steps["structural"]["means"][:, 1]),
-    ],
-    [
-        "Naive three-step",
-        np.mean(param_c0_response_3steps_Naive),
-        np.std(bootstrapped_params_3steps_Naive["structural"]["means"][:, 0]),
-        np.mean(param_c2_response_3steps_Naive),
-        np.std(bootstrapped_params_3steps_Naive["structural"]["means"][:, 2]),
-        np.mean(param_c1_response_3steps_Naive),
-        np.std(bootstrapped_params_3steps_Naive["structural"]["means"][:, 1]),
-    ],
-    [
-        "Three-step BCH",
-        np.mean(param_c0_response_3steps_BCH),
-        np.std(bootstrapped_params_3steps_BCH["structural"]["means"][:, 0]),
-        np.mean(param_c2_response_3steps_BCH),
-        np.std(bootstrapped_params_3steps_BCH["structural"]["means"][:, 2]),
-        np.mean(param_c1_response_3steps_BCH),
-        np.std(bootstrapped_params_3steps_BCH["structural"]["means"][:, 1]),
-    ],
-    [
-        "Three-step ML",
-        np.mean(param_c0_response_3steps_ML),
-        np.std(bootstrapped_params_3steps_ML["structural"]["means"][:, 0]),
-        np.mean(param_c2_response_3steps_ML),
-        np.std(bootstrapped_params_3steps_ML["structural"]["means"][:, 2]),
-        np.mean(param_c1_response_3steps_ML),
-        np.std(bootstrapped_params_3steps_ML["structural"]["means"][:, 1]),
-    ],
-]
-
-Data_Table9_rounded = [
-    [item if isinstance(item, str) else round(item, 2) for item in row]
-    for row in Data_Table9
-]
-
-Table9 = tabulate(Data_Table9_rounded, headers_Table9, tablefmt="fancy_grid")
-print(Table9)
-
-
-# Table 10
-# Differences in the familys’ income (C=Low vs C=middle, C=Low vs C=High) for each approach
-DIFF01 = (
-    bootstrapped_params_1step["structural"]["means"][:, 1, 0]
-    - bootstrapped_params_1step["structural"]["means"][:, 0, 0]
-)
-DIFF02 = (
-    bootstrapped_params_1step["structural"]["means"][:, 2, 0]
-    - bootstrapped_params_1step["structural"]["means"][:, 0, 0]
-)
-
-DIFF01_2steps = (
-    bootstrapped_params_2steps["structural"]["means"][:, 1, 0]
-    - bootstrapped_params_2steps["structural"]["means"][:, 0, 0]
-)
-DIFF02_2steps = (
-    bootstrapped_params_2steps["structural"]["means"][:, 2, 0]
-    - bootstrapped_params_2steps["structural"]["means"][:, 0, 0]
-)
-
-DIFF01_3steps_Naive = (
-    bootstrapped_params_3steps_Naive["structural"]["means"][:, 1, 0]
-    - bootstrapped_params_3steps_Naive["structural"]["means"][:, 0, 0]
-)
-DIFF02_3steps_Naive = (
-    bootstrapped_params_3steps_Naive["structural"]["means"][:, 2, 0]
-    - bootstrapped_params_3steps_Naive["structural"]["means"][:, 0, 0]
-)
-
-DIFF01_3steps_BCH = (
-    bootstrapped_params_3steps_BCH["structural"]["means"][:, 1, 0]
-    - bootstrapped_params_3steps_BCH["structural"]["means"][:, 0, 0]
-)
-DIFF02_3steps_BCH = (
-    bootstrapped_params_3steps_BCH["structural"]["means"][:, 2, 0]
-    - bootstrapped_params_3steps_BCH["structural"]["means"][:, 0, 0]
-)
-
-DIFF01_3steps_ML = (
-    bootstrapped_params_3steps_ML["structural"]["means"][:, 1, 0]
-    - bootstrapped_params_3steps_ML["structural"]["means"][:, 0, 0]
-)
-DIFF02_3steps_ML = (
-    bootstrapped_params_3steps_ML["structural"]["means"][:, 2, 0]
-    - bootstrapped_params_3steps_ML["structural"]["means"][:, 0, 0]
-)
-
-
-# One-step
-Coef_table_01 = {"Est": np.mean(DIFF01), "SE": np.std(DIFF01)}
-Coef_table_01["Z"] = Coef_table_01["Est"] / Coef_table_01["SE"]
-Coef_table_01["P(<|t|)"] = 2 * norm.cdf(-np.abs(Coef_table_01["Z"]))
-Coef_table_02 = {"Est": np.mean(DIFF02), "SE": np.std(DIFF02)}
-Coef_table_02["Z"] = Coef_table_02["Est"] / Coef_table_02["SE"]
-Coef_table_02["P(<|t|)"] = 2 * norm.cdf(-np.abs(Coef_table_02["Z"]))
-
-# Two-step
-Coef_table_02_2steps = {"Est": np.mean(DIFF02_2steps), "SE": np.std(DIFF02_2steps)}
-Coef_table_02_2steps["Z"] = Coef_table_02_2steps["Est"] / Coef_table_02_2steps["SE"]
-Coef_table_02_2steps["P(<|t|)"] = 2 * norm.cdf(-np.abs(Coef_table_02_2steps["Z"]))
-Coef_table_01_2steps = {"Est": np.mean(DIFF01_2steps), "SE": np.std(DIFF01_2steps)}
-Coef_table_01_2steps["Z"] = Coef_table_01_2steps["Est"] / Coef_table_01_2steps["SE"]
-Coef_table_01_2steps["P(<|t|)"] = 2 * norm.cdf(-np.abs(Coef_table_01_2steps["Z"]))
-
-# Naive three-step
-Coef_table_02_3steps_Naive = {
-    "Est": np.mean(DIFF02_3steps_Naive),
-    "SE": np.std(DIFF02_3steps_Naive),
-}
-Coef_table_02_3steps_Naive["Z"] = (
-    Coef_table_02_3steps_Naive["Est"] / Coef_table_02_3steps_Naive["SE"]
-)
-Coef_table_02_3steps_Naive["P(<|t|)"] = 2 * norm.cdf(
-    -np.abs(Coef_table_02_3steps_Naive["Z"])
-)
-Coef_table_01_3steps_Naive = {
-    "Est": np.mean(DIFF01_3steps_Naive),
-    "SE": np.std(DIFF01_3steps_Naive),
-}
-Coef_table_01_3steps_Naive["Z"] = (
-    Coef_table_01_3steps_Naive["Est"] / Coef_table_01_3steps_Naive["SE"]
-)
-Coef_table_01_3steps_Naive["P(<|t|)"] = 2 * norm.cdf(
-    -np.abs(Coef_table_01_3steps_Naive["Z"])
-)
-
-# Three-step BCH
-Coef_table_02_3steps_BCH = {
-    "Est": np.mean(DIFF02_3steps_BCH),
-    "SE": np.std(DIFF02_3steps_BCH),
-}
-Coef_table_02_3steps_BCH["Z"] = (
-    Coef_table_02_3steps_BCH["Est"] / Coef_table_02_3steps_BCH["SE"]
-)
-Coef_table_02_3steps_BCH["P(<|t|)"] = 2 * norm.cdf(
-    -np.abs(Coef_table_02_3steps_BCH["Z"])
-)
-Coef_table_01_3steps_BCH = {
-    "Est": np.mean(DIFF01_3steps_BCH),
-    "SE": np.std(DIFF01_3steps_BCH),
-}
-Coef_table_01_3steps_BCH["Z"] = (
-    Coef_table_01_3steps_BCH["Est"] / Coef_table_01_3steps_BCH["SE"]
-)
-Coef_table_01_3steps_BCH["P(<|t|)"] = 2 * norm.cdf(
-    -np.abs(Coef_table_01_3steps_BCH["Z"])
-)
-
-# Three-step ML
-Coef_table_02_3steps_ML = {
-    "Est": np.mean(DIFF02_3steps_ML),
-    "SE": np.std(DIFF02_3steps_ML),
-}
-Coef_table_02_3steps_ML["Z"] = (
-    Coef_table_02_3steps_ML["Est"] / Coef_table_02_3steps_ML["SE"]
-)
-Coef_table_02_3steps_ML["P(<|t|)"] = 2 * norm.cdf(-np.abs(Coef_table_02_3steps_ML["Z"]))
-Coef_table_01_3steps_ML = {
-    "Est": np.mean(DIFF01_3steps_ML),
-    "SE": np.std(DIFF01_3steps_ML),
-}
-Coef_table_01_3steps_ML["Z"] = (
-    Coef_table_01_3steps_ML["Est"] / Coef_table_01_3steps_ML["SE"]
-)
-Coef_table_01_3steps_ML["P(<|t|)"] = 2 * norm.cdf(-np.abs(Coef_table_01_3steps_ML["Z"]))
-
-
-Data_Table10 = [
-    ["1-step", "", "", "", ""],
-    [
-        "Middle",
-        Coef_table_01["Est"],
-        Coef_table_01["SE"],
-        Coef_table_01["Z"],
-        format(Coef_table_01["P(<|t|)"], "0.15f"),
-    ],
-    [
-        "High class",
-        Coef_table_02["Est"],
-        Coef_table_02["SE"],
-        Coef_table_02["Z"],
-        format(Coef_table_02["P(<|t|)"], "0.15f"),
-    ],
-    ["2-step", "", "", "", ""],
-    [
-        "Middle",
-        Coef_table_02_2steps["Est"],
-        Coef_table_02_2steps["SE"],
-        Coef_table_02_2steps["Z"],
-        format(Coef_table_02_2steps["P(<|t|)"], "0.15f"),
-    ],
-    [
-        "High class",
-        Coef_table_01_2steps["Est"],
-        Coef_table_01_2steps["SE"],
-        Coef_table_01_2steps["Z"],
-        format(Coef_table_01_2steps["P(<|t|)"], "0.15f"),
-    ],
-    ["Naive 3-step", "", "", "", ""],
-    [
-        "Middle",
-        Coef_table_02_3steps_Naive["Est"],
-        Coef_table_02_3steps_Naive["SE"],
-        Coef_table_02_3steps_Naive["Z"],
-        format(Coef_table_02_3steps_Naive["P(<|t|)"], "0.15f"),
-    ],
-    [
-        "High class",
-        Coef_table_01_3steps_Naive["Est"],
-        Coef_table_01_3steps_Naive["SE"],
-        Coef_table_01_3steps_Naive["Z"],
-        format(Coef_table_01_3steps_Naive["P(<|t|)"], "0.15f"),
-    ],
-    ["3-step BCH", "", "", "", ""],
-    [
-        "Middle",
-        Coef_table_02_3steps_BCH["Est"],
-        Coef_table_02_3steps_BCH["SE"],
-        Coef_table_02_3steps_BCH["Z"],
-        format(Coef_table_02_3steps_BCH["P(<|t|)"], "0.15f"),
-    ],
-    [
-        "High class",
-        Coef_table_01_3steps_BCH["Est"],
-        Coef_table_01_3steps_BCH["SE"],
-        Coef_table_01_3steps_BCH["Z"],
-        format(Coef_table_01_3steps_BCH["P(<|t|)"], "0.15f"),
-    ],
-    ["3-step ML", "", "", "", ""],
-    [
-        "Middle",
-        Coef_table_02_3steps_ML["Est"],
-        Coef_table_02_3steps_ML["SE"],
-        Coef_table_02_3steps_ML["Z"],
-        format(Coef_table_02_3steps_ML["P(<|t|)"], "0.15f"),
-    ],
-    [
-        "High class",
-        Coef_table_01_3steps_ML["Est"],
-        Coef_table_01_3steps_ML["SE"],
-        Coef_table_01_3steps_ML["Z"],
-        format(Coef_table_01_3steps_ML["P(<|t|)"], "0.15f"),
-    ],
-]
-
-headers_Table10 = ["Est", "SE", "Z", "P(>|Z|)"]
-
-Data_Table10_rounded = [
-    [item if isinstance(item, str) else round(item, 2) for item in row]
-    for row in Data_Table10
-]
-
-Table10 = tabulate(Data_Table10_rounded, headers_Table10, tablefmt="fancy_grid")
-print(Table10)
+    args = parser.parse_args()
+    main(n_repetitions=args.n_repetitions, max_iter=args.max_iter)

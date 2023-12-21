@@ -592,6 +592,69 @@ class StepMix(BaseEstimator):
 
         return df.set_index(["model", "model_name", "param", "class_no", "variable"])
 
+    def get_cw_df(self, x_names=None, y_names=None):
+        """Get class weights as DataFrame with classes as columns.
+
+        Parameters
+        ----------
+        x_names : List of str
+            Column names of X.
+        y_names : List of str
+            Column names of Y.
+
+        Returns
+        -------
+        params: pd.DataFrame
+        """
+        if self._conditional_likelihood:
+            raise ValueError(
+                "Class weights are not defined when using the conditional likelihood perspective (covariates)."
+            )
+        df = self.get_parameters_df(x_names, y_names).loc[
+            "measurement", "class_weights"
+        ]
+        return self._pivot_cw(df, aggfunc=np.mean)  # Mean of one value is okay
+
+    def get_mm_df(self, x_names=None, y_names=None):
+        """Get measurement model parameters as DataFrame with classes as columns.
+
+        Parameters
+        ----------
+        x_names : List of str
+            Column names of X.
+        y_names : List of str
+            Column names of Y.
+
+        Returns
+        -------
+        params: pd.DataFrame
+        """
+        df = (
+            self.get_parameters_df(x_names, y_names)
+            .loc["measurement"]
+            .drop("class_weights", level=0, errors="ignore")
+        )
+        return self._pivot_param(df, aggfunc=np.mean)  # Mean of one value is okay
+
+    def get_sm_df(self, x_names=None, y_names=None):
+        """Get structural model parameters as DataFrame with classes as columns.
+
+        Parameters
+        ----------
+        x_names : List of str
+            Column names of X.
+        y_names : List of str
+            Column names of Y.
+
+        Returns
+        -------
+        params: pd.DataFrame
+        """
+        if not hasattr(self, "_sm"):
+            raise ValueError("No structural model fitted.")
+        df = self.get_parameters_df(x_names, y_names).loc["structural"]
+        return self._pivot_param(df, aggfunc=np.mean)  # Mean of one value if okay
+
     def set_parameters(self, params):
         """Set parameters.
 
@@ -1061,11 +1124,11 @@ class StepMix(BaseEstimator):
             If none, use self.random_state.
         Returns
         ----------
-        parameters: DataFrame
+        samples: DataFrame
             Parameter DataFrame for all repetitions. Follows the convention of StepMix.get_parameters_df() with an additional
-            'rep' index.
-        stats: DataFrame
-            Various statistics of bootstrapped estimators.
+            'rep' column.
+        rep_stats: DataFrame
+            Likelihood statistics of each repetition.
         """
         check_is_fitted(self)
         if random_state is None:
@@ -1082,6 +1145,79 @@ class StepMix(BaseEstimator):
             identify_classes=identify_classes,
             progress_bar=progress_bar,
             random_state=random_state,
+        )
+
+    def bootstrap_stats(
+        self, X, Y=None, n_repetitions=1000, sample_weight=None, progress_bar=True
+    ):
+        """Non-parametric boostrap of StepMix estimator. Obtain boostrapped parameters and some statistics
+        (mean and standard deviation).
+
+        If a covariate model is used in the structural model, the output keys "cw_mean" and "cw_std" are omitted.
+
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
+        Y : array-like of shape (n_samples, n_features_structural), default=None
+        sample_weight : array-like of shape(n_samples,), default=None
+        n_repetitions: int
+            Number of repetitions to fit.
+        progress_bar : bool, default=True
+            Display a tqdm progress bar for repetitions.
+        Returns
+        ----------
+        bootstrap_and_stats: dict,
+            Dictionary of dataframes {
+            'samples': Parameters estimated by self.boostrap in a long-form DataFrame,\
+            'rep_stats': Likelihood statistics of each repetition provided by self.boostrap,\
+            'cw_mean': Bootstrapped means of the class weights,\
+            'cw_std': Bootstrapped standard deviations of the class weights,\
+            'mm_mean': Bootstrapped means of the measurement model parameters,\
+            'mm_std': Bootstrapped standard deviations of the measurement model parameters,\
+            'sm_mean': Bootstrapped means of the structural model parameters,\
+            'sm_std': Bootstrapped standard deviations of the structural model parameters,\
+            }.
+        """
+        bootstrap_df, bootstrap_stats = self.bootstrap(
+            X, Y, n_repetitions, sample_weight, progress_bar
+        )
+
+        mm_data = bootstrap_df.loc["measurement"].drop(
+            index="class_weights", level=0, errors="ignore"
+        )
+
+        result = dict()
+        result["samples"] = bootstrap_df
+        result["rep_stats"] = bootstrap_stats
+        result["mm_mean"] = self._pivot_param(mm_data, np.mean)
+        result["mm_std"] = self._pivot_param(mm_data, np.std)
+
+        if hasattr(self, "_sm"):
+            sm_data = bootstrap_df.loc["structural"]
+            result["sm_mean"] = self._pivot_param(sm_data, np.mean)
+            result["sm_std"] = self._pivot_param(sm_data, np.std)
+
+        if not self._conditional_likelihood:
+            cw_data = bootstrap_df.loc["measurement", "class_weights"]
+            result["cw_mean"] = self._pivot_cw(cw_data, np.mean)
+            result["cw_std"] = self._pivot_cw(cw_data, np.std)
+
+        return result
+
+    def _pivot_param(self, df, aggfunc=np.mean):
+        # Standard pivot function that we reuse for bootstrapping
+        return pd.pivot_table(
+            df,
+            columns="class_no",
+            values="value",
+            index=["model_name", "param", "variable"],
+            aggfunc=aggfunc,
+        )
+
+    def _pivot_cw(self, df, aggfunc=np.std):
+        # Standard pivot function that we reuse for bootstrapping
+        return pd.pivot_table(
+            df, columns="class_no", values="value", index=["param"], aggfunc=aggfunc
         )
 
     ########################################################################################################################
