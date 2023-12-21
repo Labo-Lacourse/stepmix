@@ -100,7 +100,7 @@ def test_bootstrap(data, kwargs, model):
     model_1 = StepMix(n_steps=1, **kwargs)
     model_1.fit(X, Y)
 
-    if model is not 'covariate':
+    if model != 'covariate':
         model_1.bootstrap_stats(X, Y, n_repetitions=3)
     else:
         # Should raise error. Can't sample from a covariate model
