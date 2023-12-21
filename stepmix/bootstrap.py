@@ -219,6 +219,7 @@ def blrt(null_model, alternative_model, X, Y=None, n_repetitions=30, random_stat
         identify_classes=False,
         sampler=null_model,
         random_state=random_state,
+        parametric=True,
     )
     print("\nBootstrapping alternative model...")
     _, stats_alternative = bootstrap(
@@ -229,9 +230,9 @@ def blrt(null_model, alternative_model, X, Y=None, n_repetitions=30, random_stat
         identify_classes=False,
         sampler=null_model,
         random_state=random_state,
+        parametric=True,
     )
     gen_stats = 2 * (stats_alternative["LL"] - stats_null["LL"])
     b = np.sum(gen_stats > real_stat)
 
     return b/n_repetitions
-    # return gen_stats
