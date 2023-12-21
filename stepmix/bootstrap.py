@@ -99,7 +99,14 @@ def bootstrap(
     check_is_fitted(estimator)
     estimator = copy.deepcopy(estimator)
     estimator.set_params(random_state=random_state)
+
+    if parametric and estimator._is_covariate:
+        raise ValueError("Parametric bootstrapping is not supported for covariate models.")
+
     if sampler is not None:
+        if sampler._is_covariate:
+            raise ValueError("Parametric bootstrapping is not supported for covariate models.")
+
         check_is_fitted(sampler)
         sampler = copy.deepcopy(sampler)
         sampler.set_params(random_state=random_state)

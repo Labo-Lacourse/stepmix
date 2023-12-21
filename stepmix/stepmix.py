@@ -327,11 +327,11 @@ class StepMix(BaseEstimator):
         self.param_buffer_ = list()
 
         # Covariate models have special constraints. Check them.
-        is_covariate = utils.check_covariate(self.measurement, self.structural)
+        self._is_covariate = utils.check_covariate(self.measurement, self.structural)
 
         # Covariate models use a different conditional likelihood (See Bakk and Kuha, 2018), which should
         # not include the marginal likelihood over the latent classes in the E-step
-        self._conditional_likelihood = is_covariate
+        self._conditional_likelihood = self._is_covariate
 
     def _initialize_parameters(self, X, random_state):
         """Initialize the weights and measurement model parameters.
