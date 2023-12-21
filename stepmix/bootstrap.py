@@ -57,7 +57,7 @@ def bootstrap(
 ):
     """Parametric or Non-parametric boostrap of a StepMix estimator.
 
-    Fit the estimator on X,Y then fit n_repetitions on resampled datasets.
+    Fit n_repetitions clones of the estimator on resampled datasets.
 
     If identify_classes=True, repeated parameter estimates are aligned with the class order of the main estimator using
     a permutation search.
