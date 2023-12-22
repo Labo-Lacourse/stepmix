@@ -99,7 +99,13 @@ def test_bootstrap(data, kwargs, model):
 
     model_1 = StepMix(n_steps=1, **kwargs)
     model_1.fit(X, Y)
-    model_1.bootstrap_stats(X, Y, n_repetitions=3)
+
+    if model != 'covariate':
+        model_1.bootstrap_stats(X, Y, n_repetitions=3)
+    else:
+        # Should raise error. Can't sample from a covariate model
+        with pytest.raises(NotImplementedError) as e_info:
+            model_1.bootstrap_stats(X, Y, n_repetitions=3)
 
 
 def test_nested_bootstrap(data_nested, kwargs_nested):
@@ -115,3 +121,88 @@ def test_bootstrap_df(data_nested, kwargs_nested):
     model_1 = StepMix(**kwargs_nested)
     model_1.fit(data_nested, data_nested)
     model_1.bootstrap(data_nested, data_nested, n_repetitions=3)
+
+
+@pytest.mark.parametrize("parametric", [True, False])
+def test_bootstrap_seed(data_nested, kwargs_nested, parametric):
+    """Call bootstrap twice and make sure the results are the same if seeded.
+
+    Identify classes should not affect stats either."""
+    data_nested = pd.DataFrame(data_nested)
+    kwargs_nested["verbose"] = 0
+
+    model_1 = StepMix(**kwargs_nested)  # Base model is seeded
+
+    model_1.fit(data_nested, data_nested)
+
+    _, stats = model_1.bootstrap(
+        data_nested,
+        data_nested,
+        n_repetitions=10,
+        parametric=parametric,
+        identify_classes=True,
+    )
+
+    _, stats2 = model_1.bootstrap(
+        data_nested,
+        data_nested,
+        n_repetitions=10,
+        parametric=parametric,
+        identify_classes=False,
+    )
+
+    assert np.all(stats == stats2)
+
+
+def _test_bootstrap_seed_sampler(data_nested, kwargs_nested):
+    """Call bootstrap twice with sampler and make sure the results are the same if seeded."""
+    data_nested = pd.DataFrame(data_nested)
+
+    model_1 = StepMix(**kwargs_nested)  # Base model is seeded
+    model_1.fit(data_nested, data_nested)
+
+    kwargs_nested["n_components"] = 2
+    sampler = StepMix(**kwargs_nested)
+    sampler.fit(data_nested, data_nested)
+
+    _, stats0 = model_1.bootstrap(
+        data_nested, data_nested, n_repetitions=10, parametric=True, sampler=model_1
+    )
+
+    _, stats1 = model_1.bootstrap(
+        data_nested, data_nested, n_repetitions=10, parametric=True, sampler=sampler
+    )
+
+    _, stats2 = model_1.bootstrap(
+        data_nested, data_nested, n_repetitions=10, parametric=True, sampler=sampler
+    )
+
+    assert not np.all(stats0 == stats1)
+    assert np.all(stats1 == stats2)
+
+
+@pytest.mark.parametrize("parametric", [True, False])
+def test_bootstrap_mm(data_nested, kwargs_nested, parametric):
+    """Call bootstrap with mm only and make sure it does not raise errors."""
+    data_nested = pd.DataFrame(data_nested)
+
+    model_1 = StepMix(**kwargs_nested)
+
+    model_1.fit(data_nested)
+
+    model_1.bootstrap(data_nested, n_repetitions=10, parametric=parametric)
+
+
+def test_bootstrap_mm_sampler(data_nested, kwargs_nested):
+    """Call sampler bootstrap with mm only and make sure it does not raise errors."""
+    data_nested = pd.DataFrame(data_nested)
+
+    model_1 = StepMix(**kwargs_nested)
+
+    model_1.fit(data_nested)
+
+    kwargs_nested["n_components"] = 2
+    sampler = StepMix(**kwargs_nested)
+    sampler.fit(data_nested)
+
+    model_1.bootstrap(data_nested, n_repetitions=10, parametric=True, sampler=sampler)

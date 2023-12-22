@@ -126,7 +126,7 @@ class Covariate(Emission):
         return prob.argmax(axis=1)
 
     def sample(self, class_no, n_samples):
-        raise NotImplementedError
+        raise NotImplementedError("Covariate models are not generative. Sampling not supported.")
 
     @property
     def n_parameters(self):
