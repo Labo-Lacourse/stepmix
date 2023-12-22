@@ -27,6 +27,14 @@ class Bernoulli(Emission):
         log_eps = X @ np.log(pis) + (1 - X) @ np.log(1 - pis)
         return log_eps
 
+    def predict_proba(self, log_resp):
+        resp = np.exp(log_resp)
+        return resp @ self.parameters["pis"]
+
+    def predict(self, log_resp):
+        probs = self.predict_proba(log_resp)
+        return (probs > 0.5).astype(int)
+
     def sample(self, class_no, n_samples):
         feature_weights = self.parameters["pis"][class_no, :].reshape((1, -1))
         K = feature_weights.shape[1]  # number of features

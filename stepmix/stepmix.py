@@ -1374,7 +1374,7 @@ class StepMix(BaseEstimator):
         return -2 * self.score(X, Y) * n + self.n_parameters * (np.log(n) + 1)
 
     def predict(self, X, Y=None):
-        """Predict the labels for the data samples in X using the measurement model.
+        """Predict the cluster/latent class labels for the data samples in X using the measurement model.
 
         Optionally, an array-like Y can be provided to predict the labels based on both the measurement and structural
         models.
@@ -1420,6 +1420,60 @@ class StepMix(BaseEstimator):
 
         _, log_resp = self._e_step(X, Y=Y)
         return np.exp(log_resp)
+    def predict_Y(self, X, Y=None):
+        """Call the predict method of the structural model to predict argmax P(Y|X) (Supervised prediction).
+
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
+            List of n_features-dimensional data points to fit the measurement model. Each row
+            corresponds to a single data point. If the data is categorical, by default it should be
+            0-indexed and integer encoded (not one-hot encoded).
+        Y : array-like of shape (n_samples, n_features_structural), default=None
+            List of n_features-dimensional data points to fit the structural model. Each row
+            corresponds to a single data point. If the data is categorical, by default it should be
+            0-indexed and integer encoded (not one-hot encoded).
+        Returns
+        -------
+        predictions : array, shape (n_samples, n_columns)
+            Y predictions.
+        """
+        if not hasattr(self, "_sm"):
+            raise ValueError("Calling predict_Y requires a structural model.")
+        check_is_fitted(self)
+        X, Y = self._check_x_y(X, Y)
+
+        _, log_resp = self._e_step(X, Y=Y)
+
+        return self._sm.predict(log_resp)
+
+    def predict_proba_Y(self, X, Y=None):
+        """Call the predict method of the structural model to predict the full conditional P(Y|X).
+
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
+            List of n_features-dimensional data points to fit the measurement model. Each row
+            corresponds to a single data point. If the data is categorical, by default it should be
+            0-indexed and integer encoded (not one-hot encoded).
+        Y : array-like of shape (n_samples, n_features_structural), default=None
+            List of n_features-dimensional data points to fit the structural model. Each row
+            corresponds to a single data point. If the data is categorical, by default it should be
+            0-indexed and integer encoded (not one-hot encoded).
+
+        Returns
+        -------
+        conditional : array, shape (n_samples, n_columns)
+            P(Y|X).
+        """
+        if not hasattr(self, "_sm"):
+            raise ValueError("Calling predict_proba_Y requires a structural model.")
+        check_is_fitted(self)
+        X, Y = self._check_x_y(X, Y)
+
+        _, log_resp = self._e_step(X, Y=Y)
+
+        return self._sm.predict_proba(log_resp)
 
     def sample(self, n_samples, labels=None):
         """Sample method for fitted StepMix model.

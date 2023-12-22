@@ -136,6 +136,42 @@ class Emission(ABC):
         """
         raise NotImplementedError
 
+    def predict_proba(self, log_resp):
+        """Compute the conditional probabilities P(Y|X) given the log responsibilities P(Z|X).
+
+        This will only be used if the emission model is used as a structural model. X therefore represents the input
+        and Y the output for supervised predictions.
+
+        Parameters
+        ----------
+        log_resp : ndarray of shape (n_samples, n_components)
+            Logarithm of the posterior probabilities P(Z|X) (or responsibilities) of each sample.
+
+        Returns
+        -------
+        resp : ndarray of shape (n_samples, n_columns)
+            Conditional probabilities P(Y|X) of each sample.
+        """
+        raise NotImplementedError("This emission model does not support predictions.")
+
+    def predict(self, log_resp):
+        """Compute argmax P(Y|X) given the log responsibilities P(Z|X) for supervised predictions.
+
+        This will only be used if the emission model is used as a structural model. X therefore represents the input
+        and Y the output for supervised predictions.
+
+        Parameters
+        ----------
+        log_resp : ndarray of shape (n_samples, n_components)
+            Logarithm of the posterior probabilities P(Z|X) (or responsibilities) of each sample.
+
+        Returns
+        -------
+        resp : ndarray of shape (n_samples, n_columns)
+            Argmax P(Y|X) of each sample.
+        """
+        raise NotImplementedError("This emission model does not support predictions.")
+
     @abstractmethod
     def sample(self, class_no, n_samples):
         """Sample n_samples conditioned on the given class_no.
