@@ -206,6 +206,31 @@ def bootstrap(
 
 
 def blrt(null_model, alternative_model, X, Y=None, n_repetitions=30, random_state=42):
+    """BLRT Test
+
+    References
+    ----------
+    Dziak, John J., Stephanie T. Lanza, and Xianming Tan. "Effect size, statistical power, and sample size requirements for the bootstrap likelihood ratio test in latent class analysis." Structural equation modeling: a multidisciplinary journal 21.4 (2014): 534-552.
+    Nylund, Karen L., Tihomir Asparouhov, and Bengt O. Muthén. "Deciding on the number of classes in latent class analysis and growth mixture modeling: A Monte Carlo simulation study." Structural equation modeling: A multidisciplinary Journal 14.4 (2007): 535-569.
+
+    Parameters
+    ----------
+    null_model : StepMix instance
+        A StepMix model with k classes.
+    alternative_model : StepMix instance
+        A StepMix model with k + 1 classes.
+    X : array-like of shape (n_samples, n_features)
+    Y : array-like of shape (n_samples, n_features_structural), default=None
+    n_repetitions: int
+        Number of repetitions to fit.
+    random_state : int, default=None
+
+    Returns
+    ----------
+    p-value: float
+        Bootstrap p-value of the BLRT test. A significant test indicates the alternative k + 1 model provides a
+        significantly better fit of the data.
+    """
     n_samples = X.shape[0]
 
     # Fit both models on real data
@@ -240,3 +265,56 @@ def blrt(null_model, alternative_model, X, Y=None, n_repetitions=30, random_stat
     b = np.sum(gen_stats > real_stat)
 
     return b/n_repetitions
+
+
+def blrt_sweep(model, X, Y=None, low=1, high=5, n_repetitions=30, random_state=42, verbose=True):
+    """Sweep BLRT Test
+
+    Run BLRT test for a range of number of classes. For example, if you set low=1 and high=4, the function
+    will return the result of 3 tests [1 vs 2, 2 vs 3, 3 vs 4].
+
+    Parameters
+    ----------
+    model : StepMix instance
+        A StepMix model.
+    X : array-like of shape (n_samples, n_features)
+    Y : array-like of shape (n_samples, n_features_structural), default=None
+    low: int, default=1
+        Minimum number of classes to test.
+    high: int, default=5
+        Maximum number of classes to test.
+    n_repetitions: int
+        Number of repetitions to fit.
+    random_state : int, default=None
+    verbose : bool, default=True
+
+    Returns
+    ----------
+    p-values: List of length high - low
+        Bootstrap p-values of the BLRT test for each number of classes.
+    """
+    test_string = list()
+    p_values = list()
+    for k in range(low, high):
+        print(f"Testing {k} vs. {k + 1} classes...")
+        null_model = clone(model)
+        null_model.set_params(n_components=k)
+        alternative_model = clone(model)
+        alternative_model.set_params(n_components=k + 1)
+        p_values.append(
+            blrt(
+                null_model,
+                alternative_model,
+                X,
+                Y=Y,
+                n_repetitions=n_repetitions,
+                random_state=random_state,
+            )
+        )
+        test_string.append(f"{k} vs. {k + 1} classes")
+
+    if verbose:
+        df = pd.DataFrame({"Test": test_string, "p-value": p_values}).set_index('Test')
+        print('\nBLRT Sweep Results')
+        print(df.round(4))
+    return p_values
