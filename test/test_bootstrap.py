@@ -104,7 +104,7 @@ def test_bootstrap(data, kwargs, model):
         model_1.bootstrap_stats(X, Y, n_repetitions=3)
     else:
         # Should raise error. Can't sample from a covariate model
-        with pytest.raises(ValueError) as e_info:
+        with pytest.raises(NotImplementedError) as e_info:
             model_1.bootstrap_stats(X, Y, n_repetitions=3)
 
 
