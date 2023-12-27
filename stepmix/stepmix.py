@@ -752,7 +752,7 @@ class StepMix(BaseEstimator):
             # 1) Fit the measurement model
             self.em(X, sample_weight=sample_weight)
             # 2) Assign class probabilities
-            soft_resp = self._predict_proba_class(X)
+            soft_resp = self.predict_proba_class(X)
 
             # Modal assignment (clipped for numerical reasons)
             # Else we simply keep the assignment as is (soft)
@@ -771,7 +771,7 @@ class StepMix(BaseEstimator):
             self.em(X)
 
             # 2) Assign class probabilities
-            soft_resp = self._predict_proba_class(X)
+            soft_resp = self.predict_proba_class(X)
 
             # Apply BCH correction
             _, D_inv = compute_bch_matrix(soft_resp, self.assignment)
@@ -793,7 +793,7 @@ class StepMix(BaseEstimator):
             self.em(X)
 
             # 2) Assign class probabilities
-            soft_resp = self._predict_proba_class(X)
+            soft_resp = self.predict_proba_class(X)
 
             # Compute log_emission_pm
             log_emission_pm = compute_log_emission_pm(soft_resp, self.assignment)
@@ -1304,7 +1304,7 @@ class StepMix(BaseEstimator):
         entropy : float
         """
         check_is_fitted(self)
-        resp = self._predict_proba_class(X, Y)
+        resp = self.predict_proba_class(X, Y)
         resp = np.clip(resp, 1e-15, 1 - 1e-15)
 
         return -1 * np.sum(resp * np.log(resp))
@@ -1374,7 +1374,7 @@ class StepMix(BaseEstimator):
         return -2 * self.score(X, Y) * n + self.n_parameters * (np.log(n) + 1)
 
 
-    def _predict_class(self, X, Y=None):
+    def predict_class(self, X, Y=None):
         """Predict the cluster/latent class/component labels for the data samples in X.
 
         Optionally, an array-like Y can be provided to predict the labels based on both the measurement and structural
@@ -1395,9 +1395,9 @@ class StepMix(BaseEstimator):
         labels : array, shape (n_samples,)
             Component labels.
         """
-        return self._predict_proba_class(X, Y).argmax(axis=1)
+        return self.predict_proba_class(X, Y).argmax(axis=1)
 
-    def _predict_proba_class(self, X, Y=None):
+    def predict_proba_class(self, X, Y=None):
         """Predict the latent class probabilities for the data samples in X using the measurement model.
 
         Optionally, an array-like Y can be provided to predict the posterior based on both the measurement and structural
@@ -1425,17 +1425,13 @@ class StepMix(BaseEstimator):
         _, log_resp = self._e_step(X, Y=Y)
         return np.exp(log_resp)
 
-    def _predict_Y(self, X, Y=None):
+    def predict_Y(self, X):
         """Call the predict method of the structural model to predict argmax P(Y|X) (Supervised prediction).
 
         Parameters
         ----------
         X : array-like of shape (n_samples, n_features)
             List of n_features-dimensional data points to fit the measurement model. Each row
-            corresponds to a single data point. If the data is categorical, by default it should be
-            0-indexed and integer encoded (not one-hot encoded).
-        Y : array-like of shape (n_samples, n_features_structural), default=None
-            List of n_features-dimensional data points to fit the structural model. Each row
             corresponds to a single data point. If the data is categorical, by default it should be
             0-indexed and integer encoded (not one-hot encoded).
         Returns
@@ -1446,23 +1442,19 @@ class StepMix(BaseEstimator):
         if not hasattr(self, "_sm"):
             raise ValueError("Calling predict_Y requires a structural model.")
         check_is_fitted(self)
-        X, Y = self._check_x_y(X, Y)
+        X, _ = self._check_x_y(X, None)
 
-        _, log_resp = self._e_step(X, Y=Y)
+        _, log_resp = self._e_step(X, Y=None)
 
         return self._sm.predict(log_resp)
 
-    def _predict_proba_Y(self, X, Y=None):
+    def predict_proba_Y(self, X):
         """Call the predict method of the structural model to predict the full conditional P(Y|X).
 
         Parameters
         ----------
         X : array-like of shape (n_samples, n_features)
             List of n_features-dimensional data points to fit the measurement model. Each row
-            corresponds to a single data point. If the data is categorical, by default it should be
-            0-indexed and integer encoded (not one-hot encoded).
-        Y : array-like of shape (n_samples, n_features_structural), default=None
-            List of n_features-dimensional data points to fit the structural model. Each row
             corresponds to a single data point. If the data is categorical, by default it should be
             0-indexed and integer encoded (not one-hot encoded).
 
@@ -1474,9 +1466,9 @@ class StepMix(BaseEstimator):
         if not hasattr(self, "_sm"):
             raise ValueError("Calling predict_proba_Y requires a structural model.")
         check_is_fitted(self)
-        X, Y = self._check_x_y(X, Y)
+        X, _ = self._check_x_y(X, None)
 
-        _, log_resp = self._e_step(X, Y=Y)
+        _, log_resp = self._e_step(X, Y=None)
 
         return self._sm.predict_proba(log_resp)
 
@@ -1501,7 +1493,7 @@ class StepMix(BaseEstimator):
         labels : array, shape (n_samples,)
             Component labels.
         """
-        return self._predict_class(X, Y)
+        return self.predict_class(X, Y)
 
     def predict_proba(self, X, Y=None):
         """Predict the latent class probabilities for the data samples in X using the measurement model.
@@ -1525,7 +1517,7 @@ class StepMix(BaseEstimator):
         resp : array, shape (n_samples, n_components)
             P(class|X, Y) for each sample in X.
         """
-        return self._predict_proba_class(X, Y)
+        return self.predict_proba_class(X, Y)
 
     def sample(self, n_samples, labels=None):
         """Sample method for fitted StepMix model.
@@ -1638,8 +1630,8 @@ class StepMixClassifier(StepMix):
 
     We call this a classifier since inference over Y is only supported if the structural
     model (sm) is set to 'binary', 'binary_nan', 'categorical', or 'categorical_nan'."""
-    def predict(self, X, Y=None):
-        return self._predict_Y(X, Y)
+    def predict(self, X):
+        return self.predict_Y(X)
 
-    def predict_proba(self, X, Y=None):
-        return self._predict_proba_Y(X, Y)
+    def predict_proba(self, X):
+        return self.predict_proba_Y(X)
