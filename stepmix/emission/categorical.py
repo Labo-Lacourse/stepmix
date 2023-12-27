@@ -29,11 +29,20 @@ class Bernoulli(Emission):
 
     def predict_proba(self, log_resp):
         resp = np.exp(log_resp)
-        return resp @ self.parameters["pis"]
+        probs =  resp @ self.parameters["pis"]
+
+        # Expand to explicitly model P(0) and P(1)
+        probs = np.repeat(probs, 2, axis=1)
+        probs[:, ::2] = 1 - probs[:, ::2]
+
+        return probs
 
     def predict(self, log_resp):
         probs = self.predict_proba(log_resp)
-        return (probs > 0.5).astype(int)
+        n_features = self.parameters["pis"].shape[1]
+        n_samples = log_resp.shape[0]
+        probs = probs.reshape((n_samples, n_features, 2))
+        return probs.argmax(axis=2)
 
     def sample(self, class_no, n_samples):
         feature_weights = self.parameters["pis"][class_no, :].reshape((1, -1))
