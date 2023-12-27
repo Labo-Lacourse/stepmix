@@ -2,6 +2,6 @@ data
 .idea
 __pycache__
 docs/build
-scratch.py
+scripts/scratch.py
 venv
 dist
