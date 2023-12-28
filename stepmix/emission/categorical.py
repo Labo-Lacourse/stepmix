@@ -185,6 +185,21 @@ class Multinoulli(Emission):
         pis = np.clip(self.parameters["pis"].T, 1e-15, 1 - 1e-15)
         log_eps = X @ np.log(pis)
         return log_eps
+    def predict_proba(self, log_resp):
+        n_samples, n_features, n_outcomes = log_resp.shape[0], self.get_n_features(), self.parameters["max_n_outcomes"]
+        resp = np.exp(log_resp)
+        pis = self.parameters["pis"].reshape((self.n_components, n_features, n_outcomes))
+        probs = np.einsum('nk,kfo->nfo', resp, pis)
+        probs = probs.reshape((n_samples, n_features * n_outcomes))
+
+        return probs
+
+    def predict(self, log_resp):
+        n_samples, n_features, n_outcomes = log_resp.shape[0], self.get_n_features(), self.parameters["max_n_outcomes"]
+        probs = self.predict_proba(log_resp)
+        probs = probs.reshape((n_samples, n_features, n_outcomes))
+        return probs.argmax(axis=2).flatten()
+
 
     def sample(self, class_no, n_samples):
         pis = self.parameters["pis"].T
