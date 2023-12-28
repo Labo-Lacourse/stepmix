@@ -1328,7 +1328,8 @@ class StepMix(BaseEstimator):
         entropy = self.entropy(X, Y)
         n_samples = X.shape[0]
 
-        return 1 - entropy / (n_samples * np.log(self.n_components))
+        rel_entropy =  1 - entropy / (n_samples * np.log(self.n_components)) if self.n_components > 1 else np.nan
+        return rel_entropy
 
     def sabic(self, X, Y=None):
         """Sample-Sized Adjusted BIC.
