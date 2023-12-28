@@ -10,6 +10,8 @@ from stepmix.datasets import (
     data_bakk_complete,
     data_generation_gaussian,
     data_gaussian_diag,
+    data_gaussian_binary,
+    data_gaussian_categorical,
 )
 
 
@@ -183,5 +185,46 @@ def kwargs_gaussian_nan():
         n_init=10,
         max_iter=300,
         verbose=0,
+    )
+    return kwargs
+
+# Fixtures for Supervised Gaussian Binary data
+@pytest.fixture
+def data_g_binary():
+    X, Y, _ = data_gaussian_binary(
+        n_samples=1000, random_state=42,
+    )
+    return X, Y
+
+
+@pytest.fixture
+def kwargs_data_g_binary():
+    # Default estimator arguments
+    kwargs = dict(
+        n_components=4,
+        measurement="gaussian_full",
+        structural="binary",
+        random_state=42,
+    )
+    return kwargs
+
+
+# Fixtures for Supervised Gaussian Categorical data
+@pytest.fixture
+def data_g_cat():
+    X, Y, _ = data_gaussian_categorical(
+        n_samples=1000, random_state=42,
+    )
+    return X, Y
+
+
+@pytest.fixture
+def kwargs_data_g_cat():
+    # Default estimator arguments
+    kwargs = dict(
+        n_components=4,
+        measurement="gaussian_full",
+        structural="categorical",
+        random_state=42,
     )
     return kwargs

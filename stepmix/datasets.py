@@ -345,7 +345,7 @@ def data_gaussian_binary(n_samples, random_state=None):
 
     pis = np.array([
         [0.1, 0.9, 0.1, 0.9],
-        [0.8, 0.6, 0.4, 0.2]
+        [0.9, 0.9, 0.1, 0.1]
     ])
 
     # Model parameters
