@@ -1328,7 +1328,12 @@ class StepMix(BaseEstimator):
         entropy = self.entropy(X, Y)
         n_samples = X.shape[0]
 
-        return 1 - entropy / (n_samples * np.log(self.n_components))
+        rel_entropy = (
+            1 - entropy / (n_samples * np.log(self.n_components))
+            if self.n_components > 1
+            else np.nan
+        )
+        return rel_entropy
 
     def sabic(self, X, Y=None):
         """Sample-Sized Adjusted BIC.
@@ -1372,7 +1377,6 @@ class StepMix(BaseEstimator):
         """
         n = X.shape[0]
         return -2 * self.score(X, Y) * n + self.n_parameters * (np.log(n) + 1)
-
 
     def predict_class(self, X, Y=None):
         """Predict the cluster/latent class/component labels for the data samples in X.
@@ -1621,6 +1625,7 @@ class StepMix(BaseEstimator):
 
         return X, Y, labels_ret
 
+
 class StepMixClassifier(StepMix):
     """StepMix Supervised Classifier
 
@@ -1630,6 +1635,7 @@ class StepMixClassifier(StepMix):
 
     We call this a classifier since inference over Y is only supported if the structural
     model (sm) is set to 'binary', 'binary_nan', 'categorical', or 'categorical_nan'."""
+
     def predict(self, X):
         return self.predict_Y(X)
 

@@ -10,10 +10,15 @@ StepMix
 
 *For StepMixR, please refer to <a href="https://github.com/Labo-Lacourse/stepmixr">this repository.</a>*
 
-A Python package following the scikit-learn API for model-based clustering and generalized mixture modeling (latent class/profile analysis) of continuous and categorical data. 
-StepMix handles missing values through Full Information Maximum Likelihood (FIML) and provides multiple stepwise Expectation-Maximization (EM) estimation methods based on pseudolikelihood theory. 
-Additional features include support for covariates and distal outcomes, various simulation utilities, and non-parametric bootstrapping, which allows inference
-in semi-supervised and unsupervised settings.
+A Python package following the scikit-learn API for generalized mixture modeling. The package supports categorical 
+data (Latent Class Analysis) and continuous data (Gaussian Mixtures/Latent Profile Analysis). StepMix can be used for
+both clustering and supervised learning.
+
+Additional features include:
+* Support for missing values through Full Information Maximum Likelihood (FIML); 
+* Multiple stepwise Expectation-Maximization (EM) estimation methods based on pseudolikelihood theory;
+* Covariates and distal outcomes;
+* Parametric and non-parametric bootstrapping.
 
 # Reference
 If you find StepMix useful, please consider citing our [arXiv preprint](https://arxiv.org/abs/2304.03853):
@@ -55,23 +60,28 @@ Please refer to the StepMix tutorials to learn how to combine continuous and cat
 # Tutorials
 Detailed tutorials are available in notebooks: 
 1. [Generalized Mixture Models with StepMix](https://colab.research.google.com/drive/1T8017QsMCiy62z2QHOvmbzE-tCECO-w7?): 
-an in-depth look at how latent class models can be defined with StepMix. The tutorial uses the Iris Dataset as an example
+an in-depth look at how mixture models can be defined with StepMix. The tutorial uses the Iris Dataset as an example
 and covers:
-   1. Continuous LCA models (latent profile analysis/gaussian mixture model);
-   2. Binary LCA models;
-   3. Categorical LCA models;
-   3. Mixed variables mixture models (continuous and categorical data);
+   1. Gaussian Mixtures (Latent Profile Analysis);
+   2. Binary Mixtures (LCA);
+   3. Categorical Mixtures (LCA);
+   3. Mixed Categorical and Continuous Mixtures;
    5. Missing Values through Full-Information Maximum Likelihood.
+2. [Supervised Classification with StepMix [TODO]]():
+   1. Supervised Learning;
+   1. Semi-Supervised Learning;
 2. [Stepwise Estimation with StepMix](https://colab.research.google.com/drive/1xJB4y6eaprBMw98lB7kflWz8MfQcT2cI?usp=drive_link):
     a tutorial demonstrating how to define measurement and structural models. The tutorial discusses:
    1. LCA models with distal outcomes;
    2. LCA models with covariates; 
    3. 1-step, 2-step and 3-step estimation;
-   4. Corrections (BCH or ML) and other options for 3-step estimation.
+   4. Corrections (BCH or ML) and other options for 3-step estimation;
+   5. A Complete Model with mixed measurements, covariates and mixed outcomes [TO DO]. 
 3. [Model Selection](https://colab.research.google.com/drive/1btXHCx90eCsnUlQv_yN-9AzKDhJP_JkG?usp=drive_link):
    a short tutorial discussing:
     1. Selecting the number of components in a mixture model (```n_components```);
-    2. Comparing models with fit indices: AIC and BIC.
+    2. Comparing models with fit indices: AIC and BIC;
+   3. BLRT test for selecting the number of components. [TO DO]
 4. [Parameters, Bootstrapping and CI](https://colab.research.google.com/drive/14DJCqFTUaYp3JtLAeAMYmGHFLCHE-r7z):
    a tutorial discussing how to:
    1. Access StepMix parameters;

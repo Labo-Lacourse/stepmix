@@ -29,7 +29,7 @@ class Bernoulli(Emission):
 
     def predict_proba(self, log_resp):
         resp = np.exp(log_resp)
-        probs =  resp @ self.parameters["pis"]
+        probs = resp @ self.parameters["pis"]
 
         # Expand to explicitly model P(0) and P(1)
         probs = np.repeat(probs, 2, axis=1)
@@ -42,7 +42,12 @@ class Bernoulli(Emission):
         n_features = self.parameters["pis"].shape[1]
         n_samples = log_resp.shape[0]
         probs = probs.reshape((n_samples, n_features, 2))
-        return probs.argmax(axis=2)
+        preds = probs.argmax(axis=2)
+
+        if preds.shape[1] == 1:
+            preds = preds.flatten()
+
+        return preds
 
     def sample(self, class_no, n_samples):
         feature_weights = self.parameters["pis"][class_no, :].reshape((1, -1))
@@ -186,6 +191,36 @@ class Multinoulli(Emission):
         log_eps = X @ np.log(pis)
         return log_eps
 
+    def predict_proba(self, log_resp):
+        n_samples, n_features, n_outcomes = (
+            log_resp.shape[0],
+            self.get_n_features(),
+            self.parameters["max_n_outcomes"],
+        )
+        resp = np.exp(log_resp)
+        pis = self.parameters["pis"].reshape(
+            (self.n_components, n_features, n_outcomes)
+        )
+        probs = np.einsum("nk,kfo->nfo", resp, pis)
+        probs = probs.reshape((n_samples, n_features * n_outcomes))
+
+        return probs
+
+    def predict(self, log_resp):
+        n_samples, n_features, n_outcomes = (
+            log_resp.shape[0],
+            self.get_n_features(),
+            self.parameters["max_n_outcomes"],
+        )
+        probs = self.predict_proba(log_resp)
+        probs = probs.reshape((n_samples, n_features, n_outcomes))
+        preds = probs.argmax(axis=2)
+
+        if preds.shape[1] == 1:
+            preds = preds.flatten()
+
+        return preds
+
     def sample(self, class_no, n_samples):
         pis = self.parameters["pis"].T
         n_features = self.get_n_features()
@@ -198,7 +233,7 @@ class Multinoulli(Emission):
                 for k in range(n_features)
             ]
         )
-        X = np.argmax(X, axis=2) # Convert to integers
+        X = np.argmax(X, axis=2)  # Convert to integers
         return X.T
 
     @property

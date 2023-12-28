@@ -4,7 +4,7 @@ import pytest
 
 from stepmix import StepMix
 from stepmix.emission.build_emission import EMISSION_DICT
-from stepmix.bootstrap import find_best_permutation
+from stepmix.bootstrap import find_best_permutation, blrt_sweep
 
 
 def test_find_best_permutation():
@@ -100,7 +100,7 @@ def test_bootstrap(data, kwargs, model):
     model_1 = StepMix(n_steps=1, **kwargs)
     model_1.fit(X, Y)
 
-    if model != 'covariate':
+    if model != "covariate":
         model_1.bootstrap_stats(X, Y, n_repetitions=3)
     else:
         # Should raise error. Can't sample from a covariate model
@@ -206,3 +206,23 @@ def test_bootstrap_mm_sampler(data_nested, kwargs_nested):
     sampler.fit(data_nested)
 
     model_1.bootstrap(data_nested, n_repetitions=10, parametric=True, sampler=sampler)
+
+
+@pytest.mark.filterwarnings("ignore::sklearn.exceptions.ConvergenceWarning")
+def test_blrt(data, kwargs):
+    X, Y = data
+    model = StepMix(**kwargs)
+    df = blrt_sweep(model, X, Y, n_repetitions=10, random_state=42, low=1, high=4)
+    sign = np.array(df["p"]) < 0.05
+
+    assert np.all(sign == np.array([True, True, False]))
+
+
+@pytest.mark.filterwarnings("ignore::sklearn.exceptions.ConvergenceWarning")
+def test_blrt_2(data_g_binary, kwargs_data_g_binary):
+    X, Y = data_g_binary
+    model = StepMix(**kwargs_data_g_binary)
+    df = blrt_sweep(model, X, None, n_repetitions=10, random_state=42, low=2, high=5)
+    sign = np.array(df["p"]) < 0.05
+
+    assert np.all(sign == np.array([True, True, False]))
