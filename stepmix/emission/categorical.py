@@ -42,7 +42,12 @@ class Bernoulli(Emission):
         n_features = self.parameters["pis"].shape[1]
         n_samples = log_resp.shape[0]
         probs = probs.reshape((n_samples, n_features, 2))
-        return probs.argmax(axis=2)
+        preds = probs.argmax(axis=2)
+
+        if preds.shape[1] == 1:
+            preds = preds.flatten()
+
+        return preds
 
     def sample(self, class_no, n_samples):
         feature_weights = self.parameters["pis"][class_no, :].reshape((1, -1))
@@ -198,7 +203,12 @@ class Multinoulli(Emission):
         n_samples, n_features, n_outcomes = log_resp.shape[0], self.get_n_features(), self.parameters["max_n_outcomes"]
         probs = self.predict_proba(log_resp)
         probs = probs.reshape((n_samples, n_features, n_outcomes))
-        return probs.argmax(axis=2).flatten()
+        preds = probs.argmax(axis=2)
+
+        if preds.shape[1] == 1:
+            preds = preds.flatten()
+
+        return preds
 
 
     def sample(self, class_no, n_samples):
