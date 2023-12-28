@@ -15,6 +15,8 @@ def test_data_gaussian_binary(data_g_binary, kwargs_data_g_binary):
 
     assert accuracy_score(Y[:, 0], preds[:, 0]) > 0.85
     assert accuracy_score(Y[:, 1], preds[:, 1]) > 0.85
+
+
 def test_data_gaussian_binary_nan(data_g_binary, kwargs_data_g_binary):
     kwargs_data_g_binary["structural"] = "binary_nan"
 
@@ -33,6 +35,8 @@ def test_data_gaussian_binary_nan(data_g_binary, kwargs_data_g_binary):
 
     assert accuracy_score(Y[:, 0], preds[:, 0]) > 0.85
     assert accuracy_score(Y[:, 1], preds[:, 1]) > 0.85
+
+
 def test_data_gaussian_categorical(data_g_cat, kwargs_data_g_cat):
     X, Y = data_g_cat
 
@@ -43,6 +47,8 @@ def test_data_gaussian_categorical(data_g_cat, kwargs_data_g_cat):
 
     assert accuracy_score(Y[:, 0], preds[:, 0]) > 0.80
     assert accuracy_score(Y[:, 1], preds[:, 1]) > 0.80
+
+
 def test_data_gaussian_categorical_nan(data_g_cat, kwargs_data_g_cat):
     kwargs_data_g_cat["structural"] = "categorical_nan"
 

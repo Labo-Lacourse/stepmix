@@ -299,6 +299,7 @@ def data_generation_gaussian(n_samples, sep_level, n_mm=6, random_state=None):
 
     return X, Y, labels
 
+
 def data_gaussian_binary(n_samples, random_state=None):
     """Full Gaussian measurement model with 2 binary responses.
 
@@ -343,10 +344,7 @@ def data_gaussian_binary(n_samples, random_state=None):
         ]
     )
 
-    pis = np.array([
-        [0.1, 0.9, 0.1, 0.9],
-        [0.9, 0.9, 0.1, 0.1]
-    ])
+    pis = np.array([[0.1, 0.9, 0.1, 0.9], [0.9, 0.9, 0.1, 0.1]])
 
     # Model parameters
     params = dict(
@@ -368,6 +366,7 @@ def data_gaussian_binary(n_samples, random_state=None):
     Y, X, labels = generator.sample(n_samples)
 
     return X, Y, labels
+
 
 def data_gaussian_categorical(n_samples, random_state=None):
     """Full Gaussian measurement model with 2 categorical responses.
@@ -414,12 +413,14 @@ def data_gaussian_categorical(n_samples, random_state=None):
     )
 
     # 4 classes x (2 categorical variables x 3 outcomes) = 4 x 6
-    pis = np.array([
-        [0.8, 0.1, 0.1, 0.9, 0.1, 0.0],
-        [0.1, 0.1, 0.8, 0.9, 0.0, 0.1],
-        [0.1, 0.8, 0.1, 0.1, 0.9, 0.0],
-        [0.1, 0.1, 0.8, 0.1, 0.0, 0.9],
-    ])
+    pis = np.array(
+        [
+            [0.8, 0.1, 0.1, 0.9, 0.1, 0.0],
+            [0.1, 0.1, 0.8, 0.9, 0.0, 0.1],
+            [0.1, 0.8, 0.1, 0.1, 0.9, 0.0],
+            [0.1, 0.1, 0.8, 0.1, 0.0, 0.9],
+        ]
+    )
 
     # Model parameters
     params = dict(
@@ -441,6 +442,7 @@ def data_gaussian_categorical(n_samples, random_state=None):
     X, Y, labels = generator.sample(n_samples)
 
     return X, Y, labels
+
 
 def data_gaussian_diag(n_samples, sep_level, n_mm=6, random_state=None, nan_ratio=0.0):
     """Bakk binary measurement model with 2D diagonal gaussian structural model.

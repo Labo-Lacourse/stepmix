@@ -188,11 +188,13 @@ def kwargs_gaussian_nan():
     )
     return kwargs
 
+
 # Fixtures for Supervised Gaussian Binary data
 @pytest.fixture
 def data_g_binary():
     X, Y, _ = data_gaussian_binary(
-        n_samples=1000, random_state=42,
+        n_samples=1000,
+        random_state=42,
     )
     return X, Y
 
@@ -213,7 +215,8 @@ def kwargs_data_g_binary():
 @pytest.fixture
 def data_g_cat():
     X, Y, _ = data_gaussian_categorical(
-        n_samples=1000, random_state=42,
+        n_samples=1000,
+        random_state=42,
     )
     return X, Y
 

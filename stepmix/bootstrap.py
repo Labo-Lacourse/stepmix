@@ -264,10 +264,12 @@ def blrt(null_model, alternative_model, X, Y=None, n_repetitions=30, random_stat
     gen_stats = 2 * (stats_alternative["LL"] - stats_null["LL"])
     b = np.sum(gen_stats > real_stat)
 
-    return b/n_repetitions
+    return b / n_repetitions
 
 
-def blrt_sweep(model, X, Y=None, low=1, high=5, n_repetitions=30, random_state=42, verbose=True):
+def blrt_sweep(
+    model, X, Y=None, low=1, high=5, n_repetitions=30, random_state=42, verbose=True
+):
     """Sweep BLRT Test
 
     Run BLRT test for a range of number of classes. For example, if you set low=1 and high=4, the function
@@ -313,8 +315,8 @@ def blrt_sweep(model, X, Y=None, low=1, high=5, n_repetitions=30, random_state=4
         )
         test_string.append(f"{k} vs. {k + 1} classes")
 
-    df = pd.DataFrame({"Test": test_string, "p": p_values}).set_index('Test')
+    df = pd.DataFrame({"Test": test_string, "p": p_values}).set_index("Test")
     if verbose:
-        print('\nBLRT Sweep Results')
+        print("\nBLRT Sweep Results")
         print(df.round(4))
     return df
