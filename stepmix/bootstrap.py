@@ -290,8 +290,8 @@ def blrt_sweep(model, X, Y=None, low=1, high=5, n_repetitions=30, random_state=4
 
     Returns
     ----------
-    p-values: List of length high - low
-        Bootstrap p-values of the BLRT test for each number of classes.
+    p-values: DataFrame
+        Bootstrap p-values of the BLRT test for each comparison.
     """
     test_string = list()
     p_values = list()
@@ -313,8 +313,8 @@ def blrt_sweep(model, X, Y=None, low=1, high=5, n_repetitions=30, random_state=4
         )
         test_string.append(f"{k} vs. {k + 1} classes")
 
+    df = pd.DataFrame({"Test": test_string, "p": p_values}).set_index('Test')
     if verbose:
-        df = pd.DataFrame({"Test": test_string, "p-value": p_values}).set_index('Test')
         print('\nBLRT Sweep Results')
         print(df.round(4))
-    return p_values
+    return df
