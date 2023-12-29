@@ -20,6 +20,8 @@ Additional features include:
 * Covariates and distal outcomes;
 * Parametric and non-parametric bootstrapping.
 
+![](https://drive.google.com/uc?export=view&id=1mB9-Y2N3biqHRyRVX5cvIdixBpoiyCG_)
+
 # Reference
 If you find StepMix useful, please consider citing our [arXiv preprint](https://arxiv.org/abs/2304.03853):
 ```
@@ -88,3 +90,4 @@ and covers:
    2. Bootstrap StepMix estimators;
    2. Quickly plot confidence intervals.
 
+![](https://drive.google.com/uc?export=view&id=1gajwp-NTu9kSdK_7DBhpiX0SebEx5WMF)
