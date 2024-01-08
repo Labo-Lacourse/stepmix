@@ -3,7 +3,11 @@
 E.g., we expect 1-step to achieve a higher likelihood on the Bakk data than 3-step.
 """
 import pytest
+import pandas as pd
+from stepmix.datasets import data_bakk_complex
+from sklearn.metrics import rand_score
 from stepmix.stepmix import StepMix
+from stepmix.utils import get_mixed_descriptor
 
 
 @pytest.mark.parametrize(
@@ -105,3 +109,43 @@ def test_corrections_ll(data_large, kwargs_large, corr_1, corr_2):
     ll_2 = model_2.score(X, Y)
 
     assert ll_1 < ll_2
+
+
+def test_complex_model(data_complex, kwargs_large):
+    """Test the complex model of the Bakk data."""
+    X, Y, labels = data_complex
+    df = pd.concat((X, Y), axis=1)
+
+    # Define the measurement model
+    data_mm, descriptor_mm = get_mixed_descriptor(
+        dataframe=df,
+        binary_nan=[
+            "Measurement Binary 1",
+            "Measurement Binary 2",
+            "Measurement Binary 3",
+        ],
+        gaussian_unit_nan=["Measurement Continuous 1"],
+    )
+
+    # Define the structural model
+    data_sm, descriptor_sm = get_mixed_descriptor(
+        dataframe=df,
+        binary_nan=[
+            "Structural Binary 1",
+            "Structural Binary 2",
+            "Structural Binary 3",
+        ],
+        gaussian_unit_nan=["Structural Continuous 1"],
+        covariate=["Covariate 1"],
+    )
+
+    descriptor_sm["covariate"]["max_iter"] = 20
+    kwargs_large["measurement"] = descriptor_mm
+    kwargs_large["structural"] = descriptor_sm
+
+    model = StepMix(**kwargs_large)
+    model.fit(data_mm, data_sm)
+
+    # Check if clusters match ground truth
+    preds = model.predict(data_mm, data_sm)
+    assert rand_score(labels, preds) > 0.95

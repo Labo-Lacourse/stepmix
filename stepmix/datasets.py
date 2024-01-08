@@ -4,6 +4,7 @@ import warnings
 import numpy as np
 from sklearn.utils.validation import check_random_state
 from scipy.special import softmax
+import pandas as pd
 
 from .stepmix import StepMix
 
@@ -224,6 +225,73 @@ def data_bakk_complete(n_samples, sep_level, n_mm=6, random_state=None, nan_rati
         X, Y_o = random_nan(X, Y_o, nan_ratio, random_state=random_state)
 
     return X, np.hstack((Y_p, Y_o)), labels
+
+
+def data_bakk_complex(n_samples, sep_level, random_state=None, nan_ratio=0.0):
+    """Build a simulated example with mixed data and missing values.
+
+    Measurements: 3 binary variables + 1 continuous variable.
+
+    Structural: 3 binary response variables + 1 continuous response variable + 1 covariate.
+
+    Missing values everywhere except in the covariate.
+
+    Return data as a dataframe.
+    """
+
+    # Get covariate data
+    X, Y_p, labels = data_bakk_covariate(n_samples, sep_level, 6, random_state)
+
+    # Now use the labels to conditionally sample from a response model
+    means = [[-1, 2], [1, -2], [0, 0]]
+
+    # Model parameters
+    params = dict(
+        weights=np.ones(3) / 3,
+        measurement=dict(means=np.array(means)),
+        measurement_in=2,
+    )
+
+    # Sample data
+    generator = StepMix(
+        n_components=3,
+        measurement="gaussian_unit",
+        random_state=random_state,
+    )
+    generator.set_parameters(params)
+
+    Y_o, _, _ = generator.sample(n_samples, labels=labels)
+
+    # Drop some values in measurements and response
+    if nan_ratio:
+        X, Y_o = random_nan(X, Y_o, nan_ratio, random_state=random_state)
+
+    # Dispatch binary variables in measurement and structural models
+    X_mixed = np.hstack((X[:, :3], Y_o[:, [1]]))
+    Y_mixed = np.hstack((X[:, 3:], Y_o[:, [0]], Y_p))
+
+    # Return as dataframes
+    X_mixed = pd.DataFrame(
+        X_mixed,
+        columns=[
+            "Measurement Binary 1",
+            "Measurement Binary 2",
+            "Measurement Binary 3",
+            "Measurement Continuous 1",
+        ],
+    )
+    Y_mixed = pd.DataFrame(
+        Y_mixed,
+        columns=[
+            "Structural Binary 1",
+            "Structural Binary 2",
+            "Structural Binary 3",
+            "Structural Continuous 1",
+            "Covariate 1",
+        ],
+    )
+
+    return X_mixed, Y_mixed, labels
 
 
 # Data generation: Simulated problems from IFT6269 Hwk 4

@@ -8,6 +8,7 @@ from stepmix.datasets import (
     data_bakk_response,
     data_bakk_covariate,
     data_bakk_complete,
+    data_bakk_complex,
     data_generation_gaussian,
     data_gaussian_diag,
     data_gaussian_binary,
@@ -209,6 +210,18 @@ def kwargs_data_g_binary():
         random_state=42,
     )
     return kwargs
+
+
+# Fixtures for Complex Model
+@pytest.fixture
+def data_complex():
+    X, Y, labels = data_bakk_complex(
+        n_samples=1000,
+        sep_level=0.9,
+        nan_ratio=0.2,
+        random_state=42,
+    )
+    return X, Y, labels
 
 
 # Fixtures for Supervised Gaussian Categorical data
