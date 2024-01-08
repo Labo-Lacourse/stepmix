@@ -13,6 +13,12 @@ StepMix
     :inherited-members:
     :show-inheritance:
 
+.. autoclass:: stepmix.stepmix.StepMixClassifier
+    :members:
+    :undoc-members:
+    :inherited-members:
+    :show-inheritance:
+
 Bootstrap
 ---------------
 .. automodule:: stepmix.bootstrap

@@ -1634,10 +1634,55 @@ class StepMixClassifier(StepMix):
     learning convention of sklearn.
 
     We call this a classifier since inference over Y is only supported if the structural
-    model (sm) is set to 'binary', 'binary_nan', 'categorical', or 'categorical_nan'."""
+    model (sm) is set to 'binary', 'binary_nan', 'categorical', or 'categorical_nan'.
+
+    Also works with the aliases 'bernoulli', 'bernoulli_nan', 'multinoulli' and 'multinoulli_nan'."""
+
+    def _check_initial_parameters(self, X):
+        utils.check_in(
+            [
+                "binary",
+                "binary_nan",
+                "bernoulli",
+                "bernoulli_nan",
+                "categorical",
+                "categorical_nan",
+                "multinoulli",
+                "multinoulli_nan",
+            ],
+            structural=self.structural,
+        )
+        super()._check_initial_parameters(X)
 
     def predict(self, X):
+        """Call the predict method of the structural model to predict argmax P(Y|X) (Supervised prediction).
+
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
+            List of n_features-dimensional data points to fit the measurement model. Each row
+            corresponds to a single data point. If the data is categorical, by default it should be
+            0-indexed and integer encoded (not one-hot encoded).
+        Returns
+        -------
+        predictions : array, shape (n_samples, n_columns)
+            Y predictions.
+        """
         return self.predict_Y(X)
 
     def predict_proba(self, X):
+        """Call the predict method of the structural model to predict the full conditional P(Y|X).
+
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
+            List of n_features-dimensional data points to fit the measurement model. Each row
+            corresponds to a single data point. If the data is categorical, by default it should be
+            0-indexed and integer encoded (not one-hot encoded).
+
+        Returns
+        -------
+        conditional : array, shape (n_samples, n_columns)
+            P(Y|X).
+        """
         return self.predict_proba_Y(X)
