@@ -69,9 +69,6 @@ and covers:
    3. Categorical Mixtures (LCA);
    3. Mixed Categorical and Continuous Mixtures;
    5. Missing Values through Full-Information Maximum Likelihood.
-2. [Supervised Classification with StepMix [TODO]]():
-   1. Supervised Learning;
-   1. Semi-Supervised Learning;
 2. [Stepwise Estimation with StepMix](https://colab.research.google.com/drive/1xJB4y6eaprBMw98lB7kflWz8MfQcT2cI?usp=drive_link):
     a tutorial demonstrating how to define measurement and structural models. The tutorial discusses:
    1. LCA models with distal outcomes;
@@ -89,5 +86,8 @@ and covers:
    1. Access StepMix parameters;
    2. Bootstrap StepMix estimators;
    2. Quickly plot confidence intervals.
+5. [Supervised Classification](https://colab.research.google.com/drive/1GKkdKkCsHWnB4ocjkx8oQdf-gUxHWjeB?usp=sharing):
+   1. Supervised Classification;
+   1. Semi-Supervised Classification.
 
 ![](https://drive.google.com/uc?export=view&id=1gajwp-NTu9kSdK_7DBhpiX0SebEx5WMF)
