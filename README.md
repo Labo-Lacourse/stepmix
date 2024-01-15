@@ -75,19 +75,20 @@ and covers:
    2. LCA models with covariates; 
    3. 1-step, 2-step and 3-step estimation;
    4. Corrections (BCH or ML) and other options for 3-step estimation;
-   5. A Complete Model with mixed measurements, covariates and mixed outcomes [TO DO]. 
+   5. A Complete Model with Mixed Measurements, Mixed Outcomes and a Covariate. 
 3. [Model Selection](https://colab.research.google.com/drive/1btXHCx90eCsnUlQv_yN-9AzKDhJP_JkG?usp=drive_link):
-   a short tutorial discussing:
-    1. Selecting the number of components in a mixture model (```n_components```);
-    2. Comparing models with fit indices: AIC and BIC;
-   3. BLRT test for selecting the number of components. [TO DO]
+    1. Selecting the number of components in a mixture model (```n_components```) with cross-validation;
+    3. Selecting the number of components with the Parametric Bootstrapped Likelihood Ratio Test (BLRT);
+    2. Fit indices: AIC, BIC and other metrics.
 4. [Parameters, Bootstrapping and CI](https://colab.research.google.com/drive/14DJCqFTUaYp3JtLAeAMYmGHFLCHE-r7z):
    a tutorial discussing how to:
    1. Access StepMix parameters;
    2. Bootstrap StepMix estimators;
    2. Quickly plot confidence intervals.
-5. [Supervised Classification](https://colab.research.google.com/drive/1GKkdKkCsHWnB4ocjkx8oQdf-gUxHWjeB?usp=sharing):
-   1. Supervised Classification;
-   1. Semi-Supervised Classification.
+5. [Supervised and Semi-Supervised Learning with StepMix](https://colab.research.google.com/drive/1GKkdKkCsHWnB4ocjkx8oQdf-gUxHWjeB?usp=sharing):
+   1. Binary Classification;
+   1. Multiclass Classification;
+   1. Semi-Supervised Learning;
+   1. Cross-Validation.
 
 ![](https://drive.google.com/uc?export=view&id=1gajwp-NTu9kSdK_7DBhpiX0SebEx5WMF)
