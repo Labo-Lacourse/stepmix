@@ -75,7 +75,7 @@ and covers:
    2. LCA models with covariates; 
    3. 1-step, 2-step and 3-step estimation;
    4. Corrections (BCH or ML) and other options for 3-step estimation;
-   5. A Complete Model with Mixed Measurements, Mixed Outcomes and a Covariate. 
+   5. Putting it All Together: A Complete Model with Missing Values
 3. [Model Selection](https://colab.research.google.com/drive/1btXHCx90eCsnUlQv_yN-9AzKDhJP_JkG?usp=drive_link):
     1. Selecting the number of components in a mixture model (```n_components```) with cross-validation;
     3. Selecting the number of components with the Parametric Bootstrapped Likelihood Ratio Test (BLRT);
