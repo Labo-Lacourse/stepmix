@@ -120,22 +120,22 @@ def test_complex_model(data_complex, kwargs_large):
     data_mm, descriptor_mm = get_mixed_descriptor(
         dataframe=df,
         binary_nan=[
-            "Measurement Binary 1",
-            "Measurement Binary 2",
-            "Measurement Binary 3",
+            "Binary Measurement 1",
+            "Binary Measurement 2",
+            "Binary Measurement 3",
         ],
-        gaussian_unit_nan=["Measurement Continuous 1"],
+        gaussian_unit_nan=["Continuous Measurement 1"],
     )
 
     # Define the structural model
     data_sm, descriptor_sm = get_mixed_descriptor(
         dataframe=df,
         binary_nan=[
-            "Structural Binary 1",
-            "Structural Binary 2",
-            "Structural Binary 3",
+            "Binary Outcome 1",
+            "Binary Outcome 2",
+            "Binary Outcome 3",
         ],
-        gaussian_unit_nan=["Structural Continuous 1"],
+        gaussian_unit_nan=["Continuous Outcome 1"],
         covariate=["Covariate 1"],
     )
 

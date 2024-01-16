@@ -274,19 +274,19 @@ def data_bakk_complex(n_samples, sep_level, random_state=None, nan_ratio=0.0):
     X_mixed = pd.DataFrame(
         X_mixed,
         columns=[
-            "Measurement Binary 1",
-            "Measurement Binary 2",
-            "Measurement Binary 3",
-            "Measurement Continuous 1",
+            "Binary Measurement 1",
+            "Binary Measurement 2",
+            "Binary Measurement 3",
+            "Continuous Measurement 1",
         ],
     )
     Y_mixed = pd.DataFrame(
         Y_mixed,
         columns=[
-            "Structural Binary 1",
-            "Structural Binary 2",
-            "Structural Binary 3",
-            "Structural Continuous 1",
+            "Binary Outcome 1",
+            "Binary Outcome 2",
+            "Binary Outcome 3",
+            "Continuous Outcome 1",
             "Covariate 1",
         ],
     )
