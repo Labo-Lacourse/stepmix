@@ -57,7 +57,8 @@ see changes without committing them.
 
 # Publish and update package
 You need to be a maintainer to do this. We use [Flit](https://flit.pypa.io/en/stable/) for publishing the package. Make sure to set up
-a ```.pypirc``` file in your ```HOME``` directory as described [here](https://flit.pypa.io/en/latest/upload.html).
+a ```.pypirc``` file in your ```HOME``` directory as described [here](https://flit.pypa.io/en/latest/upload.html). Following
+changes to PyPI, you may need to set your username to ```__token__``` and your password to your PyPI API token.
 
 You can test using  
 ```
