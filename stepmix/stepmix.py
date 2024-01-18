@@ -1432,6 +1432,8 @@ class StepMix(BaseEstimator):
     def predict_Y(self, X):
         """Call the predict method of the structural model to predict argmax P(Y|X) (Supervised prediction).
 
+        Inference over Y is only supported if the structural model (sm) is set to 'binary', 'binary_nan', 'categorical', or 'categorical_nan'.
+
         Parameters
         ----------
         X : array-like of shape (n_samples, n_features)
@@ -1454,6 +1456,8 @@ class StepMix(BaseEstimator):
 
     def predict_proba_Y(self, X):
         """Call the predict method of the structural model to predict the full conditional P(Y|X).
+
+        Inference over Y is only supported if the structural model (sm) is set to 'binary', 'binary_nan', 'categorical', or 'categorical_nan'.
 
         Parameters
         ----------
