@@ -1120,6 +1120,8 @@ class StepMix(BaseEstimator):
             to be bootstrapped to save computations.
             progress_bar : bool, default=True
             Display a tqdm progress bar for repetitions.
+        progress_bar : bool, default=True
+            Display a tqdm progress bar for repetitions.
         random_state : int, default=None
             If none, use self.random_state.
         Returns
@@ -1179,7 +1181,12 @@ class StepMix(BaseEstimator):
             }.
         """
         bootstrap_df, bootstrap_stats = self.bootstrap(
-            X, Y, n_repetitions, sample_weight, progress_bar
+            X=X,
+            Y=Y,
+            n_repetitions=n_repetitions,
+            sample_weight=sample_weight,
+            parametric=False,
+            progress_bar=progress_bar,
         )
 
         mm_data = bootstrap_df.loc["measurement"].drop(
