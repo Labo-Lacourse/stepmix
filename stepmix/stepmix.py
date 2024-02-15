@@ -1158,7 +1158,7 @@ class StepMix(BaseEstimator):
         parametric=False,
         progress_bar=True,
     ):
-        """Non-parametric boostrap of StepMix estimator. Obtain boostrapped parameters and some statistics
+        """Bootstrapping of a StepMix estimator. Obtain boostrapped parameters and some statistics
         (mean and standard deviation).
 
         If a covariate model is used in the structural model, the output keys "cw_mean" and "cw_std" are omitted.
