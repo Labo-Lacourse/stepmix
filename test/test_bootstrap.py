@@ -83,7 +83,8 @@ def test_nested_permutation(data_nested, kwargs_nested):
     "ignore::sklearn.exceptions.ConvergenceWarning"
 )  # Ignore convergence warnings for same reason
 @pytest.mark.parametrize("model", EMISSION_DICT.keys())
-def test_bootstrap(data, kwargs, model):
+@pytest.mark.parametrize("parametric", [False, True])
+def test_bootstrap(data, kwargs, model, parametric):
     """Call the boostrap procedure on all models and make sure they don't raise errors.
 
     The data may not make sense for the model. We therefore do not test a particular output here."""
@@ -100,12 +101,12 @@ def test_bootstrap(data, kwargs, model):
     model_1 = StepMix(n_steps=1, **kwargs)
     model_1.fit(X, Y)
 
-    if model != "covariate":
-        model_1.bootstrap_stats(X, Y, n_repetitions=3)
-    else:
-        # Should raise error. Can't sample from a covariate model
+    if parametric and model == "covariate":
+        # Parametric bootstrap is not implemented for covariate model
         with pytest.raises(NotImplementedError) as e_info:
-            model_1.bootstrap_stats(X, Y, n_repetitions=3)
+            model_1.bootstrap_stats(X, Y, parametric=parametric, n_repetitions=3)
+    else:
+        model_1.bootstrap_stats(X, Y, parametric=parametric, n_repetitions=3)
 
 
 def test_nested_bootstrap(data_nested, kwargs_nested):
