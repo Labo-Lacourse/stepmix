@@ -23,7 +23,7 @@ Additional features include:
 ![](https://drive.google.com/uc?export=view&id=1mB9-Y2N3biqHRyRVX5cvIdixBpoiyCG_)
 
 # Reference
-If you find StepMix useful, please consider citing our [arXiv preprint](https://arxiv.org/abs/2304.03853):
+If you find StepMix useful, please leave a ⭐ and consider citing our [arXiv preprint](https://arxiv.org/abs/2304.03853):
 ```
 @article{morin2023stepmix,
   title={StepMix: A Python Package for Pseudo-Likelihood Estimation of Generalized Mixture Models with External Variables},
