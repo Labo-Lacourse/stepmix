@@ -158,7 +158,7 @@ print("Printing verbose output\n")
 import pandas as pd
 from stepmix.stepmix import StepMix
 
-data = pd.read_csv("StepMix_Real_Data_GSS.csv")
+data = pd.read_csv("data/StepMix_Real_Data_GSS.csv")
 data = data.rename(
     columns={
         "realinc1000": "Income (1000)",

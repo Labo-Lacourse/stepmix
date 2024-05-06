@@ -17,3 +17,6 @@ python3 run_bakk_simulation_complete.py -s $1  # Replace 5 with 500 for the full
 # Real Data Example
 printf "\n\n\nSUBSECTION 6.4: APPLICATION EXAMPLE\n"
 python3 run_real_example.py --n_repetitions $2 --max_iter 10000  # Replace 5 with 100 for the full results
+# Package Comparison
+printf "\n\n\nSUBSECTION 6.5: PACKAGE COMPARISON (STEPMIX ONLY)\n"
+python3 run_package_comparison.py

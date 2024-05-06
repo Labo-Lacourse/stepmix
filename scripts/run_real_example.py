@@ -10,7 +10,7 @@ from scipy.stats import norm
 
 def main(n_repetitions, max_iter):
     # Load data
-    data = pd.read_csv("StepMix_Real_Data_GSS.csv")
+    data = pd.read_csv("data/StepMix_Real_Data_GSS.csv")
     data = data.rename(
         columns={
             "realinc1000": "Income (1000)",

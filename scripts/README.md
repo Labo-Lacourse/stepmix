@@ -2,7 +2,7 @@ Simulation and Real-Data Examples
 ==============================================
 This directory provides the scripts to reproduce the simulations and tables from the Computational examples section of the StepMix paper. The script to reproduce the application example is also accessible here.
 
-You will need to download the [GSS dataset](https://drive.google.com/file/d/1vdSzzBe7tPxfQ_X-hUuF3qidDd6CWFiL/view?usp=drive_link) and save it in the `scripts`directory.
+You will need to download the [datasets](https://drive.google.com/file/d/1LCtU4Oe8SwqeSORbanKNcnQkz6X9TG92/view?usp=sharing) and extract them in the `scripts/data`directory.
 
 Running Everything
 --------------------------
