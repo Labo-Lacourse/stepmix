@@ -90,12 +90,12 @@ Iris_MM = Iris_DF.iloc[:, [1, 2, 3, 4]]
 
 t0 = time.time()
 model_iris_MM = StepMix(
-    n_components=3,
-    measurement="continuous",
-    random_state=123,
+    n_components=3, 
+    measurement='gaussian_full',
+    random_state=3,
+    n_init=20,
     verbose=0,
-    progress_bar=False,
-)
+    progress_bar=False)
 
 model_iris_MM.fit(Iris_MM)
 t1 = time.time()
