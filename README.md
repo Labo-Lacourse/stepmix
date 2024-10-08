@@ -90,5 +90,13 @@ and covers:
    1. Multiclass Classification;
    1. Semi-Supervised Learning;
    1. Cross-Validation.
+6. [Deriving p-values in StepMix](https://colab.research.google.com/drive/1oaofJ68eHjahSPNty75npBzws3JuAjPO?usp=sharing): a tutorial demonstrating how to transform SM parameters into conventional regression coefficients and how to derive p-values.
+   The tutorial covers models with:
+   1. Continuous covariate;
+   2. Binary covariate;
+   3. Categorical covariate;
+   4. Multiple covariates (different distributions);
+   5. Binary distal outcome;
+
 
 ![](https://drive.google.com/uc?export=view&id=1gajwp-NTu9kSdK_7DBhpiX0SebEx5WMF)
