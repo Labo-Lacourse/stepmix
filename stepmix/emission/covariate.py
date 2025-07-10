@@ -1,4 +1,5 @@
 """Covariate emission model."""
+
 import numpy as np
 from scipy.special import softmax
 
@@ -33,7 +34,7 @@ class Covariate(Emission):
         lr=1e-3,
         intercept=True,
         method="newton-raphson",
-        **kwargs
+        **kwargs,
     ):
         super().__init__(**kwargs)
         self.tol = tol

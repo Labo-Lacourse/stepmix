@@ -1,4 +1,5 @@
 """Utility functions to compute 3-step bias corrections."""
+
 import numpy as np
 
 from stepmix import utils

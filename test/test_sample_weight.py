@@ -1,4 +1,5 @@
 """Test sample weights."""
+
 import numpy as np
 from stepmix.stepmix import StepMix
 from stepmix.bootstrap import bootstrap

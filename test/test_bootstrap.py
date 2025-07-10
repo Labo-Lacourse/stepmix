@@ -53,7 +53,8 @@ def fit_and_test_three_permutations(estimator, X, Y):
 def test_permutation(data, kwargs, model):
     """Fit all emission models, then permute latent classes and check if we still output the same likelihood.
 
-    The data may not make sense for the model. We therefore do not test a particular output here."""
+    The data may not make sense for the model. We therefore do not test a particular output here.
+    """
     X, Y = data
 
     # Use gaussians in the structural model, all other models are tested on the measurement data
@@ -87,7 +88,8 @@ def test_nested_permutation(data_nested, kwargs_nested):
 def test_bootstrap(data, kwargs, model, parametric):
     """Call the boostrap procedure on all models and make sure they don't raise errors.
 
-    The data may not make sense for the model. We therefore do not test a particular output here."""
+    The data may not make sense for the model. We therefore do not test a particular output here.
+    """
     X, Y = data
 
     # Use gaussians in the structural model, all other models are tested on the measurement data

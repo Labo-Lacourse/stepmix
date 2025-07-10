@@ -19,7 +19,8 @@ from stepmix.utils import max_one_hot, get_mixed_descriptor
 def test_emissions(data, kwargs, model):
     """Fit all emission models with verbose output (to test their print statements).
 
-    The data may not make sense for the model. We therefore do not test a particular output here."""
+    The data may not make sense for the model. We therefore do not test a particular output here.
+    """
     X, Y = data
 
     # Use gaussians in the structural model, all other models are tested on the measurement data

@@ -1,6 +1,8 @@
 """Emission models.
 
-Encapsulate the M-step and log-likelihood computations of different conditional emission models."""
+Encapsulate the M-step and log-likelihood computations of different conditional emission models.
+"""
+
 from abc import ABC, abstractmethod
 import copy
 

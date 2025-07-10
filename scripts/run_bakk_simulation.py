@@ -1,4 +1,5 @@
 """Reproduction of results from Bakk & Kuha (2018)"""
+
 import argparse
 import warnings
 

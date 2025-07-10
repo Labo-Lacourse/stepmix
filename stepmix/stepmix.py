@@ -1655,7 +1655,8 @@ class StepMixClassifier(StepMix):
     We call this a classifier since inference over Y is only supported if the structural
     model (sm) is set to 'binary', 'binary_nan', 'categorical', or 'categorical_nan'.
 
-    Also works with the aliases 'bernoulli', 'bernoulli_nan', 'multinoulli' and 'multinoulli_nan'."""
+    Also works with the aliases 'bernoulli', 'bernoulli_nan', 'multinoulli' and 'multinoulli_nan'.
+    """
 
     def _check_initial_parameters(self, X):
         utils.check_in(

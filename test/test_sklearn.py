@@ -1,4 +1,5 @@
 """Check compatibility with scikit-learn API"""
+
 from sklearn.utils.estimator_checks import parametrize_with_checks
 from sklearn.model_selection import GridSearchCV
 from stepmix.stepmix import StepMix

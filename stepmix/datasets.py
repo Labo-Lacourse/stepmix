@@ -1,4 +1,5 @@
 """Various synthetic datasets."""
+
 import warnings
 
 import numpy as np

@@ -1,4 +1,5 @@
 """All examples from Sections 5 and 6 of the paper."""
+
 # SECTION 5.2: ESTIMATORS
 # Section 5 only illustrates the API
 # Importing packages. Not in the paper

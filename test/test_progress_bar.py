@@ -1,4 +1,5 @@
 """Test progress bars."""
+
 import pytest
 
 from stepmix.stepmix import StepMix

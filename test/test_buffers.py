@@ -1,4 +1,5 @@
 """Test likelihood and parameter buffers of the main estimator."""
+
 import pytest
 from stepmix.stepmix import StepMix
 

@@ -2,6 +2,7 @@
 
 E.g., we expect 1-step to achieve a higher likelihood on the Bakk data than 3-step.
 """
+
 import pytest
 import pandas as pd
 from stepmix.datasets import data_bakk_complex
@@ -97,7 +98,8 @@ def test_steps_ll_complete(data_complete_large, kwargs_complete, n_steps_1, n_st
 def test_corrections_ll(data_large, kwargs_large, corr_1, corr_2):
     """Test binary measurements + gaussian unit structural on Bakk data with 3-step model and different corrections.
 
-    We expect BCH > No correction and ML > No correction in terms of final likelihood."""
+    We expect BCH > No correction and ML > No correction in terms of final likelihood.
+    """
     X, Y = data_large
 
     model_1 = StepMix(n_steps=3, correction=corr_1, **kwargs_large)

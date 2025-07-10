@@ -1,4 +1,5 @@
 """Gaussian emission models."""
+
 import numpy as np
 import pandas as pd
 from scipy.stats import multivariate_normal
@@ -53,7 +54,8 @@ class GaussianUnit(Emission):
 class Gaussian(Emission):
     """Gaussian emission model with various covariance options.
 
-    This class spoofs the scikit-learn Gaussian Mixture class by reusing the same attributes and calls its methods."""
+    This class spoofs the scikit-learn Gaussian Mixture class by reusing the same attributes and calls its methods.
+    """
 
     def __init__(
         self,

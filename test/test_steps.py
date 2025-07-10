@@ -1,4 +1,5 @@
 """High level tests where we call all estimation and correction methods."""
+
 import pytest
 
 import numpy as np

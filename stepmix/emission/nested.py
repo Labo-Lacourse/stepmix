@@ -1,4 +1,5 @@
 """Nested emission model with support for multiple random variables."""
+
 import copy
 
 import numpy as np
