@@ -1,12 +1,13 @@
 StepMix
 ==============================
 <a href="https://pypi.org/project/stepmix/"><img src="https://badge.fury.io/py/stepmix.svg" alt="PyPI version"></a>
+[![Paper](https://img.shields.io/badge/JSS-Paper-0474ac.svg)]()
 [![Build](https://github.com/Labo-Lacourse/stepmix/actions/workflows/pytest.yaml/badge.svg)](https://github.com/Labo-Lacourse/stepmix/actions/workflows/pytest.yaml)
 [![Documentation Status](https://readthedocs.org/projects/stepmix/badge/?version=latest)](https://stepmix.readthedocs.io/en/latest/index.html)
 <a href="https://github.com/psf/black"><img alt="Code style: black" src="https://img.shields.io/badge/code%20style-black-000000.svg"></a>
 [![Downloads](https://static.pepy.tech/badge/stepmix)](https://pepy.tech/project/stepmix)
 [![Downloads](https://static.pepy.tech/badge/stepmix/month)](https://pepy.tech/project/stepmix)
-[![arXiv](https://img.shields.io/badge/arXiv-2304.03853-b31b1b.svg)](https://arxiv.org/abs/2304.03853)
+[![DOI](https://img.shields.io/badge/DOI-10.18637/jss.v113.i08-E66A0A.svg)](https://doi.org/10.18637%2Fjss.v113.i08)
 
 *For StepMixR, please refer to <a href="https://github.com/Labo-Lacourse/stepmixr">this repository.</a>*
 
@@ -23,13 +24,21 @@ Additional features include:
 ![](https://drive.google.com/uc?export=view&id=1mB9-Y2N3biqHRyRVX5cvIdixBpoiyCG_)
 
 # Reference
-If you find StepMix useful, please leave a ⭐ and consider citing our [arXiv preprint](https://arxiv.org/abs/2304.03853):
+If you find StepMix useful, please leave a ⭐ and consider citing our [Journal of Statistical Software paper]():
 ```
-@article{morin2023stepmix,
-  title={StepMix: A Python Package for Pseudo-Likelihood Estimation of Generalized Mixture Models with External Variables},
-  author={Morin, Sacha and Legault, Robin and Lalibert{\'e}, F{\'e}lix and Bakk, Zsuzsa and Gigu{\`e}re, Charles-{\'E}douard and de la Sablonni{\`e}re, Roxane and Lacourse, {\'E}ric},
-  journal={arXiv preprint arXiv:2304.03853},
-  year={2023}
+@Article{,
+  title = {{StepMix}: A {Python} Package for Pseudo-Likelihood
+    Estimation of Generalized Mixture Models with External
+    Variables},
+  author = {Sacha Morin and Robin Legault and F{\'e}lix Lalibert{\'e}
+    and Zsuzsa Bakk and Charles-{\'E}douard Gigu{\`e}re and Roxane
+    {de la Sablonni{\`e}re} and {\'E}ric Lacourse},
+  journal = {Journal of Statistical Software},
+  year = {2025},
+  volume = {113},
+  number = {8},
+  pages = {1--39},
+  doi = {10.18637/jss.v113.i08},
 }
 ```
 
