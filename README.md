@@ -1,7 +1,7 @@
 StepMix
 ==============================
 <a href="https://pypi.org/project/stepmix/"><img src="https://badge.fury.io/py/stepmix.svg" alt="PyPI version"></a>
-[![Paper](https://img.shields.io/badge/JSS-Paper-0474ac.svg)]()
+[![Paper](https://img.shields.io/badge/JSS-Paper-0474ac.svg)](https://www.jstatsoft.org/article/view/v113i08)
 [![Build](https://github.com/Labo-Lacourse/stepmix/actions/workflows/pytest.yaml/badge.svg)](https://github.com/Labo-Lacourse/stepmix/actions/workflows/pytest.yaml)
 [![Documentation Status](https://readthedocs.org/projects/stepmix/badge/?version=latest)](https://stepmix.readthedocs.io/en/latest/index.html)
 <a href="https://github.com/psf/black"><img alt="Code style: black" src="https://img.shields.io/badge/code%20style-black-000000.svg"></a>
@@ -24,7 +24,7 @@ Additional features include:
 ![](https://drive.google.com/uc?export=view&id=1mB9-Y2N3biqHRyRVX5cvIdixBpoiyCG_)
 
 # Reference
-If you find StepMix useful, please leave a ⭐ and consider citing our [Journal of Statistical Software paper]():
+If you find StepMix useful, please leave a ⭐ and consider citing our [Journal of Statistical Software paper](https://www.jstatsoft.org/article/view/v113i08):
 ```
 @Article{,
   title = {{StepMix}: A {Python} Package for Pseudo-Likelihood
