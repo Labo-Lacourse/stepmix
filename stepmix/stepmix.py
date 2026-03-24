@@ -15,14 +15,17 @@ import pandas as pd
 import numpy as np
 
 from scipy.special import logsumexp
-from sklearn.mixture._base import BaseEstimator
+from sklearn.base import BaseEstimator
 from sklearn.exceptions import ConvergenceWarning
 from sklearn.utils.validation import (
     check_random_state,
     check_is_fitted,
+    check_array,
     _check_sample_weight,
 )
 from sklearn.cluster import KMeans
+
+from ._compat import validate_data, _finite_param
 import tqdm
 
 from . import utils
@@ -464,24 +467,24 @@ class StepMix(BaseEstimator):
             Validated structural data or None if not provided.
 
         """
-        # We use reset True since we take care of dimensions in this class (and not in the parent)
         if X is not None:
             X_names = utils.extract_column_names(X)
-            X = self._validate_data(
+            X = validate_data(
+                self,
                 X,
                 dtype=[np.float64, np.float32],
-                reset=True,
-                force_all_finite=self._force_all_finite_mm,
+                reset=reset,
+                **_finite_param(self._force_all_finite_mm),
             )
         if Y is not None:
             # Handle 1D Y array
             Y_names = utils.extract_column_names(Y)
-            Y = self._validate_data(
+            # check_array (not validate_data) to avoid overwriting n_features_in_
+            Y = check_array(
                 Y,
                 dtype=[np.float64, np.float32],
-                reset=True,
                 ensure_2d=False,
-                force_all_finite=self._force_all_finite_sm,
+                **_finite_param(self._force_all_finite_sm),
             )
 
             # Force a matrix format
@@ -1237,7 +1240,7 @@ class StepMix(BaseEstimator):
 
     ########################################################################################################################
     # INFERENCE
-    def score(self, X, Y=None, sample_weight=None):
+    def score(self, X, Y=None, sample_weight=None, y=None):
         """Compute the average log-likelihood over samples.
 
         Setting Y=None will ignore the structural likelihood.
@@ -1261,6 +1264,9 @@ class StepMix(BaseEstimator):
         avg_ll: float
             Average log likelihood over samples.
         """
+        if y is not None and Y is None:
+            Y = y
+
         check_is_fitted(self)
         X, Y = self._check_x_y(X, Y)
         sample_weight = _check_sample_weight(sample_weight, X, dtype=X.dtype, copy=True)
@@ -1495,7 +1501,7 @@ class StepMix(BaseEstimator):
 
         return self._sm.predict_proba(log_resp)
 
-    def predict(self, X, Y=None):
+    def predict(self, X, Y=None, y=None):
         """Predict the cluster/latent class/component labels for the data samples in X.
 
         Optionally, an array-like Y can be provided to predict the labels based on both the measurement and structural
@@ -1511,11 +1517,15 @@ class StepMix(BaseEstimator):
             List of n_features-dimensional data points to fit the structural model. Each row
             corresponds to a single data point. If the data is categorical, by default it should be
             0-indexed and integer encoded (not one-hot encoded).
+        y : array-like of shape (n_samples, n_features_structural), default=None
+            Alias for Y to maintain scikit-learn API compatibility.
         Returns
         -------
         labels : array, shape (n_samples,)
             Component labels.
         """
+        if y is not None and Y is None:
+            Y = y
         return self.predict_class(X, Y)
 
     def predict_proba(self, X, Y=None):

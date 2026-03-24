@@ -8,7 +8,25 @@ jobs:
     runs-on: ubuntu-22.04
     strategy:
       matrix:
-        python-version: ["3.7", "3.8", "3.9", "3.10"]
+        python-version: ["3.7", "3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]
+        sklearn-version: ["1.5.0", "1.6.1", "1.8.0", ""]
+        exclude:
+          # sklearn 1.5+ requires Python >=3.9
+          - python-version: "3.7"
+            sklearn-version: "1.5.0"
+          - python-version: "3.8"
+            sklearn-version: "1.5.0"
+          - python-version: "3.7"
+            sklearn-version: "1.6.1"
+          - python-version: "3.8"
+            sklearn-version: "1.6.1"
+          - python-version: "3.7"
+            sklearn-version: "1.8.0"
+          - python-version: "3.8"
+            sklearn-version: "1.8.0"
+          # sklearn 1.5 doesn't have wheels for Python 3.13
+          - python-version: "3.13"
+            sklearn-version: "1.5.0"
 
     steps:
       - uses: actions/checkout@v3
@@ -21,6 +39,10 @@ jobs:
           python -m pip install --upgrade pip
           pip install .[dev]
           pip install flake8
+      - name: Pin scikit-learn version (if specified)
+        if: matrix.sklearn-version != ''
+        run: |
+          pip install scikit-learn==${{ matrix.sklearn-version }}
       - name: Lint with flake8
         run: |
           # stop the build if there are Python syntax errors or undefined names
