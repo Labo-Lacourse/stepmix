@@ -28,7 +28,7 @@ keywords = ["clustering", "mixtures", "lca", "em", "latent-class-analysis", "exp
 dependencies = [
     "numpy",
     "pandas",
-    "scikit-learn >= 1.0.0",
+    "scikit-learn >= 1.0.0, <=1.5.0",
     "scipy",
     "tqdm",
 ]
@@ -41,7 +41,7 @@ dev = ["black", "bumpver", "flit", "pytest", "sphinx == 5.3.0", "sphinx-rtd-them
 Homepage = "https://stepmix.readthedocs.io/en/latest/"
 
 [tool.bumpver]
-current_version = "2.2.2"
+current_version = "2.2.3"
 version_pattern = "MAJOR.MINOR.PATCH"
 commit_message = "bump version {old_version} -> {new_version}"
 commit = true
