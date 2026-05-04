@@ -21,6 +21,7 @@ from sklearn.utils.validation import (
     check_random_state,
     check_is_fitted,
     _check_sample_weight,
+    validate_data,
 )
 from sklearn.cluster import KMeans
 import tqdm
@@ -467,21 +468,23 @@ class StepMix(BaseEstimator):
         # We use reset True since we take care of dimensions in this class (and not in the parent)
         if X is not None:
             X_names = utils.extract_column_names(X)
-            X = self._validate_data(
+            X = validate_data(
+                self,
                 X,
                 dtype=[np.float64, np.float32],
                 reset=True,
-                force_all_finite=self._force_all_finite_mm,
+                ensure_all_finite=self._force_all_finite_mm,
             )
         if Y is not None:
             # Handle 1D Y array
             Y_names = utils.extract_column_names(Y)
-            Y = self._validate_data(
+            Y = validate_data(
+                self,
                 Y,
                 dtype=[np.float64, np.float32],
                 reset=True,
                 ensure_2d=False,
-                force_all_finite=self._force_all_finite_sm,
+                ensure_all_finite=self._force_all_finite_sm,
             )
 
             # Force a matrix format
