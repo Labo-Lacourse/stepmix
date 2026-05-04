@@ -502,8 +502,7 @@ class StepMix(BaseEstimator):
         else:
             if X is not None and X.shape[1] != self.measurement_in_:
                 raise ValueError(
-                    f"X has {X.shape[1]} features, but StepMix is expecting {self.measurement_in_} measurement"
-                    f" features as input."
+                    f"X has {X.shape[1]} features, but StepMix is expecting {self.measurement_in_} features as input."
                 )
 
             if (
