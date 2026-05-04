@@ -1239,7 +1239,7 @@ class StepMix(BaseEstimator):
 
     ########################################################################################################################
     # INFERENCE
-    def score(self, X, Y=None, sample_weight=None):
+    def score(self, X, Y=None, sample_weight=None, y=None):
         """Compute the average log-likelihood over samples.
 
         Setting Y=None will ignore the structural likelihood.
@@ -1263,6 +1263,8 @@ class StepMix(BaseEstimator):
         avg_ll: float
             Average log likelihood over samples.
         """
+        if y is not None and Y is None:
+            Y = y
         check_is_fitted(self)
         X, Y = self._check_x_y(X, Y)
         sample_weight = _check_sample_weight(sample_weight, X, dtype=X.dtype, copy=True)
