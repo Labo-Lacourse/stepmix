@@ -615,7 +615,7 @@ class StepMix(BaseEstimator):
         df = self.get_parameters_df(x_names, y_names).loc[
             "measurement", "class_weights"
         ]
-        return self._pivot_cw(df, aggfunc=np.mean)  # Mean of one value is okay
+        return self._pivot_cw(df, aggfunc="mean")  # Mean of one value is okay
 
     def get_mm_df(self, x_names=None, y_names=None):
         """Get measurement model parameters as DataFrame with classes as columns.
@@ -636,7 +636,7 @@ class StepMix(BaseEstimator):
             .loc["measurement"]
             .drop("class_weights", level=0, errors="ignore")
         )
-        return self._pivot_param(df, aggfunc=np.mean)  # Mean of one value is okay
+        return self._pivot_param(df, aggfunc="mean")  # Mean of one value is okay
 
     def get_sm_df(self, x_names=None, y_names=None):
         """Get structural model parameters as DataFrame with classes as columns.
@@ -655,7 +655,7 @@ class StepMix(BaseEstimator):
         if not hasattr(self, "_sm"):
             raise ValueError("No structural model fitted.")
         df = self.get_parameters_df(x_names, y_names).loc["structural"]
-        return self._pivot_param(df, aggfunc=np.mean)  # Mean of one value if okay
+        return self._pivot_param(df, aggfunc="mean")  # Mean of one value if okay
 
     def set_parameters(self, params):
         """Set parameters.
@@ -1206,22 +1206,22 @@ class StepMix(BaseEstimator):
         result = dict()
         result["samples"] = bootstrap_df
         result["rep_stats"] = bootstrap_stats
-        result["mm_mean"] = self._pivot_param(mm_data, np.mean)
-        result["mm_std"] = self._pivot_param(mm_data, np.std)
+        result["mm_mean"] = self._pivot_param(mm_data, "mean")
+        result["mm_std"] = self._pivot_param(mm_data, "std")
 
         if hasattr(self, "_sm"):
             sm_data = bootstrap_df.loc["structural"]
-            result["sm_mean"] = self._pivot_param(sm_data, np.mean)
-            result["sm_std"] = self._pivot_param(sm_data, np.std)
+            result["sm_mean"] = self._pivot_param(sm_data, "mean")
+            result["sm_std"] = self._pivot_param(sm_data, "std")
 
         if not self._conditional_likelihood:
             cw_data = bootstrap_df.loc["measurement", "class_weights"]
-            result["cw_mean"] = self._pivot_cw(cw_data, np.mean)
-            result["cw_std"] = self._pivot_cw(cw_data, np.std)
+            result["cw_mean"] = self._pivot_cw(cw_data, "mean")
+            result["cw_std"] = self._pivot_cw(cw_data, "std")
 
         return result
 
-    def _pivot_param(self, df, aggfunc=np.mean):
+    def _pivot_param(self, df, aggfunc="mean"):
         # Standard pivot function that we reuse for bootstrapping
         return pd.pivot_table(
             df,
@@ -1231,7 +1231,7 @@ class StepMix(BaseEstimator):
             aggfunc=aggfunc,
         )
 
-    def _pivot_cw(self, df, aggfunc=np.std):
+    def _pivot_cw(self, df, aggfunc="std"):
         # Standard pivot function that we reuse for bootstrapping
         return pd.pivot_table(
             df, columns="class_no", values="value", index=["param"], aggfunc=aggfunc
