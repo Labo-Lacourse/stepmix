@@ -130,7 +130,8 @@ class Multinoulli(Emission):
 
     Attributes
     ----------
-    pis[k*L+l,c]=P[ X[n,k*L+l]=1 | n belongs to class c]
+    pis : ndarray
+        Emission probabilities where ``pis[k*L+l, c] = P(X[n,k*L+l]=1 | n belongs to class c)``.
     """
 
     def __init__(
