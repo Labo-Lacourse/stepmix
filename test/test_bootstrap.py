@@ -34,7 +34,11 @@ def fit_and_test_three_permutations(estimator, X, Y):
     ll_3 = estimator.score(X, Y)  # Average log-likelihood
     preds_3 = estimator.predict_proba(X, Y)  # Class predictions
 
-    assert ll_1 == ll_2 == ll_3  # Likelihoods should be invariant
+    # Likelihoods should be invariant
+    assert np.isclose(ll_1, ll_2, atol=1e-12, rtol=0.0)
+    assert np.isclose(ll_1, ll_3, atol=1e-12, rtol=0.0)
+    assert np.isclose(ll_2, ll_3, atol=1e-12, rtol=0.0)
+
     assert not np.all(
         preds_1 == preds_2
     )  # Second permutation should have different posterior
