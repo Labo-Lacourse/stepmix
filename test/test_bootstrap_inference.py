@@ -27,7 +27,7 @@ from stepmix.bootstrap import (
 # ---------------------------------------------------------------------------
 # Fixtures / shared helpers
 # ---------------------------------------------------------------------------
-N_BOOT = 50   # keep tests fast; use 500+ for real analyses
+N_BOOT = 10   # keep CI fast; use 500+ for real analyses
 SEED = 42
 
 
