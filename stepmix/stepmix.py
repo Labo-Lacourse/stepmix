@@ -1151,6 +1151,40 @@ class StepMix(BaseEstimator):
             random_state=random_state,
         )
 
+    
+    def wald_test(self, X, Y=None, n_repetitions=500, ci_level=0.95, correction=None, progress_bar=True, random_state=None):
+        """Runs non-parametric bootstrap over the full 3-step procedure and returns Wald test results.
+
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
+            Measurement data (same as used to fit the model).
+        Y : array-like of shape (n_samples, n_outcome_features)
+            Outcome data (same as used to fit the structural model).
+        n_repetitions : int, default=500
+            Number of bootstrap replications.  >= 500 recommended.
+        ci_level : float, default=0.95
+            Confidence level for bootstrap percentile CIs.  E.g. 0.95 -> 95 % CI.
+        correction : {None, "Bonferroni", "BH"}, default=None
+            Multiple-comparison correction applied to pairwise p-values.
+        progress_bar : bool, default=True
+            Show a tqdm progress bar.
+        random_state : int, default=None
+            Random seed for the bootstrap.
+
+        Returns
+        -------
+        wt : WaldTest3Step
+            A fitted object providing `.summary()`, `.pairwise_`, and `.omnibus_`.
+        """
+        from stepmix.bootstrap import WaldTest3Step
+        wt = WaldTest3Step(self, ci_level=ci_level)
+        wt.fit_bootstrap(
+            X, Y, n_repetitions=n_repetitions, correction=correction, 
+            progress_bar=progress_bar, random_state=random_state
+        )
+        return wt
+
     def bootstrap_stats(
         self,
         X,

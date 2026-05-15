@@ -6,6 +6,8 @@ import warnings
 import copy
 
 import numpy as np
+from scipy.stats import chi2, norm
+from typing import Optional, Union, Sequence
 import tqdm
 
 from sklearn.base import clone
@@ -321,3 +323,643 @@ def blrt_sweep(
         print("\nBLRT Sweep Results")
         print(df.round(4))
     return df
+
+
+def _fdr_bh(p_values: np.ndarray) -> np.ndarray:
+    """Benjamini-Hochberg FDR correction (two-stage).
+
+    Parameters
+    ----------
+    p_values : 1-D array of raw p-values (NaN is preserved).
+
+    Returns
+    -------
+    adjusted : 1-D array of BH-corrected p-values.
+    """
+    n = len(p_values)
+    finite = np.isfinite(p_values)
+    adjusted = np.full(n, np.nan)
+    if finite.sum() == 0:
+        return adjusted
+
+    idx = np.where(finite)[0]
+    p = p_values[idx]
+    order = np.argsort(p)
+    ranks = np.empty_like(order)
+    ranks[order] = np.arange(1, len(p) + 1)
+    adj = np.minimum(1.0, p * len(p) / ranks)
+    # Enforce monotonicity (step-down)
+    for i in range(len(adj) - 2, -1, -1):
+        adj[order[i]] = min(adj[order[i]], adj[order[i + 1]])
+    adjusted[idx] = adj
+    return adjusted
+
+
+def _bonferroni(p_values: np.ndarray) -> np.ndarray:
+    n = len(p_values)
+    finite = np.isfinite(p_values)
+    adjusted = np.full(n, np.nan)
+    adjusted[finite] = np.minimum(1.0, p_values[finite] * n)
+    return adjusted
+
+
+def _build_contrast_matrix(K: int) -> np.ndarray:
+    """Build a (K-1) × K contrast matrix that compares each of the first
+    K-1 classes to the last class.
+
+    C @ θ = [θ₀ - θ_{K-1}, θ₁ - θ_{K-1}, ..., θ_{K-2} - θ_{K-1}]
+    """
+    C = np.zeros((K - 1, K))
+    for i in range(K - 1):
+        C[i, i] = 1.0
+        C[i, K - 1] = -1.0
+    return C
+
+
+def _stars(p: float) -> str:
+    if np.isnan(p):
+        return "   "
+    if p < 0.001:
+        return "***"
+    if p < 0.01:
+        return "** "
+    if p < 0.05:
+        return "*  "
+    if p < 0.1:
+        return ".  "
+    return "   "
+
+
+# ---------------------------------------------------------------------------
+# Core class
+# ---------------------------------------------------------------------------
+
+class WaldTest3Step:
+    """Wald tests and p-values for 3-step LCA distal outcome analysis.
+
+    After fitting a :class:`stepmix.stepmix.StepMix` model with a structural
+    (outcome) component, this class runs a non-parametric bootstrap over the
+    full 3-step procedure and then uses the resulting sampling distribution to
+    compute standard errors, confidence intervals, and Wald tests.
+
+    Parameters
+    ----------
+    model : fitted StepMix instance
+        Must have been fitted with a structural model (``n_steps=3`` or via
+        manual ``m_step_structural``).  The structural model type can be any
+        continuous, binary, or categorical emission.
+    ci_level : float, default=0.95
+        Confidence level for bootstrap percentile CIs.  E.g. 0.95 → 95 % CI.
+
+    Attributes
+    ----------
+    estimates_ : pd.DataFrame
+        Point estimates, bootstrap SE, and confidence intervals per
+        (outcome variable, latent class).
+    pairwise_ : pd.DataFrame
+        Pairwise Wald test results (Δ, SE_Δ, z, χ², df, p-value, …) for
+        every (outcome variable, class-pair) combination.
+    omnibus_ : pd.DataFrame
+        Global omnibus Wald test result (χ², df, p-value) per outcome variable.
+    bootstrap_samples_ : pd.DataFrame
+        Raw bootstrap parameter draws (long-form, as returned by
+        :func:`stepmix.bootstrap.bootstrap`).
+    """
+
+    def __init__(self, model, ci_level: float = 0.95):
+        check_is_fitted(model)
+        if not hasattr(model, "_sm"):
+            raise ValueError(
+                "The StepMix model has no structural model. Fit it with Y data "
+                "and a structural specification before using WaldTest3Step."
+            )
+        self.model = model
+        self.ci_level = ci_level
+
+        self._is_fitted = False
+        self.bootstrap_samples_: Optional[pd.DataFrame] = None
+        self.estimates_: Optional[pd.DataFrame] = None
+        self.pairwise_: Optional[pd.DataFrame] = None
+        self.omnibus_: Optional[pd.DataFrame] = None
+
+    # ------------------------------------------------------------------
+    # Fitting
+    # ------------------------------------------------------------------
+
+    def fit_bootstrap(
+        self,
+        X,
+        Y,
+        n_repetitions: int = 500,
+        sample_weight=None,
+        progress_bar: bool = True,
+        random_state: Optional[int] = None,
+        correction: Optional[str] = None,
+    ) -> "WaldTest3Step":
+        """Run the bootstrap and compute all test statistics.
+
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
+            Measurement data (same as used to fit the model).
+        Y : array-like of shape (n_samples, n_outcome_features)
+            Outcome data (same as used to fit the structural model).
+        n_repetitions : int, default=500
+            Number of bootstrap replications.  ≥ 500 recommended for stable
+            95 % CIs; ≥ 1000 for 99 % CIs or for p-values < 0.01.
+        sample_weight : array-like of shape (n_samples,), default=None
+            Per-sample weights forwarded to the bootstrap.
+        progress_bar : bool, default=True
+            Show a tqdm progress bar.
+        random_state : int, default=None
+            Random seed for the bootstrap.
+        correction : {None, "Bonferroni", "BH"}, default=None
+            Multiple-comparison correction applied to pairwise p-values.
+            ``None`` → no correction; ``"Bonferroni"`` → Bonferroni-Holm;
+            ``"BH"`` → Benjamini-Hochberg FDR.
+
+        Returns
+        -------
+        self
+        """
+        
+        boot_df, _ = bootstrap(
+            self.model,
+            X,
+            Y,
+            n_repetitions=n_repetitions,
+            sample_weight=sample_weight,
+            progress_bar=progress_bar,
+            random_state=random_state,
+            identify_classes=True,
+        )
+        self.bootstrap_samples_ = boot_df
+
+        self._build_estimates()
+        self._build_pairwise(correction=correction)
+        self._build_omnibus()
+        self._is_fitted = True
+        return self
+
+    # ------------------------------------------------------------------
+    # Building result tables (internal)
+    # ------------------------------------------------------------------
+
+    def _get_structural_boot(self) -> pd.DataFrame:
+        """Return bootstrap draws for the structural model only."""
+        if "structural" not in self.bootstrap_samples_.index.get_level_values("model"):
+            raise ValueError(
+                "No structural parameters found in bootstrap samples. "
+                "Make sure the model has a structural component."
+            )
+        return self.bootstrap_samples_.loc["structural"].copy()
+
+    def _build_estimates(self) -> None:
+        """Build the estimates DataFrame from bootstrap samples."""
+        sm_df = self._get_structural_boot()
+        K = self.model.n_components
+        alpha = 1.0 - self.ci_level
+        ci_lo_label = f"CI_{self.ci_level:.0%}_lo"
+        ci_hi_label = f"CI_{self.ci_level:.0%}_hi"
+
+        # Point estimates: use the long-form parameters_df (has class_no as a column)
+        point_df = (
+            self.model.get_parameters_df()
+            .loc["structural"]
+            .reset_index()
+        )  # columns: model_name, param, class_no, variable, value
+
+        records = []
+        for _, row in point_df.iterrows():
+            model_name = row["model_name"]
+            param = row["param"]
+            variable = row["variable"]
+            class_no = int(row["class_no"])
+            point_est = row["value"]
+
+            # Extract the corresponding bootstrap draws for this (class, variable, param)
+            try:
+                mask = (
+                    (sm_df.index.get_level_values("model_name") == model_name)
+                    & (sm_df.index.get_level_values("param") == param)
+                    & (sm_df.index.get_level_values("class_no") == class_no)
+                    & (sm_df.index.get_level_values("variable") == variable)
+                )
+                draws = sm_df.loc[mask, "value"].values
+            except Exception:
+                draws = np.array([])
+
+            if len(draws) >= 2:
+                se = float(np.std(draws, ddof=1))
+                ci_lo = float(np.percentile(draws, 100 * alpha / 2))
+                ci_hi = float(np.percentile(draws, 100 * (1 - alpha / 2)))
+            else:
+                se = ci_lo = ci_hi = np.nan
+
+            records.append(
+                dict(
+                    model_name=model_name,
+                    param=param,
+                    variable=variable,
+                    class_no=class_no,
+                    estimate=point_est,
+                    se=se,
+                    ci_lo=ci_lo,
+                    ci_hi=ci_hi,
+                )
+            )
+
+        df = pd.DataFrame.from_records(records)
+        df.rename(columns={"ci_lo": ci_lo_label, "ci_hi": ci_hi_label}, inplace=True)
+        df.set_index(["model_name", "param", "variable", "class_no"], inplace=True)
+        df.sort_index(inplace=True)  # required for efficient MultiIndex slicing
+        self.estimates_ = df
+
+    def _get_boot_matrix(self, model_name: str, param: str, variable: str) -> np.ndarray:
+        """Return a (n_bootstrap × K) matrix of draws for a given variable.
+
+        Rows = bootstrap replications, columns = latent classes (0 … K-1).
+        """
+        sm_df = self._get_structural_boot()
+        K = self.model.n_components
+        n_reps = sm_df["rep"].nunique()
+
+        mat = np.full((n_reps, K), np.nan)
+        for k in range(K):
+            mask = (
+                (sm_df.index.get_level_values("model_name") == model_name)
+                & (sm_df.index.get_level_values("param") == param)
+                & (sm_df.index.get_level_values("class_no") == k)
+                & (sm_df.index.get_level_values("variable") == variable)
+            )
+            sub = sm_df.loc[mask].sort_values("rep")
+            if len(sub) > 0:
+                mat[:, k] = sub["value"].values[:n_reps]
+        return mat  # (B, K)
+
+    def _build_pairwise(self, correction: Optional[str] = None) -> None:
+        """Build pairwise Wald-test DataFrame."""
+        K = self.model.n_components
+        sm_df = self._get_structural_boot()
+
+        # All (model_name, param, variable) combinations
+        idx_cols = ["model_name", "param", "variable"]
+        unique_vars = (
+            sm_df.reset_index()[idx_cols]
+            .drop_duplicates()
+            .values.tolist()
+        )
+
+        pairs = list(itertools.combinations(range(K), 2))
+        records = []
+
+        for model_name, param, variable in unique_vars:
+            mat = self._get_boot_matrix(model_name, param, variable)  # (B, K)
+            if np.any(np.isnan(mat)):
+                continue
+            cov_mat = np.cov(mat.T, ddof=1)  # (K, K)
+
+            # Point estimates
+            try:
+                theta = (
+                    self.estimates_
+                    .loc[(model_name, param, variable)]
+                    ["estimate"]
+                    .values  # shape (K,)
+                )
+            except KeyError:
+                continue
+
+            for j, k in pairs:
+                delta = float(theta[j] - theta[k])
+                var_delta = float(cov_mat[j, j] + cov_mat[k, k] - 2 * cov_mat[j, k])
+                if var_delta <= 0:
+                    se_delta = np.nan
+                    z = np.nan
+                    chi2_stat = np.nan
+                    p_val = np.nan
+                else:
+                    se_delta = float(np.sqrt(var_delta))
+                    z = delta / se_delta
+                    chi2_stat = z ** 2
+                    p_val = float(2.0 * (1.0 - norm.cdf(abs(z))))
+
+                records.append(
+                    dict(
+                        model_name=model_name,
+                        param=param,
+                        variable=variable,
+                        class_j=j,
+                        class_k=k,
+                        theta_j=float(theta[j]),
+                        theta_k=float(theta[k]),
+                        delta=delta,
+                        se_delta=se_delta,
+                        z=z,
+                        chi2=chi2_stat,
+                        df=1,
+                        p_value=p_val,
+                    )
+                )
+
+        df = pd.DataFrame.from_records(records)
+        if len(df) == 0:
+            self.pairwise_ = df
+            return
+
+        # Multiple-comparison correction
+        raw_p = df["p_value"].values.copy()
+        if correction is None:
+            df["p_adj"] = raw_p
+            df["correction"] = "none"
+        elif correction.lower() == "bonferroni":
+            df["p_adj"] = _bonferroni(raw_p)
+            df["correction"] = "Bonferroni"
+        elif correction.lower() in ("bh", "fdr"):
+            df["p_adj"] = _fdr_bh(raw_p)
+            df["correction"] = "BH (FDR)"
+        else:
+            warnings.warn(f"Unknown correction '{correction}'. Skipping.")
+            df["p_adj"] = raw_p
+            df["correction"] = "none"
+
+        df["sig"] = df["p_adj"].apply(_stars)
+        df.set_index(["model_name", "param", "variable", "class_j", "class_k"], inplace=True)
+        self.pairwise_ = df
+
+    def _build_omnibus(self) -> None:
+        """Build omnibus Wald-test DataFrame (one row per outcome variable)."""
+        K = self.model.n_components
+        if K < 2:
+            warnings.warn("Only one class – omnibus test not applicable.")
+            self.omnibus_ = pd.DataFrame()
+            return
+
+        sm_df = self._get_structural_boot()
+        idx_cols = ["model_name", "param", "variable"]
+        unique_vars = (
+            sm_df.reset_index()[idx_cols]
+            .drop_duplicates()
+            .values.tolist()
+        )
+        C = _build_contrast_matrix(K)  # (K-1) × K
+        records = []
+
+        for model_name, param, variable in unique_vars:
+            mat = self._get_boot_matrix(model_name, param, variable)  # (B, K)
+            if np.any(np.isnan(mat)):
+                continue
+            Sigma = np.cov(mat.T, ddof=1)  # (K, K)
+
+            try:
+                theta = (
+                    self.estimates_
+                    .loc[(model_name, param, variable)]
+                    ["estimate"]
+                    .values  # (K,)
+                )
+            except KeyError:
+                continue
+
+            # Contrast: C @ theta ~ N(0, C @ Sigma @ C^T) under H0
+            C_theta = C @ theta           # (K-1,)
+            C_Sigma_CT = C @ Sigma @ C.T  # (K-1) × (K-1)
+
+            try:
+                C_Sigma_CT_inv = np.linalg.inv(C_Sigma_CT)
+                W = float(C_theta @ C_Sigma_CT_inv @ C_theta)
+            except np.linalg.LinAlgError:
+                W = np.nan
+
+            df_test = K - 1
+            p_val = float(1.0 - chi2.cdf(W, df=df_test)) if np.isfinite(W) else np.nan
+
+            records.append(
+                dict(
+                    model_name=model_name,
+                    param=param,
+                    variable=variable,
+                    chi2=W,
+                    df=df_test,
+                    p_value=p_val,
+                    sig=_stars(p_val),
+                )
+            )
+
+        df = pd.DataFrame.from_records(records)
+        if len(df) > 0:
+            df.set_index(["model_name", "param", "variable"], inplace=True)
+        self.omnibus_ = df
+
+    # ------------------------------------------------------------------
+    # Public accessors
+    # ------------------------------------------------------------------
+
+    def _check_fitted(self):
+        if not self._is_fitted:
+            raise RuntimeError(
+                "Call fit_bootstrap() before accessing test results."
+            )
+
+    def get_estimates(
+        self,
+        variable: Optional[str] = None,
+        class_no: Optional[int] = None,
+    ) -> pd.DataFrame:
+        """Return the estimates table, optionally filtered.
+
+        Parameters
+        ----------
+        variable : str, optional
+            Filter to a specific outcome variable (e.g. ``"feature_0"``).
+        class_no : int, optional
+            Filter to a specific latent class index.
+
+        Returns
+        -------
+        pd.DataFrame with columns [estimate, se, CI_xx%_lo, CI_xx%_hi].
+        """
+        self._check_fitted()
+        df = self.estimates_.reset_index()
+        if variable is not None:
+            df = df[df["variable"] == variable]
+        if class_no is not None:
+            df = df[df["class_no"] == class_no]
+        return df.set_index(["model_name", "param", "variable", "class_no"])
+
+    def get_pairwise(
+        self,
+        variable: Optional[str] = None,
+        classes: Optional[tuple] = None,
+    ) -> pd.DataFrame:
+        """Return pairwise test table.
+
+        Parameters
+        ----------
+        variable : str, optional
+            Filter to a specific outcome variable.
+        classes : tuple (j, k), optional
+            Filter to a specific class pair.
+
+        Returns
+        -------
+        pd.DataFrame with columns [theta_j, theta_k, delta, se_delta, z, chi2, df, p_value, p_adj, sig].
+        """
+        self._check_fitted()
+        df = self.pairwise_.reset_index()
+        if variable is not None:
+            df = df[df["variable"] == variable]
+        if classes is not None:
+            j, k = classes
+            df = df[(df["class_j"] == j) & (df["class_k"] == k)]
+        return df.set_index(["model_name", "param", "variable", "class_j", "class_k"])
+
+    def get_omnibus(self, variable: Optional[str] = None) -> pd.DataFrame:
+        """Return omnibus test table.
+
+        Parameters
+        ----------
+        variable : str, optional
+            Filter to a specific outcome variable.
+
+        Returns
+        -------
+        pd.DataFrame with columns [chi2, df, p_value, sig].
+        """
+        self._check_fitted()
+        df = self.omnibus_.reset_index()
+        if variable is not None:
+            df = df[df["variable"] == variable]
+        return df.set_index(["model_name", "param", "variable"])
+
+    # ------------------------------------------------------------------
+    # Summary
+    # ------------------------------------------------------------------
+
+    def summary(
+        self,
+        digits: int = 4,
+        show_omnibus: bool = True,
+        show_pairwise: bool = True,
+        show_estimates: bool = True,
+    ) -> None:
+        """Print a concise human-readable summary of all inference results.
+
+        Parameters
+        ----------
+        digits : int
+            Number of decimal places for numeric output.
+        show_omnibus : bool
+            Print the omnibus test table.
+        show_pairwise : bool
+            Print the pairwise test table.
+        show_estimates : bool
+            Print the estimates / SE / CI table.
+        """
+        self._check_fitted()
+        K = self.model.n_components
+        n_boot = self.bootstrap_samples_["rep"].nunique()
+        ci_lo_label = [c for c in self.estimates_.columns if "lo" in c][0]
+        ci_hi_label = [c for c in self.estimates_.columns if "hi" in c][0]
+
+        sep = "=" * 70
+        thin = "-" * 70
+
+        print(sep)
+        print("  3-Step LCA Outcome Analysis – Wald Tests & P-values")
+        print(sep)
+        print(f"  Latent classes (K)   : {K}")
+        print(f"  Bootstrap reps (B)   : {n_boot}")
+        print(f"  CI level             : {self.ci_level:.0%}")
+        print(
+            f"  Significance codes   : "
+            "*** p<0.001 | ** p<0.01 | * p<0.05 | . p<0.1"
+        )
+
+        # ----------------------------------------------------------------
+        # Estimates table
+        # ----------------------------------------------------------------
+        if show_estimates:
+            print()
+            print(sep)
+            print("  OUTCOME PARAMETER ESTIMATES (per latent class)")
+            print(sep)
+            est = self.estimates_.reset_index()
+            for var in est["variable"].unique():
+                sub = est[est["variable"] == var].sort_values("class_no")
+                print(f"\n  Variable: {var}")
+                header = (
+                    f"    {'Class':>6}  {'Estimate':>10}  {'SE':>9}  "
+                    f"{'CI lo':>10}  {'CI hi':>10}"
+                )
+                print(header)
+                print("    " + "-" * 60)
+                for _, row in sub.iterrows():
+                    print(
+                        f"    {int(row['class_no']):>6}  "
+                        f"{row['estimate']:>10.{digits}f}  "
+                        f"{row['se']:>9.{digits}f}  "
+                        f"{row[ci_lo_label]:>10.{digits}f}  "
+                        f"{row[ci_hi_label]:>10.{digits}f}"
+                    )
+
+        # ----------------------------------------------------------------
+        # Omnibus tests
+        # ----------------------------------------------------------------
+        if show_omnibus:
+            print()
+            print(sep)
+            print("  OMNIBUS WALD TEST  (H₀: all class means / probs are equal)")
+            print(sep)
+            omn = self.omnibus_.reset_index()
+            print(f"\n  {'Variable':>14}  {'χ²':>10}  {'df':>4}  {'p-value':>10}  {'sig':>4}")
+            print("  " + "-" * 50)
+            for _, row in omn.iterrows():
+                p = row["p_value"]
+                print(
+                    f"  {row['variable']:>14}  "
+                    f"{row['chi2']:>10.{digits}f}  "
+                    f"{int(row['df']):>4}  "
+                    f"{p:>10.{digits}f}  "
+                    f"{_stars(p)}"
+                )
+
+        # ----------------------------------------------------------------
+        # Pairwise tests
+        # ----------------------------------------------------------------
+        if show_pairwise:
+            print()
+            print(sep)
+            print("  PAIRWISE WALD TESTS  (H₀: θⱼ = θₖ  for each class pair j < k)")
+            pair_df = self.pairwise_.reset_index()
+            correction_label = pair_df["correction"].iloc[0] if len(pair_df) > 0 else "none"
+            print(f"  Multiple-comparison correction: {correction_label}")
+            print(sep)
+            for var in pair_df["variable"].unique():
+                sub = pair_df[pair_df["variable"] == var]
+                print(f"\n  Variable: {var}")
+                print(
+                    f"    {'j':>4}  {'k':>4}  "
+                    f"{'θⱼ':>10}  {'θₖ':>10}  "
+                    f"{'Δ':>10}  {'SE(Δ)':>10}  "
+                    f"{'z':>8}  {'χ²(1)':>8}  "
+                    f"{'p-value':>9}  {'p_adj':>9}  {'sig':>4}"
+                )
+                print("    " + "-" * 100)
+                for _, row in sub.iterrows():
+                    p = row["p_adj"]
+                    print(
+                        f"    {int(row['class_j']):>4}  {int(row['class_k']):>4}  "
+                        f"{row['theta_j']:>10.{digits}f}  "
+                        f"{row['theta_k']:>10.{digits}f}  "
+                        f"{row['delta']:>10.{digits}f}  "
+                        f"{row['se_delta']:>10.{digits}f}  "
+                        f"{row['z']:>8.{digits}f}  "
+                        f"{row['chi2']:>8.{digits}f}  "
+                        f"{row['p_value']:>9.{digits}f}  "
+                        f"{p:>9.{digits}f}  "
+                        f"{_stars(p)}"
+                    )
+
+        print()
+        print(sep)
